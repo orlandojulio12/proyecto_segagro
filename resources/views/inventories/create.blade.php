@@ -24,7 +24,7 @@
 </div>
 @endif
 
-<form action="{{ route('inventories.store') }}" method="POST" id="inventoryForm">
+<form action="{{ route('inventories.store') }}" method="POST" id="inventoryForm"  enctype="multipart/form-data">
     @csrf
     <div class="row">
         <!-- Información General -->
@@ -43,7 +43,7 @@
                     <select name="staff_name" class="form-control" required>
                         <option value="">Seleccionar funcionario</option>
                         @foreach($users as $user)
-                        <option value="{{ $user->user_id }}" {{ old('staff_name') == $user->user_id ? 'selected' : '' }}>
+                        <option value="{{ $user->id }}" {{ old('staff_name') == $user->id ? 'selected' : '' }}>
                             {{ $user->name }}
                         </option>
                         @endforeach

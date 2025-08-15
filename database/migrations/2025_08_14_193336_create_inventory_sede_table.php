@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->foreignId('sede_id')->constrained('sedes');
             $table->string('responsible_department');
-            $table->foreignId('staff_name')->constrained('users');
+            $table->foreignId('staff_name')->constrained('users', 'id');
             $table->text('image_inventory')->nullable();
             $table->text('inventory_description');
             $table->timestamp('record_date')->nullable();

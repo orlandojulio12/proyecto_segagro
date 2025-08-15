@@ -32,8 +32,9 @@ class InventoryController extends Controller
         $request->validate([
             'sede_id' => 'required|exists:sedes,id',
             'responsible_department' => 'required|string|max:255',
-            'staff_name' => 'required|exists:users,user_id',
+            'staff_name' => 'required|exists:users,id',
             'inventory_description' => 'required|string',
+            'image_inventory' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'materials' => 'required|array|min:1',
             'materials.*.material_name' => 'required|string|max:255',
             'materials.*.material_quantity' => 'required|integer|min:1',
@@ -42,11 +43,21 @@ class InventoryController extends Controller
         ]);
 
         DB::transaction(function() use ($request) {
+            $imagePath = null;
+            
+            // Manejar la imagen si se sube
+            if ($request->hasFile('image_inventory')) {
+                $image = $request->file('image_inventory');
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $imagePath = $image->storeAs('inventories', $imageName, 'public');
+            }
+
             // Crear inventario
             $inventory = InventorySede::create([
                 'sede_id' => $request->sede_id,
                 'responsible_department' => $request->responsible_department,
                 'staff_name' => $request->staff_name,
+                'image_inventory' => $imagePath,
                 'inventory_description' => $request->inventory_description,
                 'record_date' => now()
             ]);
@@ -66,6 +77,7 @@ class InventoryController extends Controller
         return redirect()->route('inventories.index')->with('success', 'Inventario creado exitosamente');
     }
 
+
     public function show(InventorySede $inventory)
     {
         $inventory->load(['sede.centro', 'staff', 'materials']);
@@ -81,13 +93,14 @@ class InventoryController extends Controller
         return view('inventories.edit', compact('inventory', 'centros', 'sedes', 'users'));
     }
 
-    public function update(Request $request, InventorySede $inventory)
+   public function update(Request $request, InventorySede $inventory)
     {
         $request->validate([
             'sede_id' => 'required|exists:sedes,id',
             'responsible_department' => 'required|string|max:255',
-            'staff_name' => 'required|exists:users,user_id',
+            'staff_name' => 'required|exists:users',
             'inventory_description' => 'required|string',
+            'image_inventory' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'materials' => 'required|array|min:1',
             'materials.*.material_name' => 'required|string|max:255',
             'materials.*.material_quantity' => 'required|integer|min:1',
@@ -96,11 +109,26 @@ class InventoryController extends Controller
         ]);
 
         DB::transaction(function() use ($request, $inventory) {
+            $imagePath = $inventory->image_inventory; // Mantener imagen actual
+
+            // Manejar nueva imagen si se sube
+            if ($request->hasFile('image_inventory')) {
+                // Eliminar imagen anterior si existe
+                if ($inventory->image_inventory && \Storage::disk('public')->exists($inventory->image_inventory)) {
+                    \Storage::disk('public')->delete($inventory->image_inventory);
+                }
+                
+                $image = $request->file('image_inventory');
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $imagePath = $image->storeAs('inventories', $imageName, 'public');
+            }
+
             // Actualizar inventario
             $inventory->update([
                 'sede_id' => $request->sede_id,
                 'responsible_department' => $request->responsible_department,
                 'staff_name' => $request->staff_name,
+                'image_inventory' => $imagePath,
                 'inventory_description' => $request->inventory_description
             ]);
 

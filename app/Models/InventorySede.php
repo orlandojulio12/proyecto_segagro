@@ -33,7 +33,7 @@ class InventorySede extends Model
 
     public function staff()
     {
-        return $this->belongsTo(User::class, 'staff_name');
+        return $this->belongsTo(User::class, 'staff_name', 'id');
     }
 
     public function materials()
