@@ -25,8 +25,13 @@ class Centro extends Model
 
     protected $dates = ['fecha_reg_centro'];
 
-     public function sedes()
-     {
+    public function sedes()
+    {
         return $this->hasMany(Sede::class);
-     }
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_centros', 'centro_id', 'user_id');
+    }
 }

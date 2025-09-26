@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/InventoryController.php
+// app/Http/Controllers/FerreteriaController.php
 
 namespace App\Http\Controllers;
 
@@ -11,12 +11,12 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class InventoryController extends Controller
+class FerreteriaController extends Controller
 {
     public function index()
     {
         $inventories = InventorySede::with(['sede.centro', 'staff', 'materials'])->latest('record_date')->get();
-        return view('inventories.index', compact('inventories'));
+        return view('ferreteria.index', compact('inventories'));
     }
 
     public function create()
@@ -24,7 +24,7 @@ class InventoryController extends Controller
         $centros = Centro::all();
         $sedes = Sede::all();
         $users = User::all();
-        return view('inventories.create', compact('centros', 'sedes', 'users'));
+        return view('ferreteria.create', compact('centros', 'sedes', 'users'));
     }
 
     public function store(Request $request)
@@ -49,7 +49,7 @@ class InventoryController extends Controller
             if ($request->hasFile('image_inventory')) {
                 $image = $request->file('image_inventory');
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('inventories', $imageName, 'public');
+                $imagePath = $image->storeAs('ferreteria', $imageName, 'public');
             }
 
             // Crear inventario
@@ -74,14 +74,14 @@ class InventoryController extends Controller
             }
         });
 
-        return redirect()->route('inventories.index')->with('success', 'Inventario creado exitosamente');
+        return redirect()->route('ferreteria.index')->with('success', 'Inventario creado exitosamente');
     }
 
 
     public function show(InventorySede $inventory)
     {
         $inventory->load(['sede.centro', 'staff', 'materials']);
-        return view('inventories.show', compact('inventory'));
+        return view('ferreteria.show', compact('inventory'));
     }
 
     public function edit(InventorySede $inventory)
@@ -90,7 +90,7 @@ class InventoryController extends Controller
         $sedes = Sede::all();
         $users = User::all();
         $inventory->load(['sede.centro', 'materials']);
-        return view('inventories.edit', compact('inventory', 'centros', 'sedes', 'users'));
+        return view('ferreteria.edit', compact('inventory', 'centros', 'sedes', 'users'));
     }
 
    public function update(Request $request, InventorySede $inventory)
@@ -120,7 +120,7 @@ class InventoryController extends Controller
                 
                 $image = $request->file('image_inventory');
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('inventories', $imageName, 'public');
+                $imagePath = $image->storeAs('ferreteria', $imageName, 'public');
             }
 
             // Actualizar inventario
@@ -147,7 +147,7 @@ class InventoryController extends Controller
             }
         });
 
-        return redirect()->route('inventories.index')->with('success', 'Inventario actualizado exitosamente');
+        return redirect()->route('ferreteria.index')->with('success', 'Inventario actualizado exitosamente');
     }
 
     public function destroy(InventorySede $inventory)

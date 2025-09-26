@@ -1,16 +1,15 @@
-{{-- resources/views/inventories/index.blade.php --}}
 @extends('layouts.dashboard')
 
-@section('page-title', 'Inventarios')
+@section('page-title', 'Necesidades de Traslado')
 
 @section('dashboard-content')
 <div class="section-header">
     <div>
-        <h2>Gestión de Inventarios</h2>
-        <p>Administra los inventarios de las sedes</p>
+        <h2>Gestión de Traslados</h2>
+        <p>Administra las solicitudes de traslado</p>
     </div>
-    <a href="{{ route('inventories.create') }}" class="btn btn-success">
-        <i class="fas fa-plus"></i> Crear Inventario
+    <a href="{{ route('traslados.create') }}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Crear Traslado
     </a>
 </div>
 
@@ -19,37 +18,40 @@
 @endif
 
 <div class="content-card">
-    <table class="table table-striped" id="inventoriesTable">
+    <table class="table table-striped" id="trasladosTable">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Sede</th>
-                <th>Centro</th>
-                <th>Responsable</th>
+                <th>Centro Inicial</th>
+                <th>Sede Inicial</th>
+                <th>Centro Final</th>
+                <th>Sede Final</th>
                 <th>Funcionario</th>
-                <th>Fecha</th>
+                <th>Fechas</th>
                 <th>Materiales</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($inventories as $inventory)
+            @foreach($traslados as $traslado)
             <tr>
-                <td>{{ $inventory->id }}</td>
-                <td>{{ $inventory->sede->nom_sede ?? 'N/A' }}</td>
-                <td>{{ $inventory->sede->centro->nom_centro ?? 'N/A' }}</td>
-                <td>{{ $inventory->responsible_department }}</td>
-                <td>{{ $inventory->staff->name ?? 'N/A' }}</td>
-                <td>{{ $inventory->record_date ? $inventory->record_date->format('d/m/Y') : 'N/A' }}</td>
-                <td>{{ $inventory->materials->count() }}</td>
+                <td>{{ $traslado->id }}</td>
+                <td>{{ $traslado->centroInicial->nom_centro ?? 'N/A' }}</td>
+                <td>{{ $traslado->sedeInicial->nom_sede ?? 'N/A' }}</td>
+                <td>{{ $traslado->centroFinal->nom_centro ?? 'N/A' }}</td>
+                <td>{{ $traslado->sedeFinal->nom_sede ?? 'N/A' }}</td>
+                <td>{{ $traslado->user->name ?? 'N/A' }}</td>
                 <td>
-                    <a href="{{ route('inventories.show', $inventory) }}" class="btn btn-info btn-sm">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a href="{{ route('inventories.edit', $inventory) }}" class="btn btn-primary btn-sm">
+                    {{ $traslado->fecha_inicio ? $traslado->fecha_inicio->format('d/m/Y') : 'N/A' }}
+                    -
+                    {{ $traslado->fecha_fin ? $traslado->fecha_fin->format('d/m/Y') : 'N/A' }}
+                </td>
+                <td>{{ $traslado->materiales->count() }}</td>
+                <td>
+                    <a href="{{ route('traslados.edit', $traslado->id) }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-edit"></i>
                     </a>
-                    <button class="btn btn-danger btn-sm" onclick="deleteInventory({{ $inventory->id }})">
+                    <button class="btn btn-danger btn-sm" onclick="deleteTraslado({{ $traslado->id }})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -63,6 +65,15 @@
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<style>
+    .content-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .btn { padding: 8px 16px; border-radius: 6px; }
+</style>
 @endpush
 
 @push('scripts')
@@ -72,12 +83,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-    $('#inventoriesTable').DataTable({
+    $('#trasladosTable').DataTable({
         language: { url: 'https://cdn.datatables.net/plug-ins/1.12.1/i18n/es-ES.json' }
     });
 });
 
-function deleteInventory(id) {
+function deleteTraslado(id) {
     Swal.fire({
         title: '¿Estás seguro?',
         text: "Esta acción no se puede deshacer",
@@ -90,7 +101,7 @@ function deleteInventory(id) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: `/inventories/${id}`,
+                url: `/traslados/${id}`,
                 type: 'DELETE',
                 data: { _token: $('meta[name="csrf-token"]').attr('content') },
                 success: function(response) {
