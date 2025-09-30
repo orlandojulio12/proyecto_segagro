@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Centro;
+use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,14 +13,15 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('centros')->get();
+        $users = User::with('sedes.centro')->get();
         return view('users.index', compact('users'));
     }
 
     public function create()
     {
-        $centros = Centro::all(); // Obtener todos los centros
-        return view('users.create', compact('centros'));
+        $centros = Centro::all();
+        $sedes = Sede::all();
+        return view('users.create', compact('centros', 'sedes'));
     }
 
     public function store(Request $request)
@@ -30,7 +32,7 @@ class UserController extends Controller
             'password'  => 'required|string|min:6',
             'address'   => 'nullable|string|max:225',
             'phone'     => 'nullable|string|max:20',
-            'centro_id' => 'required|exists:centros,id',
+            'sede_id'   => 'required|exists:sedes,id',
         ]);
 
         $user = User::create([
@@ -43,7 +45,7 @@ class UserController extends Controller
             'state'             => 1,
         ]);
 
-        $user->centros()->attach($request->centro_id);
+        $user->sedes()->attach($request->sede_id);
 
         return redirect()->route('users.index')
             ->with('success', 'Usuario creado exitosamente.');
@@ -51,10 +53,11 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        $user = User::with('centros')->findOrFail($id);
-        $centros = Centro::all(); // para mostrar en el modal
+        $user = User::with('sedes')->findOrFail($id);
+        $centros = Centro::all();
+        $sedes = Sede::all();
 
-        return view('users.edit', compact('user', 'centros'));
+        return view('users.edit', compact('user', 'centros', 'sedes'));
     }
 
     public function update(Request $request, $id)
@@ -65,7 +68,7 @@ class UserController extends Controller
             'password'  => 'nullable|string|min:6',
             'address'   => 'nullable|string|max:225',
             'phone'     => 'nullable|string|max:20',
-            'centro_id' => 'required|exists:centros,id',
+            'sede_id'   => 'required|exists:sedes,id',
         ]);
 
         $user = User::findOrFail($id);
@@ -78,7 +81,7 @@ class UserController extends Controller
             'phone'    => $request->phone,
         ]);
 
-        $user->centros()->sync([$request->centro_id]);
+        $user->sedes()->sync([$request->sede_id]);
 
         return redirect()->route('users.index')
             ->with('success', 'Usuario actualizado correctamente.');
@@ -86,7 +89,7 @@ class UserController extends Controller
 
     public function show($id)
     {
-        $user = User::with('centros')->findOrFail($id);
+        $user = User::with('sedes.centro')->findOrFail($id);
         return response()->json($user);
     }
 

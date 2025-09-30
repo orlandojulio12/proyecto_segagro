@@ -155,101 +155,108 @@
                         </div>
 
                         <br><br><br><br>
-                        <h5 class="section-title"><i class="fas fa-users"></i> Información personal</h5>
-                        <p class="section-subtitle">Datos de personal requerido</p>
+                        <h5 class="section-title"><i class="fas fa-users"></i> Información personal y materiales</h5>
+                        <p class="section-subtitle">Seleccione si requiere trasladar personas o materiales</p>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label text-success fw-semibold">Requiere trasladar personas</label><br>
-                                <input type="checkbox" id="chk-personas" name="requiere_personal" value="1"
-                                    {{ old('requiere_personal') ? 'checked' : '' }}> Sí
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="chk-personas" name="requiere_personal" value="1"
+                                        {{ old('requiere_personal') ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="chk-personas">
+                                        Requiere trasladar personas
+                                    </label>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label text-success fw-semibold">Requiere trasladar
-                                    materiales</label><br>
-                                <input type="checkbox" id="chk-materiales" name="requiere_materiales" value="1"
-                                    {{ old('requiere_materiales') ? 'checked' : '' }}> Sí
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="chk-materiales" name="requiere_materiales" value="1"
+                                        {{ old('requiere_materiales') ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="chk-materiales">
+                                        Requiere trasladar materiales
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
                         {{-- Sección personas --}}
-                        <div id="personas-section" class="content-card mb-4"
-                            style="{{ old('requiere_personal') ? '' : 'display: none;' }}">
-                            <h5 class="mb-3 text-primary">Seleccionar Personas</h5>
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>Rol</th>
-                                        <th>Seleccionar</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($users as $usuario)
-                                        <tr>
-                                            <td>{{ $usuario->name }}</td>
-                                            <td>{{ $usuario->role }}</td>
-                                            <td>
-                                                <input type="checkbox" name="personal[]" value="{{ $usuario->id }}"
-                                                    {{ is_array(old('personal')) && in_array($usuario->id, old('personal')) ? 'checked' : '' }}>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                        <div id="personas-section" style="display: none;">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-user-friends"></i> Personal necesitado</h6>
+                                    <small class="text-muted">Personal necesario para el traslado</small>
+                                </div>
+                                <div class="card-body">
+                                    <button type="button" class="btn btn-success btn-sm mb-3" onclick="agregarPersona()">
+                                        <i class="fas fa-plus"></i> Agregar Persona
+                                    </button>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="personasTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Nombre</th>
+                                                    <th>Documento</th>
+                                                    <th>Cargo</th>
+                                                    <th width="100">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {{-- Filas dinámicas --}}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Sección materiales --}}
-                        <div id="materiales-section" class="content-card mb-4"
-                            style="{{ old('requiere_materiales') ? '' : 'display: none;' }}">
-                            <h5 class="mb-3 text-primary">Seleccionar Materiales</h5>
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Material</th>
-                                        <th>Cantidad</th>
-                                        <th>Tipo</th>
-                                        <th>Seleccionar</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($materials as $material)
-                                        <tr>
-                                            <td>{{ $material->nombre }}</td>
-                                            <td>
-                                                <input type="number" name="materiales[{{ $material->id }}][cantidad]"
-                                                    class="form-control"
-                                                    value="{{ old('materiales.' . $material->id . '.cantidad', 1) }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" name="materiales[{{ $material->id }}][tipo]"
-                                                    class="form-control"
-                                                    value="{{ old('materiales.' . $material->id . '.tipo') }}">
-                                            </td>
-                                            <td>
-                                                <input type="checkbox" name="materiales[{{ $material->id }}][id]"
-                                                    value="{{ $material->id }}"
-                                                    {{ old('materiales.' . $material->id . '.id') ? 'checked' : '' }}>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                        <div id="materiales-section" style="display: none;">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-box"></i> Material necesitado</h6>
+                                    <small class="text-muted">Materiales necesarios para el traslado</small>
+                                </div>
+                                <div class="card-body">
+                                    <button type="button" class="btn btn-success btn-sm mb-3" onclick="agregarMaterial()">
+                                        <i class="fas fa-plus"></i> Agregar Material
+                                    </button>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="materialesTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Nombre Material</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Tipo de Material</th>
+                                                    <th width="100">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {{-- Filas dinámicas --}}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Botones -->
-            <div class="d-flex justify-content-between">
-                <a href="{{ route('traslados.index') }}" class="btn btn-outline-secondary btn-lg shadow-sm">
-                    <i class="fas fa-times"></i> Cancelar
-                </a>
-                <button type="submit" class="btn btn-success btn-lg shadow-sm">
-                    <i class="fas fa-save"></i> Guardar
-                </button>
-            </div>
+        </div>
+        
+        <!-- Botones -->
+        <div class="d-flex justify-content-between">
+            <a href="{{ route('traslados.index') }}" class="btn btn-outline-secondary btn-lg shadow-sm">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+        </div>
     </form>
 @endsection
+
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -295,6 +302,43 @@
             padding: 10px 22px;
             font-size: 15px;
             border-radius: 8px;
+        }
+
+        .form-check-input:checked {
+            background-color: #4cd137;
+            border-color: #4cd137;
+        }
+
+        .card-header {
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table thead th {
+            font-weight: 600;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .table td input {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+
+        .table td input:focus {
+            border-color: #4cd137;
+            box-shadow: 0 0 0 0.2rem rgba(76, 209, 55, 0.15);
+        }
+
+        .btn-danger {
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            transform: scale(1.05);
         }
 
         /* Tabla moderna */
@@ -353,68 +397,65 @@
     </style>
 @endpush
 
-
 @push('scripts')
     <script>
-        let materialIndex = 1;
+        let personaIndex = 0;
+        let materialIndex = 0;
 
-        function addMaterial() {
-            const tbody = document.querySelector('#materialsTable tbody');
+        // Toggle de secciones
+        function toggleSections() {
+            const personasChecked = document.getElementById('chk-personas').checked;
+            const materialesChecked = document.getElementById('chk-materiales').checked;
+            
+            document.getElementById('personas-section').style.display = personasChecked ? 'block' : 'none';
+            document.getElementById('materiales-section').style.display = materialesChecked ? 'block' : 'none';
+        }
+
+        document.getElementById('chk-personas').addEventListener('change', toggleSections);
+        document.getElementById('chk-materiales').addEventListener('change', toggleSections);
+
+        // Al cargar la página
+        toggleSections();
+
+        // Agregar persona
+        function agregarPersona() {
+            const tbody = document.querySelector('#personasTable tbody');
             const row = document.createElement('tr');
             row.innerHTML = `
-        <td><input type="text" name="materials[${materialIndex}][material_name]" class="form-control" required></td>
-        <td><input type="number" name="materials[${materialIndex}][material_quantity]" class="form-control" required></td>
-        <td><input type="text" name="materials[${materialIndex}][material_type]" class="form-control"></td>
-        <td><input type="number" name="materials[${materialIndex}][material_price]" class="form-control" step="0.01"></td>
-        <td>
-            <button type="button" class="btn btn-danger btn-sm shadow-sm" onclick="removeMaterial(this)">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    `;
+                <td><input type="text" name="personas[${personaIndex}][nombre]" class="form-control" placeholder="Nombre completo" required></td>
+                <td><input type="text" name="personas[${personaIndex}][documento]" class="form-control" placeholder="Cédula" required></td>
+                <td><input type="text" name="personas[${personaIndex}][cargo]" class="form-control" placeholder="Cargo"></td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+            personaIndex++;
+        }
+
+        // Agregar material
+        function agregarMaterial() {
+            const tbody = document.querySelector('#materialesTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" name="materiales[${materialIndex}][nombre]" class="form-control" placeholder="Nombre del material" required></td>
+                <td><input type="number" name="materiales[${materialIndex}][cantidad]" class="form-control" placeholder="0" min="1" required></td>
+                <td><input type="text" name="materiales[${materialIndex}][tipo]" class="form-control" placeholder="Tipo"></td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
             tbody.appendChild(row);
             materialIndex++;
         }
 
-        function removeMaterial(button) {
+        // Eliminar fila
+        function eliminarFila(button) {
             button.closest('tr').remove();
         }
-
-        // Filtrar sedes por centro con AJAX
-        document.getElementById('centroSelect').addEventListener('change', function() {
-            const centroId = this.value;
-            const sedeSelect = document.getElementById('sedeSelect');
-            sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
-
-            if (centroId) {
-                fetch(`/centros/${centroId}/sedes`)
-                    .then(response => response.json())
-                    .then(sedes => {
-                        sedeSelect.innerHTML = '<option value="">Seleccionar sede</option>';
-                        sedes.forEach(sede => {
-                            const option = document.createElement('option');
-                            option.value = sede.id;
-                            option.textContent = sede.nom_sede;
-                            sedeSelect.appendChild(option);
-                        });
-                    })
-                    .catch(() => sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>');
-            } else {
-                sedeSelect.innerHTML = '<option value="">Primero selecciona un centro</option>';
-            }
-        });
-
-       $(function () {
-    function toggleSections() {
-        $('#personas-section').toggle($('#chk-personas').is(':checked'));
-        $('#materiales-section').toggle($('#chk-materiales').is(':checked'));
-    }
-
-    // Eventos
-    $('#chk-personas, #chk-materiales').on('change', toggleSections);
-
-    // Al cargar la página
-    toggleSections();
-});
     </script>
 @endpush

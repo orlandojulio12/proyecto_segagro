@@ -34,14 +34,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
-    public function centros()
-    {
-        return $this->belongsToMany(
-            Centro::class,       // Modelo relacionado
-            'user_centros',      // Tabla pivote
-            'user_id',           // FK en la tabla pivote que apunta a users
-            'centro_id'          // FK en la tabla pivote que apunta a centros
-        );
-    }
+public function sedes() {
+    return $this->belongsToMany(Sede::class, 'user_sedes');
+}
+   
 }

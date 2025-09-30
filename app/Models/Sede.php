@@ -30,4 +30,7 @@ class Sede extends Model
     {
         return $this->belongsTo(Centro::class);
     }
+    public function users() {
+        return $this->belongsToMany(User::class, 'user_sedes');
+    }
 }

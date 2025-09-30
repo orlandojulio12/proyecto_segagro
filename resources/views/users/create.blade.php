@@ -46,14 +46,25 @@
                         <input type="text" name="phone" id="phone" class="form-control">
                     </div>
 
-                    <!-- Campo Centro de Formación -->
+                    <!-- Campo Centro (para filtrar) -->
                     <div class="form-group mb-3">
                         <label for="centro_id">Centro de Formación *</label>
-                        <input type="hidden" name="centro_id" id="centro_id">
+                        <input type="hidden" name="centro_id_temp" id="centro_id_temp">
                         <div class="search-box">
                             <input type="text" id="centroSeleccionado" placeholder="Seleccione un centro..." readonly
                                 onclick="openModal('centroModal')" />
                             <span class="search-icon" onclick="openModal('centroModal')">🔍</span>
+                        </div>
+                    </div>
+
+                    <!-- Campo Sede (se guarda en BD) -->
+                    <div class="form-group mb-3">
+                        <label for="sede_id">Sede de Formación *</label>
+                        <input type="hidden" name="sede_id" id="sede_id">
+                        <div class="search-box">
+                            <input type="text" id="sedeSeleccionada" placeholder="Primero seleccione un centro..." readonly
+                                onclick="openModalSede()" disabled />
+                            <span class="search-icon" onclick="openModalSede()">🔍</span>
                         </div>
                     </div>
                 </div>
@@ -76,13 +87,11 @@
                 <button class="close-btn" onclick="closeModal('centroModal')">&times;</button>
             </div>
             <div class="custom-modal-body">
-                <!-- Input moderno con icono -->
                 <div class="search-box">
                     <input type="text" id="filtroCentro" placeholder="Buscar centro de formación..." />
                     <span class="search-icon">🔍</span>
                 </div>
                 <br>
-
 
                 <table class="table table-hover">
                     <thead>
@@ -105,7 +114,37 @@
                         @endforeach
                     </tbody>
                 </table>
-                <div id="pagination" class="pagination"></div>
+                <div id="paginationCentros" class="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Selección de Sedes -->
+    <div id="sedeModal" class="custom-modal">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5>Seleccionar Sede de Formación</h5>
+                <button class="close-btn" onclick="closeModal('sedeModal')">&times;</button>
+            </div>
+            <div class="custom-modal-body">
+                <div class="search-box">
+                    <input type="text" id="filtroSede" placeholder="Buscar sede de formación..." />
+                    <span class="search-icon">🔍</span>
+                </div>
+                <br>
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre de la Sede</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaSedes">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+                <div id="paginationSedes" class="pagination"></div>
             </div>
         </div>
     </div>
@@ -130,7 +169,6 @@
 
         .btn-modern {
             min-width: 140px;
-            /* mismo tamaño en ambos */
             padding: 12px 28px;
             font-size: 15px;
             font-weight: 600;
@@ -144,13 +182,11 @@
 
         .btn-save {
             background: #4cd137;
-            /* verde moderno */
             color: #fff;
         }
 
         .btn-save:hover {
-            background: #fff;
-            color: #43a047;
+            background: #43a047;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(76, 209, 55, 0.4);
         }
@@ -158,19 +194,15 @@
         .btn-cancel {
             background-color: #fff;
             border: 1px solid #43a047;
-            /* define borde completo */
             color: #43a047;
         }
-
 
         .btn-cancel:hover {
             background: #43a047;
             color: #fff;
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(99, 110, 114, 0.3);
         }
 
-        /* Fondo y modal igual que antes */
         .custom-modal {
             display: none;
             position: fixed;
@@ -215,7 +247,6 @@
             display: flex;
             align-items: center;
             width: 100%;
-            max-width: 100%;
         }
 
         .search-box input {
@@ -231,9 +262,8 @@
 
         .search-box input:focus {
             border-color: #43a047;
-            /* morado elegante */
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(76, 209, 55, 0.4);
+            box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.1);
         }
 
         .search-box .search-icon {
@@ -241,7 +271,7 @@
             right: 14px;
             font-size: 16px;
             color: #888;
-            pointer-events: none;
+            cursor: pointer;
             transition: color 0.3s;
         }
 
@@ -249,7 +279,6 @@
             color: #43a047;
         }
 
-        /* Tabla moderna */
         .table {
             width: 100%;
             border-collapse: collapse;
@@ -273,7 +302,6 @@
             transition: background 0.2s ease;
         }
 
-        /* Botones */
         .btn {
             display: inline-block;
             padding: 6px 12px;
@@ -282,26 +310,16 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
+            border: none;
         }
 
         .btn-success {
             background: #4caf50;
             color: white;
-            border: none;
         }
 
         .btn-success:hover {
             background: #43a047;
-        }
-
-        .btn-primary {
-            background: #007bff;
-            color: white;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background: #0069d9;
         }
 
         .close-btn {
@@ -316,7 +334,6 @@
             color: #000;
         }
 
-        /* Paginación */
         .pagination {
             display: flex;
             justify-content: center;
@@ -344,8 +361,6 @@
             background: #e0e0e0;
         }
 
-
-        /* Animación */
         @keyframes zoomIn {
             from {
                 transform: scale(0.9);
@@ -366,62 +381,144 @@
 
 @push('scripts')
     <script>
-        let currentPage = 1;
+        let currentPageCentros = 1;
+        let currentPageSedes = 1;
         const rowsPerPage = 5;
 
-        function renderTable() {
+        function renderTableCentros() {
             const rows = document.querySelectorAll('#listaCentros tr');
             const totalPages = Math.ceil(rows.length / rowsPerPage);
 
             rows.forEach((row, index) => {
                 row.style.display =
-                    index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage ?
+                    index >= (currentPageCentros - 1) * rowsPerPage && index < currentPageCentros * rowsPerPage ?
                     '' :
                     'none';
             });
 
-            // Render paginación
-            const pagination = document.getElementById('pagination');
+            const pagination = document.getElementById('paginationCentros');
             pagination.innerHTML = '';
-
             for (let i = 1; i <= totalPages; i++) {
                 let btn = document.createElement('button');
                 btn.innerText = i;
-                btn.classList.toggle('active', i === currentPage);
+                btn.classList.toggle('active', i === currentPageCentros);
                 btn.onclick = () => {
-                    currentPage = i;
-                    renderTable();
+                    currentPageCentros = i;
+                    renderTableCentros();
                 };
                 pagination.appendChild(btn);
             }
         }
 
-        // Abrir modal
-        function openModal(id) {
-            document.getElementById(id).style.display = 'flex';
-            renderTable();
+        function renderTableSedes() {
+            const rows = document.querySelectorAll('#listaSedes tr');
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+            rows.forEach((row, index) => {
+                row.style.display =
+                    index >= (currentPageSedes - 1) * rowsPerPage && index < currentPageSedes * rowsPerPage ? '' :
+                    'none';
+            });
+
+            const pagination = document.getElementById('paginationSedes');
+            pagination.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                let btn = document.createElement('button');
+                btn.innerText = i;
+                btn.classList.toggle('active', i === currentPageSedes);
+                btn.onclick = () => {
+                    currentPageSedes = i;
+                    renderTableSedes();
+                };
+                pagination.appendChild(btn);
+            }
         }
 
-        // Cerrar modal
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+            if (id === 'centroModal') renderTableCentros();
+        }
+
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
         }
 
-        // Filtro
+        function openModalSede() {
+            const centroId = document.getElementById('centro_id_temp').value;
+            if (!centroId) {
+                alert('Primero debe seleccionar un centro');
+                return;
+            }
+            document.getElementById('sedeModal').style.display = 'flex';
+            renderTableSedes();
+        }
+
         document.getElementById('filtroCentro').addEventListener('keyup', function() {
             let filtro = this.value.toLowerCase();
             document.querySelectorAll('#listaCentros tr').forEach(row => {
-                let texto = row.innerText.toLowerCase();
-                row.style.display = texto.includes(filtro) ? '' : 'none';
+                row.style.display = row.innerText.toLowerCase().includes(filtro) ? '' : 'none';
             });
         });
 
-        // Selección de centro
+        document.getElementById('filtroSede').addEventListener('keyup', function() {
+            let filtro = this.value.toLowerCase();
+            document.querySelectorAll('#listaSedes tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(filtro) ? '' : 'none';
+            });
+        });
+
         document.querySelectorAll('.seleccionar-centro').forEach(boton => {
             boton.addEventListener('click', function() {
-                document.getElementById('centroSeleccionado').value = this.dataset.nombre;
-                document.getElementById('centro_id').value = this.dataset.id; // ✅ aquí guardamos el ID
+                const centroId = this.dataset.id;
+                const centroNombre = this.dataset.nombre;
+
+                document.getElementById('centro_id_temp').value = centroId;
+                document.getElementById('centroSeleccionado').value = centroNombre;
+
+                document.getElementById('sede_id').value = '';
+                document.getElementById('sedeSeleccionada').value = '';
+                document.getElementById('sedeSeleccionada').placeholder = 'Cargando sedes...';
+                document.getElementById('sedeSeleccionada').disabled = true;
+
                 closeModal('centroModal');
+
+                fetch(`/centros/${centroId}/sedes`)
+                    .then(response => response.json())
+                    .then(sedes => {
+                        const listaSedes = document.getElementById('listaSedes');
+                        listaSedes.innerHTML = '';
+
+                        sedes.forEach(sede => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${sede.nom_sede}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-success seleccionar-sede"
+                                        data-id="${sede.id}" data-nombre="${sede.nom_sede}">
+                                        Seleccionar
+                                    </button>
+                                </td>
+                            `;
+                            listaSedes.appendChild(tr);
+                        });
+
+                        document.querySelectorAll('.seleccionar-sede').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                document.getElementById('sede_id').value = this.dataset.id;
+                                document.getElementById('sedeSeleccionada').value = this.dataset.nombre;
+                                closeModal('sedeModal');
+                            });
+                        });
+
+                        document.getElementById('sedeSeleccionada').placeholder = 'Seleccione una sede...';
+                        document.getElementById('sedeSeleccionada').disabled = false;
+                        currentPageSedes = 1;
+                        renderTableSedes();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('sedeSeleccionada').placeholder = 'Error al cargar sedes';
+                    });
             });
         });
     </script>
