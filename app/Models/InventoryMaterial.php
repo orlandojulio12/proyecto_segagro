@@ -18,7 +18,11 @@ class InventoryMaterial extends Model
         'material_name',
         'material_quantity',
         'material_type',
-        'material_price'
+        'material_price',
+        'iva_percentage',
+        'total_without_tax',
+        'total_with_tax',
+        'observations',
     ];
 
     public function inventory()

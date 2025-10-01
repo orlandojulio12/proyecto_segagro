@@ -161,9 +161,25 @@
                         </tr>
                     </tbody>
                 </table>
-
-
             </div>
+            <div class="content-card mb-4">
+                <h5 class="section-title"><i class="fas fa-file-excel"></i> Importar desde Excel</h5>
+
+                <div class="input-group mb-3">
+                    <input type="file" id="excelUpload" accept=".xlsx,.xls" class="form-control mb-3">
+                    <button type="button" class="btn btn-success btn-lg shadow-sm"
+                        onclick="document.getElementById('excelUpload').click()">
+                        <i class="fas fa-upload"></i> Importar
+                    </button>
+                </div>
+
+                <small class="text-muted">Descarga la plantilla de ejemplo para organizar tus datos antes de
+                    importar.</small>
+                <a href="{{ asset('plantillas/materiales_template.xlsx') }}" class="btn btn-outline-primary btn-sm mt-2">
+                    <i class="fas fa-download"></i> Descargar Plantilla
+                </a>
+            </div>
+
         </div>
 
         <div class="d-flex justify-content-between">
@@ -355,6 +371,7 @@
                 updateMaterialTotals();
             }
         });
+
         document.addEventListener("change", function(e) {
             if (e.target.closest("#materialsTable")) {
                 updateMaterialTotals();
@@ -363,5 +380,96 @@
 
         // Calcular al cargar la página para la primera fila
         document.addEventListener("DOMContentLoaded", updateMaterialTotals);
+
+        // Filtrar sedes por centro con AJAX
+        document.getElementById('centroSelect').addEventListener('change', async function() {
+            const centroId = this.value;
+            const sedeSelect = document.getElementById('sedeSelect');
+
+            // Mensaje de carga
+            sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
+
+            if (!centroId) {
+                sedeSelect.innerHTML = '<option value="">Primero selecciona un centro</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/centros/${centroId}/sedes`);
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+
+                const sedes = await response.json();
+
+                if (!Array.isArray(sedes) || sedes.length === 0) {
+                    sedeSelect.innerHTML = '<option value="">No hay sedes para este centro</option>';
+                    return;
+                }
+
+                // Rellenar select con las sedes recibidas
+                sedeSelect.innerHTML = '<option value="">Seleccionar sede</option>';
+                sedes.forEach(sede => {
+                    const option = document.createElement('option');
+                    option.value = sede.id;
+                    // usa la propiedad que tu API devuelva (nom_sede en tus ejemplos)
+                    option.textContent = sede.nom_sede ?? sede.name ?? `Sede ${sede.id}`;
+                    sedeSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error cargando sedes:', error);
+                sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>';
+            }
+        });
+
+        document.getElementById('excelUpload').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(`/ferreteria/${0}/import-materials`, { // ⚠️ ajustar según tu flujo
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.querySelector('#materialsTable tbody');
+                    tbody.innerHTML = '';
+
+                    data.forEach((mat, i) => {
+                        const row = `
+            <tr>
+                <td><input type="text" name="materials[${i}][material_name]" value="${mat.material_name}" class="form-control modern-input"></td>
+                <td><input type="number" name="materials[${i}][material_quantity]" value="${mat.material_quantity}" class="form-control modern-input"></td>
+                <td><input type="text" name="materials[${i}][material_type]" value="${mat.material_type}" class="form-control modern-input"></td>
+                <td><input type="number" name="materials[${i}][material_price]" value="${mat.material_price}" class="form-control modern-input"></td>
+                <td>
+                    <select name="materials[${i}][iva_percentage]" class="form-control modern-input">
+                        <option value="0" ${mat.material_iva == 0 ? 'selected' : ''}>0%</option>
+                        <option value="5" ${mat.material_iva == 5 ? 'selected' : ''}>5%</option>
+                        <option value="12" ${mat.material_iva == 12 ? 'selected' : ''}>12%</option>
+                        <option value="19" ${mat.material_iva == 19 ? 'selected' : ''}>19%</option>
+                    </select>
+                </td>
+                <td><input type="number" name="materials[${i}][total_without_tax]" class="form-control modern-input" readonly></td>
+                <td><input type="number" name="materials[${i}][total_with_tax]" class="form-control modern-input" readonly></td>
+                <td><input type="text" name="materials[${i}][observations]" value="${mat.material_observations}" class="form-control modern-input"></td>
+                <td>
+                    <button type="button" class="btn btn-outline-danger btn-sm shadow-sm" onclick="removeMaterial(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+
+                    updateMaterialTotals(); // 🔥 recalcular al final
+                })
+        });
     </script>
 @endpush

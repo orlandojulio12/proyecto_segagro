@@ -44,10 +44,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [FerreteriaController::class, 'create'])->name('create');
         Route::post('/', [FerreteriaController::class, 'store'])->name('store');
         Route::get('/{inventory}', [FerreteriaController::class, 'show'])->name('show');
+
+        Route::post('/{inventory}/import-materials', [FerreteriaController::class, 'importMaterials'])
+            ->name('import.materials');
+
         Route::get('/{inventory}/edit', [FerreteriaController::class, 'edit'])->name('edit');
         Route::put('/{inventory}', [FerreteriaController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [FerreteriaController::class, 'destroy'])->name('destroy');
     });
+
+
 
     Route::prefix('semoviente')->name('semoviente.')->group(function () {
         Route::get('/', [SemovienteController::class, 'index'])->name('index');           // Listado

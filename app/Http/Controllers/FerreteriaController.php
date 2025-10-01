@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\InventoryMaterialsImport;
 use App\Models\InventorySede;
 use App\Models\InventoryMaterial;
 use App\Models\Sede;
@@ -10,6 +11,7 @@ use App\Models\Centro;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FerreteriaController extends Controller
 {
@@ -92,6 +94,38 @@ class FerreteriaController extends Controller
         });
 
         return redirect()->route('ferreteria.index')->with('success', 'Inventario creado exitosamente');
+    }
+
+    public function importMaterials(Request $request, $inventory)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+
+        // Leer con Laravel Excel
+        $data = Excel::toArray([], $path);
+
+        $rows = $data[0]; // Primera hoja
+        $materials = [];
+
+        foreach ($rows as $index => $row) {
+            if ($index === 0) continue; // Saltar encabezado
+
+            $materials[] = [
+                'material_name' => $row[0] ?? '',
+                'material_quantity' => $row[1] ?? 0,
+                'material_type' => $row[2] ?? '',
+                'material_price' => $row[3] ?? 0,
+                'material_iva' => $row[4] ?? 0,
+                'material_total_sin_iva' => $row[5] ?? 0,
+                'material_total_con_iva' => $row[6] ?? 0,
+                'material_observations' => $row[7] ?? '',
+            ];
+        }
+
+        return response()->json($materials);
     }
 
 
