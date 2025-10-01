@@ -110,7 +110,11 @@
                             <th>Nombre del material</th>
                             <th>Cantidad</th>
                             <th>Tipo</th>
-                            <th>Precio</th>
+                            <th>Precio Unitario</th>
+                            <th>IVA</th>
+                            <th>Total sin IVA</th>
+                            <th>Total con IVA</th>
+                            <th>Observaciones</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -120,10 +124,34 @@
                                     required></td>
                             <td><input type="number" name="materials[0][material_quantity]"
                                     class="form-control modern-input" required></td>
-                            <td><input type="text" name="materials[0][material_type]" class="form-control modern-input">
+                            <td>
+                                <select name="materials[0][material_type]" class="form-control modern-input">
+                                    <option value="Consumible">Consumible</option>
+                                    <option value="Herramienta">Herramienta</option>
+                                </select>
                             </td>
                             <td><input type="number" name="materials[0][material_price]" class="form-control modern-input"
-                                    step="0.01"></td>
+                                    step="0.01" required></td>
+
+                            <!-- Select IVA -->
+                            <td>
+                                <select name="materials[0][iva_percentage]" class="form-control modern-input">
+                                    <option value="0">0%</option>
+                                    <option value="5">5%</option>
+                                    <option value="12">12%</option>
+                                    <option value="19">19%</option>
+                                </select>
+                            </td>
+
+                            <!-- Totales calculados en JS -->
+                            <td><input type="text" name="materials[0][total_without_tax]"
+                                    class="form-control modern-input" readonly></td>
+                            <td><input type="text" name="materials[0][total_with_tax]" class="form-control modern-input"
+                                    readonly></td>
+
+                            <td><input type="text" name="materials[0][observations]" class="form-control modern-input">
+                            </td>
+
                             <td>
                                 <button type="button" class="btn btn-outline-danger btn-sm shadow-sm"
                                     onclick="removeMaterial(this)">
@@ -133,6 +161,8 @@
                         </tr>
                     </tbody>
                 </table>
+
+
             </div>
         </div>
 
@@ -259,46 +289,79 @@
             const tbody = document.querySelector('#materialsTable tbody');
             const row = document.createElement('tr');
             row.innerHTML = `
-        <td><input type="text" name="materials[${materialIndex}][material_name]" class="form-control" required></td>
-        <td><input type="number" name="materials[${materialIndex}][material_quantity]" class="form-control" required></td>
-        <td><input type="text" name="materials[${materialIndex}][material_type]" class="form-control"></td>
-        <td><input type="number" name="materials[${materialIndex}][material_price]" class="form-control" step="0.01"></td>
-        <td>
-            <button type="button" class="btn btn-danger btn-sm shadow-sm" onclick="removeMaterial(this)">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    `;
+            <td><input type="text" name="materials[${materialIndex}][material_name]" class="form-control modern-input" required></td>
+            <td><input type="number" name="materials[${materialIndex}][material_quantity]" class="form-control modern-input" required></td>
+            <td>
+                <select name="materials[${materialIndex}][material_type]" class="form-control modern-input">
+                    <option value="Consumible">Consumible</option>
+                    <option value="Herramienta">Herramienta</option>
+                </select>
+            </td>
+            <td><input type="number" name="materials[${materialIndex}][material_price]" class="form-control modern-input" step="0.01" required></td>
+            <td>
+                <select name="materials[${materialIndex}][iva_percentage]" class="form-control modern-input">
+                    <option value="0">0%</option>
+                    <option value="5">5%</option>
+                    <option value="12">12%</option>
+                    <option value="19">19%</option>
+                </select>
+            </td>
+            <td><input type="text" name="materials[${materialIndex}][total_without_tax]" class="form-control modern-input" readonly></td>
+            <td><input type="text" name="materials[${materialIndex}][total_with_tax]" class="form-control modern-input" readonly></td>
+            <td><input type="text" name="materials[${materialIndex}][observations]" class="form-control modern-input"></td>
+            <td>
+                <button type="button" class="btn btn-outline-danger btn-sm shadow-sm" onclick="removeMaterial(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
             tbody.appendChild(row);
             materialIndex++;
         }
 
         function removeMaterial(button) {
             button.closest('tr').remove();
+            updateMaterialTotals(); // recalcular después de borrar
         }
 
-        // Filtrar sedes por centro con AJAX
-        document.getElementById('centroSelect').addEventListener('change', function() {
-            const centroId = this.value;
-            const sedeSelect = document.getElementById('sedeSelect');
-            sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
+        function updateMaterialTotals() {
+            const table = document.getElementById("materialsTable");
+            const rows = table.querySelectorAll("tbody tr");
 
-            if (centroId) {
-                fetch(`/centros/${centroId}/sedes`)
-                    .then(response => response.json())
-                    .then(sedes => {
-                        sedeSelect.innerHTML = '<option value="">Seleccionar sede</option>';
-                        sedes.forEach(sede => {
-                            const option = document.createElement('option');
-                            option.value = sede.id;
-                            option.textContent = sede.nom_sede;
-                            sedeSelect.appendChild(option);
-                        });
-                    })
-                    .catch(() => sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>');
-            } else {
-                sedeSelect.innerHTML = '<option value="">Primero selecciona un centro</option>';
+            rows.forEach((row) => {
+                const qtyInput = row.querySelector('[name*="[material_quantity]"]');
+                const priceInput = row.querySelector('[name*="[material_price]"]');
+                const ivaInput = row.querySelector('[name*="[iva_percentage]"]');
+                const totalWithoutInput = row.querySelector('[name*="[total_without_tax]"]');
+                const totalWithInput = row.querySelector('[name*="[total_with_tax]"]');
+
+                if (!qtyInput || !priceInput || !ivaInput) return;
+
+                const quantity = parseFloat(qtyInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                const iva = parseFloat(ivaInput.value) || 0;
+
+                const totalWithoutTax = quantity * price;
+                const totalWithTax = totalWithoutTax + (totalWithoutTax * iva / 100);
+
+                if (totalWithoutInput) totalWithoutInput.value = totalWithoutTax.toFixed(2);
+                if (totalWithInput) totalWithInput.value = totalWithTax.toFixed(2);
+            });
+        }
+
+        // Ejecutar cuando se cambia cantidad, precio o IVA
+        document.addEventListener("input", function(e) {
+            if (e.target.closest("#materialsTable")) {
+                updateMaterialTotals();
             }
         });
+        document.addEventListener("change", function(e) {
+            if (e.target.closest("#materialsTable")) {
+                updateMaterialTotals();
+            }
+        });
+
+        // Calcular al cargar la página para la primera fila
+        document.addEventListener("DOMContentLoaded", updateMaterialTotals);
     </script>
 @endpush

@@ -71,7 +71,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('centros/{centro}/sedes', [FerreteriaController::class, 'getSedesByCentro']);
 
-    Route::resource('infraestructura', InfraestructuraController::class);
+    Route::prefix('infraestructura')->name('infraestructura.')->group(function () {
+        Route::get('/', [InfraestructuraController::class, 'index'])->name('index');
+        Route::get('/create', [InfraestructuraController::class, 'create'])->name('create');
+        Route::post('/store', [InfraestructuraController::class, 'store'])->name('store');
+        Route::get('/{infraestructura}/edit', [InfraestructuraController::class, 'edit'])->name('edit');
+        Route::put('/{infraestructura}/update', [InfraestructuraController::class, 'update'])->name('update');
+
+        Route::delete('/{id}', [InfraestructuraController::class, 'destroy'])->name('destroy');
+    });
 
     // Route::resource('calendario', CalendarioController::class);
     // Route::resource('infraestructura', InfraestructuraController::class);

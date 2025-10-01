@@ -35,16 +35,21 @@ class FerreteriaController extends Controller
             'staff_name' => 'required|exists:users,id',
             'inventory_description' => 'required|string',
             'image_inventory' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+
             'materials' => 'required|array|min:1',
             'materials.*.material_name' => 'required|string|max:255',
             'materials.*.material_quantity' => 'required|integer|min:1',
             'materials.*.material_type' => 'nullable|string|max:100',
-            'materials.*.material_price' => 'nullable|numeric|min:0'
+            'materials.*.material_price' => 'required|numeric|min:0',
+            'materials.*.iva_percentage' => 'required|in:0,5,12,19',
+            'materials.*.observations' => 'nullable|string|max:500',
         ]);
 
-        DB::transaction(function() use ($request) {
+
+
+        DB::transaction(function () use ($request) {
             $imagePath = null;
-            
+
             // Manejar la imagen si se sube
             if ($request->hasFile('image_inventory')) {
                 $image = $request->file('image_inventory');
@@ -64,12 +69,24 @@ class FerreteriaController extends Controller
 
             // Crear materiales
             foreach ($request->materials as $material) {
+                $quantity = $material['material_quantity'];
+                $price = $material['material_price'];
+                $iva = $material['iva_percentage'];
+
+                // Calcular totales
+                $totalWithoutTax = $quantity * $price;
+                $totalWithTax = $totalWithoutTax + ($totalWithoutTax * $iva / 100);
+
                 InventoryMaterial::create([
                     'inventory_id' => $inventory->id,
                     'material_name' => $material['material_name'],
-                    'material_quantity' => $material['material_quantity'],
+                    'material_quantity' => $quantity,
                     'material_type' => $material['material_type'] ?? null,
-                    'material_price' => $material['material_price'] ?? null
+                    'material_price' => $price,
+                    'iva_percentage' => $iva,
+                    'total_without_tax' => $totalWithoutTax,
+                    'total_with_tax' => $totalWithTax,
+                    'observations' => $material['observations'] ?? null,
                 ]);
             }
         });
@@ -93,7 +110,7 @@ class FerreteriaController extends Controller
         return view('ferreteria.edit', compact('inventory', 'centros', 'sedes', 'users'));
     }
 
-   public function update(Request $request, InventorySede $inventory)
+    public function update(Request $request, InventorySede $inventory)
     {
         $request->validate([
             'sede_id' => 'required|exists:sedes,id',
@@ -108,7 +125,7 @@ class FerreteriaController extends Controller
             'materials.*.material_price' => 'nullable|numeric|min:0'
         ]);
 
-        DB::transaction(function() use ($request, $inventory) {
+        DB::transaction(function () use ($request, $inventory) {
             $imagePath = $inventory->image_inventory; // Mantener imagen actual
 
             // Manejar nueva imagen si se sube
@@ -117,7 +134,7 @@ class FerreteriaController extends Controller
                 if ($inventory->image_inventory && \Storage::disk('public')->exists($inventory->image_inventory)) {
                     \Storage::disk('public')->delete($inventory->image_inventory);
                 }
-                
+
                 $image = $request->file('image_inventory');
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('ferreteria', $imageName, 'public');
@@ -152,7 +169,7 @@ class FerreteriaController extends Controller
 
     public function destroy(InventorySede $inventory)
     {
-        DB::transaction(function() use ($inventory) {
+        DB::transaction(function () use ($inventory) {
             $inventory->materials()->delete();
             $inventory->delete();
         });

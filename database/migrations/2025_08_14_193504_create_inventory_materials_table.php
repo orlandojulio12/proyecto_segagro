@@ -10,17 +10,33 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('inventory_materials', function (Blueprint $table) {
-            $table->id();
+{
+    Schema::create('inventory_materials', function (Blueprint $table) {
+        $table->id();
 
-            $table->foreignId('inventory_id')->constrained('inventory_sede');
-            $table->string('material_name');
-            $table->integer('material_quantity');
-            $table->string('material_type', 100)->nullable();
-            $table->decimal('material_price', 10, 2)->nullable();
-        });
-    }
+        $table->foreignId('inventory_id')->constrained('inventory_sede');
+
+        $table->string('material_name');
+        $table->integer('material_quantity');
+        $table->string('material_type', 100)->nullable();
+
+        // Precio unitario
+        $table->decimal('material_price', 10, 2)->nullable();
+
+        // IVA (0, 5, 12, 19)
+        $table->decimal('iva_percentage', 5, 2)->default(0);
+
+        // Totales
+        $table->decimal('total_without_tax', 12, 2)->nullable();
+        $table->decimal('total_with_tax', 12, 2)->nullable();
+
+        $table->text('observations')->nullable();
+
+        $table->timestamps();
+    });
+}
+
+
 
     /**
      * Reverse the migrations.

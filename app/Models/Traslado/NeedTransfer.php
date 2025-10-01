@@ -3,6 +3,7 @@
 namespace App\Models\Traslado;
 
 use App\Models\Centro;
+use App\Models\Infraestructura\Infraestructura;
 use App\Models\InventoryMaterial;
 use App\Models\InventorySede;
 use App\Models\Sede;
@@ -72,8 +73,18 @@ class NeedTransfer extends Model
             ->withPivot('cantidad', 'tipo');
     }
 
-      protected $casts = [
+    protected $casts = [
         'fecha_inicio' => 'date',
         'fecha_fin'    => 'date',
     ];
+
+    public function infraestructuras()
+    {
+        return $this->belongsToMany(
+            Infraestructura::class,
+            'infraestructura_need_transfer',
+            'need_transfer_id',
+            'infraestructura_id'
+        )->withTimestamps();
+    }
 }

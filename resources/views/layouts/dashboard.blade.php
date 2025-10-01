@@ -60,10 +60,12 @@
                     <i class="fas fa-calendar"></i>
                     Calendario
                 </a>
-                <a href="{{ route('infraestructura.index') }}" class="nav-item {{ request()->routeIs('infraestructura.*') ? 'active' : '' }}">
+                <a href="{{ route('infraestructura.index') }}"
+                    class="nav-item {{ request()->routeIs('infraestructura.*') ? 'active' : '' }}">
                     <i class="fas fa-warehouse"></i>
                     Infraestructura
                 </a>
+
                 <a href="#" class="nav-item {{ request()->routeIs('contabilidad.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     Contabilidad
