@@ -20,6 +20,3 @@ services:
 networks:
   segagro-network:
     external: true
-
-volumes:
-  mysql_data:
