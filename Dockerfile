@@ -1,12 +1,12 @@
-# Etapa 1: compilar assets
-FROM node:20-alpine as frontend
+# Etapa 1: frontend
+FROM node:20-alpine AS frontend
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci  # incluye devDependencies
 COPY . .
-RUN npm run build
+RUN npm run build  # genera los assets
 
-# Etapa 2: PHP-FPM con Laravel
+# Etapa 2: PHP-FPM
 FROM php:8.2-fpm-alpine
 RUN apk add --no-cache git curl libpng-dev libxml2-dev libzip-dev zip unzip mysql-client oniguruma-dev freetype-dev libjpeg-turbo-dev
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -19,10 +19,8 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock* ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction --prefer-dist
 
-# Copiar código
+# Copiar código y assets compilados
 COPY . .
-
-# Copiar assets compilados desde la etapa Node
 COPY --from=frontend /app/public /var/www/html/public
 
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache \
