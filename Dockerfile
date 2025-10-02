@@ -1,4 +1,3 @@
-.en el Dockerfile:
 # Etapa 1: frontend
 FROM node:20-alpine AS frontend
 WORKDIR /app
