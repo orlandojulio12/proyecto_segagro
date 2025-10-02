@@ -19,7 +19,6 @@ services:
       - "traefik.http.routers.segagro.tls.certresolver=letsencrypt"
       - "traefik.http.services.segagro.loadbalancer.server.port=9000"
       - "traefik.docker.network=segagro-network"
-
 networks:
   segagro-network:
     external: true
