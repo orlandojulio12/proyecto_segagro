@@ -8,21 +8,18 @@ services:
     env_file:
       - .env
     networks:
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.segagro.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.segagro.entrypoints=websecure"
-      - "traefik.http.routers.segagro.tls.certresolver=letsencrypt"
-      - "traefik.http.services.segagro.loadbalancer.server.port=80"
-      - "traefik.docker.network=dokploy"
-networks:
-  dokploy:
-    external: true
-    restart: unless-stopped
-    networks:
       - segagro-network
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.segagro.rule=Host(${DOMAIN})"
+      - "traefik.http.routers.segagro.entrypoints=websecure"
+      - "traefik.http.routers.segagro.tls.certresolver=letsencrypt"
+      - "traefik.http.services.segagro.loadbalancer.server.port=80"
+      - "traefik.docker.network=segagro-network"
+
+networks:
+  segagro-network:
+    external: true
 
 volumes:
-  mysql_data:
+  mysql_data:
