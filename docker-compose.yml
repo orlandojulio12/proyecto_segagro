@@ -9,6 +9,20 @@ services:
       - .env
     networks:
       - segagro-network
+    volumes:
+      - ./:/var/www/html
+
+  nginx:
+    image: nginx:alpine
+    container_name: segagro-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - segagro-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.segagro.rule=Host(${DOMAIN})"
