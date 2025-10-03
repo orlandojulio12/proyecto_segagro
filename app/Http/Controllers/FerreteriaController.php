@@ -11,6 +11,7 @@ use App\Models\Centro;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class FerreteriaController extends Controller
@@ -96,38 +97,47 @@ class FerreteriaController extends Controller
         return redirect()->route('ferreteria.index')->with('success', 'Inventario creado exitosamente');
     }
 
-    public function importMaterials(Request $request, $inventory)
+    public function importMaterials(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
-        ]);
-
-        $path = $request->file('file')->getRealPath();
-
-        // Leer con Laravel Excel
-        $data = Excel::toArray([], $path);
-
-        $rows = $data[0]; // Primera hoja
-        $materials = [];
-
-        foreach ($rows as $index => $row) {
-            if ($index === 0) continue; // Saltar encabezado
-
-            $materials[] = [
-                'material_name' => $row[0] ?? '',
-                'material_quantity' => $row[1] ?? 0,
-                'material_type' => $row[2] ?? '',
-                'material_price' => $row[3] ?? 0,
-                'material_iva' => $row[4] ?? 0,
-                'material_total_sin_iva' => $row[5] ?? 0,
-                'material_total_con_iva' => $row[6] ?? 0,
-                'material_observations' => $row[7] ?? '',
-            ];
+        try {
+            $file = $request->file('file');
+            if (!$file) {
+                return response()->json(['error' => 'Debes seleccionar un archivo Excel.'], 422);
+            }
+    
+            // Leer archivo Excel en array (sin guardar en BD)
+            $rows = Excel::toArray([], $file);
+    
+            if (empty($rows) || count($rows[0]) === 0) {
+                return response()->json(['error' => 'El archivo está vacío o tiene formato inválido.'], 422);
+            }
+    
+            $data = [];
+            foreach ($rows[0] as $index => $row) {
+                if ($index === 0) continue; // saltar encabezado
+    
+                $data[] = [
+                    'material_name'      => $row[0] ?? '',
+                    'material_quantity'  => (int)($row[1] ?? 0),
+                    'material_type'      => $row[2] ?? '',
+                    'material_price'     => (float)($row[3] ?? 0),
+                    'iva_percentage'     => isset($row[4]) ? (int)str_replace('%', '', $row[4]) : 0,
+                    'total_without_tax'  => ((int)($row[1] ?? 0)) * ((float)($row[3] ?? 0)),
+                    'total_with_tax'     => ((int)($row[1] ?? 0)) * ((float)($row[3] ?? 0)) * (1 + (isset($row[4]) ? (int)str_replace('%', '', $row[4]) : 0) / 100),
+                ];
+            }
+    
+            return response()->json($data, 200);
+    
+        } catch (\Throwable $e) {
+            \Log::error("Error importando materiales: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => "Error al importar: " . $e->getMessage()], 500);
         }
-
-        return response()->json($materials);
     }
-
+    
+    
 
     public function show(InventorySede $inventory)
     {

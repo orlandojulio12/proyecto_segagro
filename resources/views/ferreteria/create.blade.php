@@ -161,6 +161,8 @@
                         </tr>
                     </tbody>
                 </table>
+                <div id="paginationControls" class="d-flex justify-content-center mt-3"></div>
+                <br>
             </div>
             <div class="content-card mb-4">
                 <h5 class="section-title"><i class="fas fa-file-excel"></i> Importar desde Excel</h5>
@@ -333,11 +335,14 @@
         `;
             tbody.appendChild(row);
             materialIndex++;
+
+            goToLastPage(); // 👈 siempre mostrar última página
         }
 
         function removeMaterial(button) {
             button.closest('tr').remove();
-            updateMaterialTotals(); // recalcular después de borrar
+            updateMaterialTotals();
+            refreshPagination(); // 👈 actualizar paginación al eliminar
         }
 
         function updateMaterialTotals() {
@@ -365,111 +370,164 @@
             });
         }
 
-        // Ejecutar cuando se cambia cantidad, precio o IVA
+        // Eventos para recalcular totales
         document.addEventListener("input", function(e) {
-            if (e.target.closest("#materialsTable")) {
-                updateMaterialTotals();
-            }
+            if (e.target.closest("#materialsTable")) updateMaterialTotals();
         });
 
         document.addEventListener("change", function(e) {
-            if (e.target.closest("#materialsTable")) {
-                updateMaterialTotals();
-            }
+            if (e.target.closest("#materialsTable")) updateMaterialTotals();
         });
 
-        // Calcular al cargar la página para la primera fila
         document.addEventListener("DOMContentLoaded", updateMaterialTotals);
 
-        // Filtrar sedes por centro con AJAX
-        document.getElementById('centroSelect').addEventListener('change', async function() {
-            const centroId = this.value;
-            const sedeSelect = document.getElementById('sedeSelect');
-
-            // Mensaje de carga
-            sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
-
-            if (!centroId) {
-                sedeSelect.innerHTML = '<option value="">Primero selecciona un centro</option>';
+        // 📌 Importar desde Excel
+        document.getElementById('excelUpload').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) {
+                alert("⚠️ No seleccionaste ningún archivo.");
                 return;
             }
 
-            try {
-                const response = await fetch(`/centros/${centroId}/sedes`);
-                if (!response.ok) throw new Error('Error en la respuesta del servidor');
-
-                const sedes = await response.json();
-
-                if (!Array.isArray(sedes) || sedes.length === 0) {
-                    sedeSelect.innerHTML = '<option value="">No hay sedes para este centro</option>';
-                    return;
-                }
-
-                // Rellenar select con las sedes recibidas
-                sedeSelect.innerHTML = '<option value="">Seleccionar sede</option>';
-                sedes.forEach(sede => {
-                    const option = document.createElement('option');
-                    option.value = sede.id;
-                    // usa la propiedad que tu API devuelva (nom_sede en tus ejemplos)
-                    option.textContent = sede.nom_sede ?? sede.name ?? `Sede ${sede.id}`;
-                    sedeSelect.appendChild(option);
-                });
-
-            } catch (error) {
-                console.error('Error cargando sedes:', error);
-                sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>';
+            const allowedExtensions = [".xls", ".xlsx"];
+            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (!allowedExtensions.includes(ext)) {
+                alert("❌ Solo se permiten archivos Excel (.xls, .xlsx)");
+                this.value = "";
+                return;
             }
-        });
-
-        document.getElementById('excelUpload').addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
 
             const formData = new FormData();
             formData.append('file', file);
 
-            fetch(`/ferreteria/${0}/import-materials`, { // ⚠️ ajustar según tu flujo
+            fetch(`/ferreteria/import-materials`, {
                     method: 'POST',
                     body: formData,
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    const raw = await res.text();
+                    let data;
+                    try {
+                        data = JSON.parse(raw);
+                    } catch (e) {
+                        throw new Error(raw || "Respuesta no válida del servidor");
+                    }
+                    if (!res.ok) throw new Error(data.message || raw);
+                    return data;
+                })
                 .then(data => {
-                    const tbody = document.querySelector('#materialsTable tbody');
-                    tbody.innerHTML = '';
+                    if (!Array.isArray(data) || data.length === 0) {
+                        alert("⚠️ El archivo está vacío o no tiene formato válido.");
+                        return;
+                    }
 
-                    data.forEach((mat, i) => {
+                    console.log("✅ Materiales importados:", data);
+                    const tbody = document.querySelector("#materialsTable tbody");
+
+                    data.forEach((mat) => {
                         const row = `
-            <tr>
-                <td><input type="text" name="materials[${i}][material_name]" value="${mat.material_name}" class="form-control modern-input"></td>
-                <td><input type="number" name="materials[${i}][material_quantity]" value="${mat.material_quantity}" class="form-control modern-input"></td>
-                <td><input type="text" name="materials[${i}][material_type]" value="${mat.material_type}" class="form-control modern-input"></td>
-                <td><input type="number" name="materials[${i}][material_price]" value="${mat.material_price}" class="form-control modern-input"></td>
-                <td>
-                    <select name="materials[${i}][iva_percentage]" class="form-control modern-input">
-                        <option value="0" ${mat.material_iva == 0 ? 'selected' : ''}>0%</option>
-                        <option value="5" ${mat.material_iva == 5 ? 'selected' : ''}>5%</option>
-                        <option value="12" ${mat.material_iva == 12 ? 'selected' : ''}>12%</option>
-                        <option value="19" ${mat.material_iva == 19 ? 'selected' : ''}>19%</option>
-                    </select>
-                </td>
-                <td><input type="number" name="materials[${i}][total_without_tax]" class="form-control modern-input" readonly></td>
-                <td><input type="number" name="materials[${i}][total_with_tax]" class="form-control modern-input" readonly></td>
-                <td><input type="text" name="materials[${i}][observations]" value="${mat.material_observations}" class="form-control modern-input"></td>
-                <td>
-                    <button type="button" class="btn btn-outline-danger btn-sm shadow-sm" onclick="removeMaterial(this)">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-            `;
-                        tbody.insertAdjacentHTML('beforeend', row);
+                        <tr>
+                            <td><input type="text" name="materials[${materialIndex}][material_name]" value="${mat.material_name}" class="form-control modern-input"></td>
+                            <td><input type="number" name="materials[${materialIndex}][material_quantity]" value="${mat.material_quantity}" class="form-control modern-input"></td>
+                            <td><input type="text" name="materials[${materialIndex}][material_type]" value="${mat.material_type}" class="form-control modern-input"></td>
+                            <td><input type="number" name="materials[${materialIndex}][material_price]" value="${mat.material_price}" class="form-control modern-input"></td>
+                            <td>
+                                <select name="materials[${materialIndex}][iva_percentage]" class="form-control modern-input">
+                                    <option value="0"  ${mat.iva_percentage == 0 ? 'selected' : ''}>0%</option>
+                                    <option value="5"  ${mat.iva_percentage == 5 ? 'selected' : ''}>5%</option>
+                                    <option value="12" ${mat.iva_percentage == 12 ? 'selected' : ''}>12%</option>
+                                    <option value="19" ${mat.iva_percentage == 19 ? 'selected' : ''}>19%</option>
+                                </select>
+                            </td>
+                            <td><input type="number" value="${mat.total_without_tax}" class="form-control modern-input" readonly></td>
+                            <td><input type="number" value="${mat.total_with_tax}" class="form-control modern-input" readonly></td>
+                            <td><input type="text" name="materials[${materialIndex}][observations]" class="form-control modern-input"></td>
+                            <td>
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMaterial(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                        tbody.insertAdjacentHTML("beforeend", row);
+                        materialIndex++;
                     });
 
-                    updateMaterialTotals(); // 🔥 recalcular al final
+                    updateMaterialTotals();
+                    goToLastPage(); // 👈 ir a la última página al importar
                 })
+                .catch(err => {
+                    console.error("❌ Error importando materiales:", err);
+                    alert(`❌ No se pudo importar el archivo:\n${err.message}`);
+                    document.getElementById('excelUpload').value = "";
+                });
+        });
+
+        // 🔄 Paginación
+        let currentPage = 1;
+        const rowsPerPage = 5;
+
+        function renderTablePage() {
+            const tbody = document.querySelector("#materialsTable tbody");
+            const rows = tbody.querySelectorAll("tr");
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? "" : "none";
+            });
+
+            renderPaginationControls(rows.length);
+        }
+
+        function renderPaginationControls(totalRows) {
+            const controls = document.getElementById("paginationControls");
+            controls.innerHTML = "";
+
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            if (totalPages <= 1) return;
+
+            const prevBtn = document.createElement("button");
+            prevBtn.className = "btn btn-outline-success btn-sm mx-1";
+            prevBtn.textContent = "← Anterior";
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                currentPage--;
+                renderTablePage();
+            };
+            controls.appendChild(prevBtn);
+
+            const pageIndicator = document.createElement("span");
+            pageIndicator.className = "mx-2 fw-bold";
+            pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
+            controls.appendChild(pageIndicator);
+
+            const nextBtn = document.createElement("button");
+            nextBtn.className = "btn btn-outline-success btn-sm mx-1";
+            nextBtn.textContent = "Siguiente →";
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                currentPage++;
+                renderTablePage();
+            };
+            controls.appendChild(nextBtn);
+        }
+
+        function refreshPagination() {
+            renderTablePage();
+        }
+
+        function goToLastPage() {
+            const totalRows = document.querySelectorAll("#materialsTable tbody tr").length;
+            currentPage = Math.ceil(totalRows / rowsPerPage);
+            renderTablePage();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderTablePage();
         });
     </script>
 @endpush
