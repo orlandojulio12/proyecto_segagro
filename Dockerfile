@@ -2,53 +2,40 @@
 # Etapa 1: compilar assets
 FROM node:20-alpine as frontend
 WORKDIR /app
+
+# Copiar solo package.json y lock para instalar dependencias
 COPY package*.json ./
 
-# Instalar todas las dependencias (dev incluidas) para poder compilar
+# Instalar dependencias del frontend
 RUN npm ci
 
-# Copiar el resto del código
+# Copiar el resto del proyecto
 COPY . .
 
-# Compilar los assets
+# Compilar assets (asumiendo que usás Vite o Laravel Mix)
 RUN npm run build
 
-# Etapa 2: PHP-FPM con Laravel
+# Etapa 2: PHP con Laravel
 FROM php:8.2-fpm-alpine
 
-# Instalar extensiones necesarias y herramientas
+# Instalar extensiones necesarias
 RUN apk add --no-cache git curl libpng-dev libxml2-dev libzip-dev zip unzip mysql-client \
     oniguruma-dev freetype-dev libjpeg-turbo-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip opcache
 
-# Copiar Composer desde la imagen oficial
+# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Instalar dependencias de PHP
-COPY composer.json composer.lock* ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction --prefer-dist
+# Copiar los archivos del proyecto desde la etapa frontend (ya tiene los assets compilados)
+COPY --from=frontend /app /var/www/html
 
-# Copiar todo el código de la app
-COPY . .
+# Instalar dependencias de PHP (Laravel)
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Copiar los assets compilados desde la etapa frontend
-COPY --from=frontend /app/public /var/www/html/public
-
-# Preparar directorios de Laravel
-RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 storage bootstrap/cache
-
-# Cachear configuraciones y rutas de Laravel
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && composer dump-autoload --optimize
-
-# Ejecutar PHP-FPM
-CMD ["php-fpm"]
-
-EXPOSE 9000
+# Asignar permisos (ajustá según cómo manejes permisos en producción)
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache

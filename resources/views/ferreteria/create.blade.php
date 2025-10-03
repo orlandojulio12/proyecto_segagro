@@ -529,5 +529,28 @@
         document.addEventListener("DOMContentLoaded", () => {
             renderTablePage();
         });
+
+        document.getElementById('centroSelect').addEventListener('change', function() {
+                const centroId = this.value;
+                const sedeSelect = document.getElementById('sedeSelect');
+                sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
+
+                if (centroId) {
+                    fetch(`/centros/${centroId}/sedes`)
+                        .then(response => response.json())
+                        .then(sedes => {
+                            sedeSelect.innerHTML = '<option value="">Seleccionar sede</option>';
+                            sedes.forEach(sede => {
+                                const option = document.createElement('option');
+                                option.value = sede.id;
+                                option.textContent = sede.nom_sede;
+                                sedeSelect.appendChild(option);
+                            });
+                        })
+                        .catch(() => sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>');
+                } else {
+                    sedeSelect.innerHTML = '<option value="">Primero selecciona un centro</option>';
+                }
+            });
     </script>
 @endpush
