@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: >
+      sh -c "php artisan migrate --force && php artisan db:seed && php-fpm"
+    restart: unless-stopped
+    networks:
+      segagro-network: {}   # <-- MAPPING, no lista
+    volumes:
+      - ./:/var/www/html
+networks:
+  segagro-network:
+    external: true
