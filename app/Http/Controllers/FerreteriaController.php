@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MaterialesTemplateExport;
 
 class FerreteriaController extends Controller
 {
@@ -97,46 +98,91 @@ class FerreteriaController extends Controller
         return redirect()->route('ferreteria.index')->with('success', 'Inventario creado exitosamente');
     }
 
-    public function importMaterials(Request $request)
+    public function downloadTemplate()
     {
-        try {
-            $file = $request->file('file');
-            if (!$file) {
-                return response()->json(['error' => 'Debes seleccionar un archivo Excel.'], 422);
-            }
-    
-            // Leer archivo Excel en array (sin guardar en BD)
-            $rows = Excel::toArray([], $file);
-    
-            if (empty($rows) || count($rows[0]) === 0) {
-                return response()->json(['error' => 'El archivo está vacío o tiene formato inválido.'], 422);
-            }
-    
-            $data = [];
-            foreach ($rows[0] as $index => $row) {
-                if ($index === 0) continue; // saltar encabezado
-    
-                $data[] = [
-                    'material_name'      => $row[0] ?? '',
-                    'material_quantity'  => (int)($row[1] ?? 0),
-                    'material_type'      => $row[2] ?? '',
-                    'material_price'     => (float)($row[3] ?? 0),
-                    'iva_percentage'     => isset($row[4]) ? (int)str_replace('%', '', $row[4]) : 0,
-                    'total_without_tax'  => ((int)($row[1] ?? 0)) * ((float)($row[3] ?? 0)),
-                    'total_with_tax'     => ((int)($row[1] ?? 0)) * ((float)($row[3] ?? 0)) * (1 + (isset($row[4]) ? (int)str_replace('%', '', $row[4]) : 0) / 100),
-                ];
-            }
-    
-            return response()->json($data, 200);
-    
-        } catch (\Throwable $e) {
-            \Log::error("Error importando materiales: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json(['error' => "Error al importar: " . $e->getMessage()], 500);
-        }
+        return Excel::download(
+            new MaterialesTemplateExport(), 
+            'plantilla_materiales_ferreteria.xlsx'
+        );
     }
-    
+
+    /**
+     * Importar materiales desde Excel
+     */
+    /**
+ * Importar materiales desde Excel (para el formulario CREATE)
+ * NO guarda en BD, solo devuelve los datos al frontend
+ */
+public function importMaterials(Request $request)
+{
+    try {
+        // Validar solo el archivo
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls|max:10240', // Máximo 10MB
+        ]);
+
+        $file = $request->file('file');
+
+        // Leer archivo Excel en array (sin guardar en BD)
+        $rows = Excel::toArray([], $file);
+
+        if (empty($rows) || count($rows[0]) === 0) {
+            return response()->json([
+                'error' => 'El archivo está vacío o tiene formato inválido.'
+            ], 422);
+        }
+
+        $data = [];
+        
+        // IMPORTANTE: Saltar las primeras 11 filas (instrucciones + encabezado)
+        foreach ($rows[0] as $index => $row) {
+            if ($index < 11) continue; // Saltar instrucciones
+            
+            // Validar que la fila no esté vacía
+            if (empty($row[0]) || empty($row[1])) continue;
+
+            $quantity = (int)($row[1] ?? 0);
+            $price = (float)($row[3] ?? 0);
+            $iva = isset($row[4]) ? (int)str_replace('%', '', $row[4]) : 0;
+            
+            $totalWithoutTax = $quantity * $price;
+            $totalWithTax = $totalWithoutTax * (1 + $iva / 100);
+
+            $data[] = [
+                'material_name'      => trim($row[0] ?? ''),
+                'material_quantity'  => $quantity,
+                'material_type'      => trim($row[2] ?? ''),
+                'material_price'     => $price,
+                'iva_percentage'     => $iva,
+                'total_without_tax'  => round($totalWithoutTax, 2),
+                'total_with_tax'     => round($totalWithTax, 2),
+                'observations'       => isset($row[5]) ? trim($row[5]) : '',
+            ];
+        }
+
+        if (empty($data)) {
+            return response()->json([
+                'error' => 'No se encontraron materiales válidos en el archivo. Asegúrate de completar los datos a partir de la fila 12.'
+            ], 422);
+        }
+
+        return response()->json($data, 200);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'error' => 'El archivo debe ser un Excel válido (.xlsx o .xls)'
+        ], 422);
+        
+    } catch (\Throwable $e) {
+        \Log::error("Error importando materiales: " . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'error' => 'Error al importar: ' . $e->getMessage()
+        ], 500);
+    }
+}
     
 
     public function show(InventorySede $inventory)

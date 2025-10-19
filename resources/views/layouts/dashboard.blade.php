@@ -30,7 +30,7 @@
                     Sedes
                 </a>
                 <a href="javascript:void(0)"
-                    class="nav-item has-submenu {{ request()->routeIs('inventories.*') ? 'open' : '' }}">
+                    class="nav-item has-submenu {{ request()->routeIs('inventories.*') || request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') || request()->routeIs('semoviente.*') ? 'open' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
                     Inventario
                     <span class="submenu-arrow">▼</span>
@@ -43,10 +43,25 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('ferreteria.index') }}"
-                            class="{{ request()->routeIs('ferreteria.index') ? 'active' : '' }}">
+                        <a href="javascript:void(0)" 
+                            class="has-submenu {{ request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') ? 'open' : '' }}">
                             Ferretería
+                            <span class="submenu-arrow">▼</span>
                         </a>
+                        <ul class="submenu">
+                            <li>
+                                <a href="{{ route('ferreteria.index') }}"
+                                    class="{{ request()->routeIs('ferreteria.*') ? 'active' : '' }}">
+                                    Ferretería
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('salida_ferreteria.index') }}"
+                                    class="{{ request()->routeIs('salida_ferreteria.*') ? 'active' : '' }}">
+                                    Salida de Ferretería
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     <li>
                         <a href="{{ route('semoviente.index') }}"
@@ -130,4 +145,35 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manejar todos los elementos con submenú (nivel 1 y nivel 2)
+            const menuItems = document.querySelectorAll('.has-submenu');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Toggle clase 'open'
+                    this.classList.toggle('open');
+                    
+                    // Obtener el submenu siguiente
+                    const submenu = this.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                    }
+                });
+            });
+
+            // Asegurar que los submenús con clase 'open' estén visibles al cargar
+            document.querySelectorAll('.has-submenu.open').forEach(item => {
+                const submenu = item.nextElementSibling;
+                if (submenu && submenu.classList.contains('submenu')) {
+                    submenu.style.display = 'block';
+                }
+            });
+        });
+    </script>
 @endsection
