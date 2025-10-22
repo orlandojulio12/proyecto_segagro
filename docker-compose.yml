@@ -1,0 +1,25 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: >
+      sh -c "php artisan migrate --force && php artisan db:seed && exec php-fpm"
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - segagro-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.segagro.rule=Host(app.segagro.com.co)"
+      - "traefik.http.routers.segagro.entrypoints=websecure"
+      - "traefik.http.routers.segagro.tls.certresolver=letsencrypt"
+      - "traefik.http.services.segagro.loadbalancer.server.port=9000"
+
+networks:
+  segagro-network:
+    external: true

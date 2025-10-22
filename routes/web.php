@@ -5,6 +5,7 @@ use App\Http\Controllers\FerreteriaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 
+use App\Http\Controllers\SalidaFerreteriaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\CalendarioController;
 use App\Http\Controllers\ContabilidadController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Traslado\NeedTransferController;
 use App\Http\Controllers\TrasladoController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
+
 
 // Redirigir raíz a login
 Route::get('/', function () {
@@ -39,22 +41,42 @@ Route::middleware('auth')->group(function () {
     // Route::resource('usuarios', UserController::class);
     Route::resource('sedes', SedeController::class);
 
+
+//Modulo Ferretería
+
     Route::prefix('ferreteria')->name('ferreteria.')->group(function () {
+        // 1️⃣ PRIMERO: Rutas estáticas (sin parámetros)
         Route::get('/', [FerreteriaController::class, 'index'])->name('index');
         Route::get('/create', [FerreteriaController::class, 'create'])->name('create');
+
+        // ✅ PLANTILLA DEBE IR ANTES DE LAS RUTAS DINÁMICAS
+        Route::get('/plantilla/descargar', [FerreteriaController::class, 'downloadTemplate'])
+            ->name('template.download');
+
+        // ✅ IMPORT TAMBIÉN ES ESTÁTICA
+        Route::post('/import-materials', [FerreteriaController::class, 'importMaterials'])
+            ->name('import.materials');
+
+        // 2️⃣ DESPUÉS: Rutas dinámicas (con {parámetros})
         Route::post('/', [FerreteriaController::class, 'store'])->name('store');
         Route::get('/{inventory}', [FerreteriaController::class, 'show'])->name('show');
-
-        // rutas/web.php
-        Route::post('/import-materials', [FerreteriaController::class, 'importMaterials'])
-        ->name('import.materials');
-
-
         Route::get('/{inventory}/edit', [FerreteriaController::class, 'edit'])->name('edit');
         Route::put('/{inventory}', [FerreteriaController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [FerreteriaController::class, 'destroy'])->name('destroy');
     });
 
+    Route::prefix('salida-ferreteria')->name('salida_ferreteria.')->group(function () {
+        Route::get('/', [SalidaFerreteriaController::class, 'index'])->name('index');
+        Route::get('/create', [SalidaFerreteriaController::class, 'create'])->name('create');
+        Route::post('/', [SalidaFerreteriaController::class, 'store'])->name('store');
+        Route::get('/{salidaFerreteria}', [SalidaFerreteriaController::class, 'show'])->name('show');
+        Route::get('/{salidaFerreteria}/edit', [SalidaFerreteriaController::class, 'edit'])->name('edit');
+        Route::put('/{salidaFerreteria}', [SalidaFerreteriaController::class, 'update'])->name('update');
+        Route::delete('/{salidaFerreteria}', [SalidaFerreteriaController::class, 'destroy'])->name('destroy');
+
+        // Ruta AJAX para obtener materiales por sede
+        Route::get('/materiales/sede/{sedeId}', [SalidaFerreteriaController::class, 'getMaterialesBySede'])->name('materiales.sede');
+    });
 
 
     Route::prefix('semoviente')->name('semoviente.')->group(function () {

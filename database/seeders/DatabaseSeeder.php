@@ -20,5 +20,14 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
             'password' => bcrypt('123456'), // 👈 contraseña personalizada
         ]);
+
+         // Llamar al seeder de centros
+        $this->call([
+            CentrosSeeder::class,
+        ]);
+        // Llamar al seeder de sedes
+        $this->call([
+            SedesSeeder::class,
+        ]);
     }
 }
