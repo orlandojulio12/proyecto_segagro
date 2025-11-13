@@ -29,9 +29,8 @@
 <form action="{{ route('contracts.store') }}" method="POST" id="contractForm">
     @csrf
     
-    <div class="row">
-        <!-- Información Básica del Contrato -->
-        <div class="col-md-6">
+    <div class="row g-4">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-file-contract"></i> Información del Contrato
@@ -89,7 +88,7 @@
         </div>
 
         <!-- Información del Contratista -->
-        <div class="col-md-6">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-user-tie"></i> Información del Contratista
@@ -163,9 +162,12 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Segundo Row: Ubicación y Fechas/Valores -->
+    <div class="row g-4">
         <!-- Ubicación -->
-        <div class="col-md-6">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-map-marker-alt"></i> Ubicación
@@ -207,7 +209,7 @@
         </div>
 
         <!-- Información Financiera y Fechas -->
-        <div class="col-md-6">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-calendar-alt"></i> Fechas y Valores
@@ -342,6 +344,20 @@
         font-size: 0.95rem;
     }
 
+    .contracts-create .row {
+        display: flex;
+        margin-right: -0.5rem;
+        margin-left: -0.5rem;
+        margin-top: 22px;
+    }
+
+    .contracts-create .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+    }
+
     .contracts-create .content-card {
         background: white;
         padding: 25px;
@@ -350,6 +366,7 @@
         border: 1px solid #e9ecef;
         margin-top: 20px;
         margin-bottom: 20px;
+        height: 100%;
     }
 
     .contracts-create .section-title {
@@ -464,12 +481,23 @@
         margin-top: 5px;
     }
 
+    /* Forzar 2 columnas */
+    .contracts-create .row > .col-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .contracts-create .section-header {
             flex-direction: column;
             align-items: flex-start;
             gap: 15px;
+        }
+
+        .contracts-create .row > .col-6 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
         }
     }
 </style>

@@ -6,8 +6,8 @@
 @section('dashboard-content')
 <div class="section-header mb-4">
     <div>
-        <h2 class="fw-bold">Gestión de Contratación</h2>
-        <p class="text-muted">Administra los contratos de la entidad</p>
+        <h2 class="fw-bold"></h2>
+        <p class="text-muted"></p>
     </div>
     <a href="{{ route('contracts.create') }}" class="btn btn-success shadow-sm">
         <i class="fas fa-plus me-2"></i>Nuevo Contrato
@@ -29,59 +29,77 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 @endif
-<!-- Filtros rápidos -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="stat-card-mini">
-            <div class="stat-icon bg-success">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $contracts->where('is_active', true)->count() }}</div>
-                <div class="stat-label">Contratos Activos</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card-mini">
-            <div class="stat-icon bg-warning">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $contracts->where('is_pending', true)->count() }}</div>
-                <div class="stat-label">Pendientes</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card-mini">
-            <div class="stat-icon bg-danger">
-                <i class="fas fa-times-circle"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $contracts->where('is_expired', true)->count() }}</div>
-                <div class="stat-label">Vencidos</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card-mini">
-            <div class="stat-icon bg-info">
-                <i class="fas fa-dollar-sign"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-number">${{ number_format($contracts->sum('total_value'), 0, ',', '.') }}</div>
-                <div class="stat-label">Valor Total</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="container-fluid px-0">
+
+    <!-- VALOR TOTAL GRANDE -->
+    <div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="stat-card-large">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-info flex-shrink-0">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="ms-3 flex-grow-1">
+                    <div class="stat-number">
+                        ${{ number_format($contracts->sum('total_value'), 0, ',', '.') }}
+                    </div>
+                    <div class="stat-label">Valor Total</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="content-card">
+    <!-- 3 TARJETAS PEQUEÑAS - FORZADO CON FLEX -->
+    <div class="row g-3" style="display: flex; flex-wrap: wrap; margin-top: 16px; margin-bottom: 16px;">
+
+        <div class="col-md-4" style="flex: 1 1 30%; max-width: 32%; ">
+            <div class="stat-card-small h-100">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ $contracts->where('is_active', true)->count() }}</div>
+                    <div class="stat-label">Contratos Activos</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4" style="flex: 1 1 30%; max-width: 32%;">
+            <div class="stat-card-small h-100">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ $contracts->where('is_pending', true)->count() }}</div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4" style="flex: 1 1 30%; max-width: 32%;">
+            <div class="stat-card-small h-100">
+                <div class="stat-icon bg-danger">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ $contracts->where('is_expired', true)->count() }}</div>
+                    <div class="stat-label">Vencidos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- TABLA (NO TOCADA) -->
+<div class="content-card mt-5">
     <div class="table-header mb-3">
         <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Listado de Contratos</h5>
     </div>
-    
+
     <div class="table-responsive">
         <table class="table table-modern" id="contractsTable">
             <thead>
@@ -138,27 +156,23 @@
                         <span class="badge {{ $contract->status_badge_class }}">
                             {{ $contract->status }}
                         </span>
-                        @if($contract->is_active && $contract->days_remaining <= 30)
-                            <br><small class="text-warning">
+                        @if($contract->is_active && $contract->days_remaining <= 30) <br><small class="text-warning">
                                 <i class="fas fa-clock"></i> {{ $contract->days_remaining }} días
                             </small>
-                        @endif
+                            @endif
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <a href="{{ route('contracts.show', $contract) }}" 
-                               class="btn btn-sm btn-info" 
-                               title="Ver detalles">
+                            <a href="{{ route('contracts.show', $contract) }}" class="btn btn-sm btn-info"
+                                title="Ver detalles">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ route('contracts.edit', $contract) }}" 
-                               class="btn btn-sm btn-warning" 
-                               title="Editar">
+                            <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-sm btn-warning"
+                                title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button onclick="deleteContract({{ $contract->id }}, '{{ $contract->contract_number }}')" 
-                                    class="btn btn-sm btn-danger" 
-                                    title="Eliminar">
+                            <button onclick="deleteContract({{ $contract->id }}, '{{ $contract->contract_number }}')"
+                                class="btn btn-sm btn-danger" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -178,13 +192,11 @@
     </div>
 </div>
 
-
-
 @endsection
 
 @push('styles')
 <style>
-    /* Estilos específicos para contracts - No afectan al layout */
+    /* === ESTILOS GENERALES (INTACTOS) === */
     .contracts-index .section-header {
         display: flex;
         justify-content: space-between;
@@ -225,7 +237,6 @@
         color: #4cd137;
     }
 
-    /* Tabla moderna */
     .contracts-index .table-modern {
         border-collapse: separate;
         border-spacing: 0;
@@ -277,7 +288,6 @@
         box-shadow: none;
     }
 
-    /* Botones de acción - CON SPACING */
     .contracts-index .action-buttons {
         display: flex;
         gap: 8px;
@@ -300,8 +310,6 @@
     .contracts-index .btn-success {
         background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
         padding: 10px 20px;
-        font-weight: 500;
-        transition: all 0.3s ease;
         margin-left: 8px;
         text-decoration: none;
     }
@@ -343,7 +351,6 @@
         box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
     }
 
-    /* Badges */
     .contracts-index .badge {
         padding: 8px 14px;
         color: white;
@@ -375,7 +382,6 @@
         background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%) !important;
     }
 
-    /* Alerts */
     .contracts-index .alert {
         border-radius: 10px;
         border: none;
@@ -394,34 +400,82 @@
         border-left: 4px solid #e74c3c;
     }
 
-    /* Tarjetas de estadísticas */
-    .contracts-index .stat-card-mini {
+    /* ========================================= */
+    /* ESTILOS TARJETAS - FORZADO CON FLEX */
+    /* ========================================= */
+
+    /* === TARJETA VALOR TOTAL – NÚMERO AL LADO DEL ÍCONO === */
+   /* === VALOR TOTAL – NÚMERO AL LADO === */
+.contracts-index .stat-card-large {
+    background: #ebf3fd;
+    border: 2px solid #3498db;
+    border-radius: 16px;
+    padding: 20px 24px;
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.15);
+    transition: all 0.3s ease;
+}
+.contracts-index .stat-card-large:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(52, 152, 219, 0.25);
+}
+.contracts-index .stat-card-large .stat-icon {
+    width: 70px; height: 70px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; color: white;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    flex-shrink: 0;
+}
+.contracts-index .stat-card-large .stat-number {
+    font-size: 2.5rem; font-weight: 800; color: #2c3e50;
+    margin: 0; line-height: 1.1; white-space: nowrap;
+}
+.contracts-index .stat-card-large .stat-label {
+    font-size: 1.1rem; font-weight: 600; color: #34495e;
+    margin: 4px 0 0 0;
+}
+@media (max-width: 768px) {
+    .contracts-index .stat-card-large .stat-number { font-size: 2rem; }
+    .contracts-index .stat-card-large .stat-icon { width: 60px; height: 60px; font-size: 1.8rem; }
+}    .contracts-index .stat-card-small {
         background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 14px;
         transition: all 0.3s ease;
-        margin-bottom: 28px;
-        margin-top: 22px;
+        border: 1px solid #e9ecef;
+        margin: 0 !important;
     }
 
-    .contracts-index .stat-card-mini:hover {
+    .contracts-index .stat-card-small:hover {
         transform: translateY(-4px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
     }
 
-    .contracts-index .stat-icon {
-        width: 50px;
-        height: 50px;
+    .contracts-index .stat-card-small .stat-icon {
+        width: 48px;
+        height: 48px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         color: white;
+    }
+
+    .contracts-index .stat-card-small .stat-number {
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .contracts-index .stat-card-small .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin: 0;
     }
 
     .contracts-index .stat-icon.bg-success {
@@ -436,23 +490,24 @@
         background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     }
 
-    .contracts-index .stat-icon.bg-info {
-        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-    }
-
     .contracts-index .stat-content {
         flex: 1;
     }
 
-    .contracts-index .stat-number {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #2c3e50;
+    /* SEPARAR LAS 3 TARJETAS PEQUEÑAS */
+    .contracts-index .row[style*="flex-wrap"]>div[class*="col"] {
+        margin: 0 8px !important;
+        flex: 1 1 calc(33.333% - 16px) !important;
+        max-width: calc(33.333% - 16px) !important;
     }
 
-    .contracts-index .stat-label {
-        color: #6c757d;
-        font-size: 0.9rem;
+    /* En móvil: no aplicar margen */
+    @media (max-width: 768px) {
+        .contracts-index .row[style*="flex-wrap"]>div[class*="col"] {
+            margin: 8px 0 !important;
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
+        }
     }
 
     /* Responsive */
@@ -472,8 +527,9 @@
             width: 100%;
         }
 
-        .contracts-index .stat-card-mini {
-            margin-bottom: 15px;
+        [style*="flex: 1 1 30%"] {
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
         }
     }
 </style>
@@ -481,13 +537,10 @@
 
 @push('scripts')
 <script>
-    // Agregar clase al body para scope de estilos
     document.body.classList.add('contracts-index');
 
     function deleteContract(id, contractNumber) {
-        if (!confirm(`¿Estás seguro de eliminar el contrato ${contractNumber}?\n\n⚠️ Esta acción no se puede deshacer.`)) {
-            return;
-        }
+        if (!confirm(`¿Estás seguro de eliminar el contrato ${contractNumber}?\n\nEsta acción no se puede deshacer.`)) return;
 
         fetch(`/contracts/${id}`, {
             method: 'DELETE',
@@ -496,41 +549,27 @@
                 'Accept': 'application/json',
             }
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
             if (data.success) {
                 const alert = document.createElement('div');
                 alert.className = 'alert alert-success alert-dismissible fade show';
-                alert.innerHTML = `
-                    <i class="fas fa-check-circle me-2"></i>
-                    Contrato eliminado exitosamente
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
+                alert.innerHTML = `<i class="fas fa-check-circle me-2"></i>Contrato eliminado exitosamente<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
                 document.querySelector('.section-header').after(alert);
-                
                 setTimeout(() => location.reload(), 1000);
             } else {
-                alert('❌ Error al eliminar el contrato');
+                alert('Error al eliminar');
             }
         })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('❌ Error al eliminar el contrato');
-        });
+        .catch(() => alert('Error al eliminar'));
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
             $('#contractsTable').DataTable({
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
-                },
-                order: [[0, 'desc']],
-                pageLength: 10,
-                responsive: true,
-                columnDefs: [
-                    { orderable: false, targets: -1 } // Deshabilitar orden en columna de acciones
-                ]
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' },
+                order: [[0, 'desc']], pageLength: 10, responsive: true,
+                columnDefs: [{ orderable: false, targets: -1 }]
             });
         }
     });
