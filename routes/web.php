@@ -17,6 +17,9 @@ use App\Http\Controllers\Traslado\NeedTransferController;
 use App\Http\Controllers\TrasladoController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Contrato\ContractController;
+
+
 
 
 // Redirigir raíz a login
@@ -127,6 +130,34 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}', [UserController::class, 'update'])->name('update');
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
     });
+
+    Route::prefix('contracts')->name('contracts.')->group(function () {
+    // Listado
+    Route::get('/', [ContractController::class, 'index'])->name('index');
+    
+    // Crear
+    Route::get('/create', [ContractController::class, 'create'])->name('create');
+    Route::post('/', [ContractController::class, 'store'])->name('store');
+    
+    // Ver detalle
+    Route::get('/{contract}', [ContractController::class, 'show'])->name('show');
+    
+    // Editar
+    Route::get('/{contract}/edit', [ContractController::class, 'edit'])->name('edit');
+    Route::put('/{contract}', [ContractController::class, 'update'])->name('update');
+    
+    // Eliminar
+    Route::delete('/{contract}', [ContractController::class, 'destroy'])->name('destroy');
+    
+    // Rutas AJAX
+    Route::get('/sedes/centro/{centroId}', [ContractController::class, 'getSedesByCentro'])->name('sedes.centro');
+    Route::get('/types/dependencia/{dependenciaId}', [ContractController::class, 'getTypesByDependencia'])->name('types.dependencia');
+    
+    // Estadísticas y reportes
+    Route::get('/api/statistics', [ContractController::class, 'statistics'])->name('statistics');
+    Route::get('/report/generate', [ContractController::class, 'report'])->name('report');
+});
+
 });
 
 require __DIR__ . '/auth.php';

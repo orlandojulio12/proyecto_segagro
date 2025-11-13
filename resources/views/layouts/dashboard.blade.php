@@ -89,9 +89,9 @@
                     <i class="fas fa-comment-dots"></i>
                     Quejas
                 </a>
-                <a href="#" class="nav-item {{ request()->routeIs('planes.*') ? 'active' : '' }}">
+                <a href="{{ route('contracts.index') }}" class="nav-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
-                    Planes de trabajo
+                    Contrataciones  
                 </a>
                 <a href="{{ route('traslados.index') }}"
                     class="nav-item {{ request()->routeIs('traslados.*') ? 'active' : '' }}">
