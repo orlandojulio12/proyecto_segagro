@@ -20,11 +20,11 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-       /*  User::factory()->create([
+        User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => bcrypt('123456'), // 👈 contraseña personalizada
-        ]);
+        ]); 
 
          // Llamar al seeder de centros
         $this->call([
@@ -33,14 +33,9 @@ class DatabaseSeeder extends Seeder
         // Llamar al seeder de sedes
         $this->call([
             SedesSeeder::class,
-        ]); */
-        // Llamar al seeder de modalidades de contrato
-         $this->call(HiringModalitiesSeeder::class);
-
-         // Llamar al seeder de Dependencias
-         $this->call(DependencisSeeder::class);
-
-          // Llamar al seeder de tipos de contratos
-         $this->call(ContractTypesSeeder::class);
+            DependencisSeeder::class,
+            HiringModalitiesSeeder::class,
+            ContractTypesSeeder::class
+        ]);
     }
 }

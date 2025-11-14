@@ -12,11 +12,12 @@ return new class extends Migration {
             $table->string('type_name');
             $table->text('description')->nullable();
 
-            // Relación con dependencias
+            // Relación con dependencias (permite nulos y evita errores si no existen aún)
             $table->foreignId('dependencia_id')
+                ->nullable()
                 ->constrained('dependencias')
-                ->cascadeOnUpdate()
-                ->restrictOnDelete();
+                ->nullOnDelete()
+                ->cascadeOnUpdate();
 
             $table->timestamps();
         });
