@@ -6,7 +6,7 @@
 @section('dashboard-content')
 <div class="section-header mb-4">
     <div>
-        <h2 class="fw-bold">Editar Contrato</h2>
+        {{-- <h2 class="fw-bold">Editar Contrato</h2> --}}
         <p class="text-muted">Actualiza la información del contrato <strong>{{ $contract->contract_number }}</strong></p>
     </div>
     <a href="{{ route('contracts.show', $contract) }}" class="btn btn-outline-secondary shadow-sm">
@@ -30,9 +30,10 @@
     @csrf
     @method('PUT')
     
-    <div class="row">
+    <!-- Row 1: Contrato + Contratista -->
+    <div class="row g-4">
         <!-- Información Básica del Contrato -->
-        <div class="col-md-6">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-file-contract"></i> Información del Contrato
@@ -91,7 +92,7 @@
         </div>
 
         <!-- Información del Contratista -->
-        <div class="col-md-6">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-user-tie"></i> Información del Contratista
@@ -172,9 +173,12 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Row 2: Ubicación + Fechas -->
+    <div class="row g-4">
         <!-- Ubicación -->
-        <div class="col-md-6">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-map-marker-alt"></i> Ubicación
@@ -223,7 +227,7 @@
         </div>
 
         <!-- Información Financiera y Fechas -->
-        <div class="col-md-6">
+        <div class="col-6">
             <div class="content-card mb-4">
                 <h5 class="section-title">
                     <i class="fas fa-calendar-alt"></i> Fechas y Valores
@@ -326,7 +330,7 @@
     </div>
 
     <!-- Botones de acción -->
-    <div class="d-flex justify-content-end gap-2 mt-4">
+    <div class="d-flex justify-content-end gap-2 mt-4" style="margin-top: 43px;">
         <a href="{{ route('contracts.show', $contract) }}" class="btn btn-secondary">
             <i class="fas fa-times me-2"></i> Cancelar
         </a>
@@ -358,13 +362,29 @@
         font-size: 0.95rem;
     }
 
+    .contracts-edit .row {
+        display: flex;
+        margin-right: -0.5rem;
+        margin-left: -0.5rem;
+        margin-top: 20px;
+    }
+
+    .contracts-edit .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+    }
+
     .contracts-edit .content-card {
         background: white;
         padding: 25px;
         border-radius: 12px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         border: 1px solid #e9ecef;
+        margin-top: 20px;
         margin-bottom: 20px;
+        height: 100%;
     }
 
     .contracts-edit .section-title {
@@ -480,12 +500,23 @@
         margin-top: 5px;
     }
 
+    /* Forzar 2 columnas */
+    .contracts-edit .row > .col-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .contracts-edit .section-header {
             flex-direction: column;
             align-items: flex-start;
             gap: 15px;
+        }
+
+        .contracts-edit .row > .col-6 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
         }
     }
 </style>
