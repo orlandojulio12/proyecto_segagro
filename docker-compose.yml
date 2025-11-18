@@ -1,25 +1,27 @@
-
 services:
-  app:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env
-    command: >
-      sh -c "php artisan migrate --force && php artisan db:seed && exec php-fpm"
+    container_name: enviaya_api
     restart: unless-stopped
-    volumes:
-      - ./:/var/www/html
+    working_dir: /var/www
+    environment:
+      - APP_ENV=production
+      - APP_KEY=${APP_KEY}
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-laravel}
+      - DB_USERNAME=${DB_USERNAME:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8000:8000" # Cambiado a 8000
     networks:
-      - segagro-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.segagro.rule=Host(app.segagro.com.co)"
-      - "traefik.http.routers.segagro.entrypoints=websecure"
-      - "traefik.http.routers.segagro.tls.certresolver=letsencrypt"
-      - "traefik.http.services.segagro.loadbalancer.server.port=9000"
+      - dokploy-network # Usar la misma red overlay que Traefik
 
 networks:
-  segagro-network:
+  dokploy-network:
     external: true

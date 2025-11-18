@@ -4,7 +4,12 @@ namespace Database\Seeders;
 
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Database\Seeders\CentrosSeeder;
+use Database\Seeders\DependencisSeeder;
+use Database\Seeders\HiringModalitiesSeeder;
+use Database\Seeders\SedesSeeder;
 use Illuminate\Database\Seeder;
+use Database\Seeders\ContractTypesSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,7 +24,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => bcrypt('123456'), // 👈 contraseña personalizada
-        ]);
+        ]); 
 
          // Llamar al seeder de centros
         $this->call([
@@ -28,6 +33,9 @@ class DatabaseSeeder extends Seeder
         // Llamar al seeder de sedes
         $this->call([
             SedesSeeder::class,
+            DependencisSeeder::class,
+            HiringModalitiesSeeder::class,
+            ContractTypesSeeder::class
         ]);
     }
 }

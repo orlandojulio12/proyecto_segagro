@@ -89,6 +89,7 @@ body {
 
 .form-group {
     margin-bottom: 20px;
+    margin-right: 20px;
 }
 
 .form-group label {
@@ -448,7 +449,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
 }
 
 .section-header h2 {
