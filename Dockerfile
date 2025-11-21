@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql zip gd mbstring pcntl posix \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && pecl install swoole \
     && docker-php-ext-enable swoole \
     && apt-get clean \
