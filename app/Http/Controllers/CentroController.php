@@ -11,7 +11,7 @@ class CentroController extends Controller
     public function index()
     {
         $centros = Centro::latest()->get();
-        return view('centros.index', compact('centros'));
+        return view('Centros.index', compact('centros'));
     }
 
     public function store(Request $request)

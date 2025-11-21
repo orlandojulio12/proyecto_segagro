@@ -18,7 +18,7 @@ class InfraestructuraController extends Controller
     {
         $infraestructuras = Infraestructura::with(['dependencia', 'funcionario', 'centro', 'sede'])
             ->latest()->get();
-        return view('infraestructura.index', compact('infraestructuras'));
+        return view('Infraestructura.index', compact('infraestructuras'));
     }
 
     public function create()
@@ -28,7 +28,7 @@ class InfraestructuraController extends Controller
         $centros = Centro::all();
         $sedes = Sede::all();
 
-        return view('infraestructura.create', compact('dependencias', 'users', 'centros', 'sedes'));
+        return view('Infraestructura.create', compact('dependencias', 'users', 'centros', 'sedes'));
     }
 
     public function store(Request $request)
@@ -78,7 +78,7 @@ class InfraestructuraController extends Controller
             // Si quisieras guardar después, lo descomentas
             Infraestructura::create($data);
             DB::commit();
-            return redirect()->route('infraestructura.index')
+            return redirect()->route('Infraestructura.index')
                 ->with('success', 'Infraestructura creada correctamente');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -96,8 +96,8 @@ class InfraestructuraController extends Controller
         // Solo las sedes del centro relacionado a esta infraestructura
         $sedes = Sede::where('centro_id', $infraestructura->centro_id)->get();
 
-        return view('infraestructura.edit', compact(
-            'infraestructura',
+        return view('Infraestructura.edit', compact(
+            'Infraestructura',
             'dependencias',
             'users',
             'centros',
@@ -192,7 +192,7 @@ class InfraestructuraController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('infraestructura.index')
+            return redirect()->route('Infraestructura.index')
                 ->with('success', 'Infraestructura actualizada correctamente');
         } catch (\Exception $e) {
             DB::rollBack();

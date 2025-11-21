@@ -13,7 +13,7 @@ class SedeController extends Controller
     {
         $sedes = Sede::with('centro')->latest()->get();
         $centros = Centro::all();
-        return view('sedes.index', compact('sedes', 'centros'));
+        return view('Sedes.index', compact('sedes', 'centros'));
     }
 
     public function store(Request $request)
