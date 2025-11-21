@@ -18,9 +18,17 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     ports:
-      - "8000:8000" # Cambiado a 8000
+      - "8000:8000"
     networks:
-      - dokploy-network # Usar la misma red overlay que Traefik
+      - dokploy-network
+    depends_on:
+      - redis   # <-- esto es importante
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    networks:
+      - dokploy-network
 
 networks:
   dokploy-network:
