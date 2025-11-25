@@ -38,9 +38,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Instalar dependencias Laravel (sin dev)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Agregar dependencia DATATABLES
-RUN composer require yajra/laravel-datatables-oracle:"^11.0" --no-interaction
-
 # Copiar código del proyecto
 COPY . .
 
