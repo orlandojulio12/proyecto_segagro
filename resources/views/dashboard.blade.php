@@ -47,7 +47,7 @@
     <div class="left-column">
         <div class="chart-container">
             <div class="chart-header">
-                <h3>Contabilidad</h3>
+                <h3>Presupuesto</h3>
                 <div class="chart-legend">
                     <span class="legend-item">
                         <span class="legend-color red"></span> Egresos

@@ -2,13 +2,18 @@
 
 namespace App\Imports;
 
-
 use App\Models\Inventario\CatalogProduct;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 
-class CatalogProductImport implements ToModel, WithHeadingRow
+class CatalogProductImport implements ToModel, WithHeadingRow, WithChunkReading, WithBatchInserts, SkipsEmptyRows
 {
+    /**
+     * Map each row to the model
+     */
     public function model(array $row)
     {
         return new CatalogProduct([
@@ -26,5 +31,21 @@ class CatalogProductImport implements ToModel, WithHeadingRow
             'consecutive'         => $row['consecutivo'] ?? null,
             'element_description' => $row['descripcion_elemento'] ?? null,
         ]);
+    }
+
+    /**
+     * Número de filas por chunk (lee y procesa este bloque por vez).
+     */
+    public function chunkSize(): int
+    {
+        return 1000;
+    }
+
+    /**
+     * Inserciones por lotes (mejora rendimiento al insertar a BD).
+     */
+    public function batchSize(): int
+    {
+        return 1000;
     }
 }

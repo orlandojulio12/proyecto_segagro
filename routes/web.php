@@ -8,7 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalidaFerreteriaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\CalendarioController;
-use App\Http\Controllers\ContabilidadController;
+use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\Infraestructura\InfraestructuraController;
 use App\Http\Controllers\Inventario\SemovienteController;
 use App\Http\Controllers\QuejaController;
@@ -116,7 +116,7 @@ Route::middleware('auth')->group(function () {
 
     // Route::resource('calendario', CalendarioController::class);
     // Route::resource('infraestructura', InfraestructuraController::class);
-    // Route::resource('contabilidad', ContabilidadController::class);
+    // Route::resource('presupuesto', PresupuestoController::class);
     // Route::resource('quejas', QuejaController::class);
     // Route::resource('planes', PlanController::class);
     // Route::resource('traslados', TrasladoController::class);

@@ -24,14 +24,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => bcrypt('123456'), // 👈 contraseña personalizada
-        ]); 
-
-         // Llamar al seeder de centros
-        $this->call([
-            CentrosSeeder::class,
         ]);
+
         // Llamar al seeder de sedes
         $this->call([
+            CentrosSeeder::class,
             SedesSeeder::class,
             DependencisSeeder::class,
             HiringModalitiesSeeder::class,
