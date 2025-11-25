@@ -35,7 +35,8 @@ class DatabaseSeeder extends Seeder
             SedesSeeder::class,
             DependencisSeeder::class,
             HiringModalitiesSeeder::class,
-            ContractTypesSeeder::class
+            ContractTypesSeeder::class,
+            CatalogProductSeeder::class
         ]);
     }
 }
