@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('inventory_id')->constrained('inventory_sede');
+            
+            $table->integer('consecutive')->nullable();
 
             $table->string('material_name');
             $table->integer('material_quantity');

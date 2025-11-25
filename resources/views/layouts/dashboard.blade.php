@@ -81,9 +81,9 @@
                     Infraestructura
                 </a>
 
-                <a href="#" class="nav-item {{ request()->routeIs('contabilidad.*') ? 'active' : '' }}">
+                <a href="#" class="nav-item {{ request()->routeIs('presupuesto.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
-                    Contabilidad
+                    Presupuesto
                 </a>
                 <a href="#" class="nav-item {{ request()->routeIs('quejas.*') ? 'active' : '' }}">
                     <i class="fas fa-comment-dots"></i>
