@@ -81,9 +81,9 @@
                         <div class="module-name">Infraestructura</div>
                         <div class="module-progress">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 65%; background: #4a90e2;"></div>
+                                <div class="progress-fill" style="width: {{ $percentInfraestructura }}%; background:#4a90e2;"></div>
                             </div>
-                            <span class="progress-percent">65%</span>
+                            <span class="progress-percent">{{ $percentInfraestructura }}%</span>
                         </div>
                     </div>
                 </div>
@@ -93,9 +93,9 @@
                         <div class="module-name">Gestión de usuario</div>
                         <div class="module-progress">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 25%; background: #26d0ce;"></div>
+                                <div class="progress-fill" style="width: {{ $percentUsuarios }}%; background:#26d0ce;"></div>
                             </div>
-                            <span class="progress-percent">25%</span>
+                            <span class="progress-percent">{{ $percentUsuarios }}%</span>
                         </div>
                     </div>
                 </div>
@@ -105,9 +105,9 @@
                         <div class="module-name">Contratos y seguimiento</div>
                         <div class="module-progress">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 18%; background: #a855f7;"></div>
+                               <div class="progress-fill" style="width: {{ $percentContratos }}%; background:#a855f7;"></div>
                             </div>
-                            <span class="progress-percent">18%</span>
+                            <span class="progress-percent">{{ $percentContratos }}%</span>
                         </div>
                     </div>
                 </div>
@@ -117,9 +117,9 @@
                         <div class="module-name">Traslados</div>
                         <div class="module-progress">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: 75%; background: #f59e0b;"></div>
+                                <div class="progress-fill" style="width: {{ $percentTraslados }}%; background:#f59e0b;"></div>
                             </div>
-                            <span class="progress-percent">75%</span>
+                            <span class="progress-percent">{{ $percentTraslados }}%</span>
                         </div>
                     </div>
                 </div>
