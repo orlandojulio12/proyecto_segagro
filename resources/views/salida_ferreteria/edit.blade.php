@@ -29,9 +29,9 @@
         @csrf
         @method('PUT')
         
-        <div class="row">
+        <div class="row g-4">
             {{-- Columna izquierda - Información General --}}
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="content-card mb-4">
                     <h5 class="section-title"><i class="fas fa-info-circle me-2"></i>Información General</h5>
                     <p class="section-subtitle">Datos básicos de la salida de ferretería</p>
@@ -83,7 +83,7 @@
             </div>
 
             {{-- Columna derecha - Datos adicionales --}}
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="content-card mb-4">
                     <h5 class="section-title"><i class="fas fa-clipboard-list me-2"></i>Información Adicional</h5>
                     <p class="section-subtitle">Datos complementarios de la salida</p>
@@ -105,7 +105,9 @@
         </div>
 
         {{-- Materiales de Salida --}}
-        <div class="content-card mb-4">
+        <div class="row g-4 mt-2">
+            <div class="col-12">
+                <div class="content-card mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h5 class="section-title mb-1"><i class="fas fa-boxes me-2"></i>Materiales de Salida</h5>
@@ -171,6 +173,7 @@
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
 
         <div class="form-footer">
@@ -203,6 +206,33 @@
     .salida-ferreteria-edit .section-header p {
         color: #6c757d;
         margin: 5px 0 0 0;
+    }
+
+    .salida-ferreteria-edit .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: calc(-0.5 * 1rem);
+        margin-left: calc(-0.5 * 1rem);
+    }
+
+    .salida-ferreteria-edit .row.g-4 {
+        --bs-gutter-x: 1.5rem;
+        --bs-gutter-y: 0;
+    }
+
+    .salida-ferreteria-edit .col-12 {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+
+    .salida-ferreteria-edit .col-md-6 {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+
+    .salida-ferreteria-edit .col-12.col-md-6 {
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
     }
 
     .salida-ferreteria-edit .content-card {
@@ -280,7 +310,7 @@
         transition: all 0.2s ease;
     }
 
-    .salida-ferreteria-edit .table-modern tbody tr:hover {
+    .salida-ferreteria-edit .table-modern tbody tr:hover:not(.empty-state) {
         background: #f8fff9;
         transform: scale(1.002);
         box-shadow: 0 2px 8px rgba(76, 209, 55, 0.15);
@@ -291,6 +321,16 @@
         text-align: center;
         vertical-align: middle;
         border-bottom: 1px solid #f0f0f0;
+    }
+
+    .salida-ferreteria-edit .table-modern .empty-state {
+        background: #fafafa;
+    }
+
+    .salida-ferreteria-edit .table-modern .empty-state:hover {
+        background: #fafafa;
+        transform: none;
+        box-shadow: none;
     }
 
     .salida-ferreteria-edit .form-footer {
@@ -307,11 +347,13 @@
         padding: 10px 24px;
         font-weight: 500;
         transition: all 0.3s ease;
+        margin-bottom: 10px;
     }
 
     .salida-ferreteria-edit .btn-success {
         background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
         border: none;
+        margin-left: 8px;
     }
 
     .salida-ferreteria-edit .btn-success:hover {
@@ -387,6 +429,10 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 15px;
+        }
+
+        .salida-ferreteria-edit .col-md-6 {
+            width: 100%;
         }
 
         .salida-ferreteria-edit .form-footer {

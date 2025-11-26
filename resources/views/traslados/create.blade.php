@@ -38,7 +38,7 @@
                         <select name="dependencia_id" class="form-select modern-input" required>
                             <option value="">Seleccionar dependencia</option>
                             @foreach ($dependencias as $dep)
-                                <option value="{{ $dep->id }}">{{ $dep->nombre }}</option>
+                                <option value="{{ $dep->id }}">{{ $dep->responsible_department ?? 'N/A' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -53,45 +53,9 @@
                         </select>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Centro de formación inicial *</label>
-                        <select name="centro_inicial_id" class="form-select modern-input" required>
-                            <option value="">Seleccionar centro</option>
-                            @foreach ($centros as $c)
-                                <option value="{{ $c->id }}">{{ $c->nom_centro }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    {{-- COMPONENTE CENTRO Y SEDE INICIALES --}}
+                    <x-centros-sedes-selector :centros="$centros" prefix="inicial" />
 
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Sede de formación inicial *</label>
-                        <select name="sede_inicial_id" class="form-select modern-input" required>
-                            <option value="">Seleccionar sede</option>
-                            @foreach ($sedes as $s)
-                                <option value="{{ $s->id }}">{{ $s->nom_sede }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Centro de formación final *</label>
-                        <select name="centro_final_id" class="form-select modern-input" required>
-                            <option value="">Seleccionar centro</option>
-                            @foreach ($centros as $c)
-                                <option value="{{ $c->id }}">{{ $c->nom_centro }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Sede de formación final *</label>
-                        <select name="sede_final_id" class="form-select modern-input" required>
-                            <option value="">Seleccionar sede</option>
-                            @foreach ($sedes as $s)
-                                <option value="{{ $s->id }}">{{ $s->nom_sede }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                     <br>
                     <h5 class="section-title"><i class="fas fa-calendar-alt"></i> Información de calendario</h5>
                     <p class="section-subtitle">Fechas de inicio y finalización de la necesidad</p>
@@ -218,7 +182,7 @@
                                     <small class="text-muted">Materiales necesarios para el traslado</small>
                                 </div>
                                 <div class="card-body">
-                                    <button type="button" class="btn btn-success btn-sm mb-3" onclick="agregarMaterial()">
+                                    <button type="button" class="btn btn-success btn-sm mb-3" onclick="abrirModalMateriales()">
                                         <i class="fas fa-plus"></i> Agregar Material
                                     </button>
                                     
@@ -227,8 +191,8 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Nombre Material</th>
+                                                    <th>Tipo</th>
                                                     <th>Cantidad</th>
-                                                    <th>Tipo de Material</th>
                                                     <th width="100">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -255,6 +219,59 @@
             </button>
         </div>
     </form>
+
+    {{-- Modal de Selección de Materiales --}}
+    <div class="modal fade" id="modalMateriales" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-box-open me-2"></i>Seleccionar Material
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- Buscador --}}
+                    <div class="input-group mb-3">
+                        <span class="input-group-text bg-light">
+                            <i class="fas fa-search text-success"></i>
+                        </span>
+                        <input type="text" id="searchMaterial" class="form-control" 
+                            placeholder="Buscar por nombre o tipo de material...">
+                    </div>
+
+                    {{-- Tabla de materiales --}}
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Tipo</th>
+                                    <th>Stock</th>
+                                    <th>Sede</th>
+                                    <th width="100">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materialesModalBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="spinner-border text-success" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Paginación --}}
+                    <div id="paginationContainer" class="d-flex justify-content-center mt-3">
+                        {{-- Se llenará con JavaScript --}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('styles')
@@ -341,58 +358,37 @@
             transform: scale(1.05);
         }
 
-        /* Tabla moderna */
-        .table-modern {
-            border-collapse: separate;
-            border-spacing: 0 8px;
-            width: 100%;
+        /* Modal */
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
         }
 
-        .table-modern thead {
-            background: #4cd137;
-            color: #fff;
-            border-radius: 8px;
+        .modal-header {
+            border-radius: 12px 12px 0 0;
         }
 
-        .table-modern thead th {
-            padding: 12px;
-            font-size: 14px;
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8f9fa;
+        }
+
+        .badge-stock {
+            padding: 6px 12px;
+            font-size: 12px;
             font-weight: 600;
-            text-align: center;
         }
 
-        .table-modern tbody tr {
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .material-row {
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .table-modern tbody tr:hover {
-            transform: scale(1.01);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .table-modern td {
-            padding: 10px 12px;
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        .table-modern input {
-            text-align: center;
-        }
-
-        /* Botones de acciones */
-        .btn-outline-danger {
-            border-radius: 6px;
-            padding: 6px 10px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline-danger:hover {
-            background: #e63946;
-            color: #fff;
-            transform: scale(1.05);
+        .material-row:hover {
+            background-color: #e8f5e9 !important;
         }
     </style>
 @endpush
@@ -401,6 +397,9 @@
     <script>
         let personaIndex = 0;
         let materialIndex = 0;
+        let currentPage = 1;
+        let searchTimeout = null;
+        let materialesSeleccionados = []; // Para evitar duplicados
 
         // Toggle de secciones
         function toggleSections() {
@@ -417,7 +416,7 @@
         // Al cargar la página
         toggleSections();
 
-        // Agregar persona
+        // ============= SECCIÓN DE PERSONAS =============
         function agregarPersona() {
             const tbody = document.querySelector('#personasTable tbody');
             const row = document.createElement('tr');
@@ -435,27 +434,196 @@
             personaIndex++;
         }
 
-        // Agregar material
-        function agregarMaterial() {
+        // ============= SECCIÓN DE MATERIALES =============
+        function abrirModalMateriales() {
+            const modal = new bootstrap.Modal(document.getElementById('modalMateriales'));
+            modal.show();
+            cargarMateriales();
+        }
+
+        // Cargar materiales con búsqueda y paginación
+        function cargarMateriales(page = 1, search = '') {
+            const tbody = document.getElementById('materialesModalBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            fetch(`{{ route('traslados.buscar-materiales') }}?page=${page}&search=${encodeURIComponent(search)}`)
+                .then(response => response.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+                    
+                    if (data.data.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p>No se encontraron materiales</p>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    data.data.forEach(material => {
+                        // Verificar si ya está seleccionado
+                        const yaSeleccionado = materialesSeleccionados.includes(material.id);
+                        
+                        const row = document.createElement('tr');
+                        row.className = yaSeleccionado ? 'table-success' : 'material-row';
+                        row.innerHTML = `
+                            <td><strong>${material.material_name}</strong></td>
+                            <td><span class="badge bg-info">${material.material_type || 'N/A'}</span></td>
+                            <td><span class="badge badge-stock bg-primary">${material.material_quantity} unidades</span></td>
+                            <td><small class="text-muted">${material.inventory?.sede?.nom_sede || 'N/A'}</small></td>
+                            <td>
+                                ${yaSeleccionado 
+                                    ? '<span class="badge bg-success">Seleccionado</span>'
+                                    : `<button type="button" class="btn btn-success btn-sm" onclick="seleccionarMaterial(${material.id}, '${material.material_name.replace(/'/g, "\\'")}', '${material.material_type || 'N/A'}')">
+                                        <i class="fas fa-check"></i> Seleccionar
+                                    </button>`
+                                }
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Renderizar paginación
+                    renderizarPaginacion(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-danger">
+                                <i class="fas fa-exclamation-triangle"></i> Error al cargar materiales
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        // Seleccionar material del modal
+        function seleccionarMaterial(id, nombre, tipo) {
+            // Verificar si ya está agregado
+            if (materialesSeleccionados.includes(id)) {
+                alert('Este material ya ha sido agregado');
+                return;
+            }
+
             const tbody = document.querySelector('#materialesTable tbody');
             const row = document.createElement('tr');
+            row.setAttribute('data-material-id', id);
             row.innerHTML = `
-                <td><input type="text" name="materiales[${materialIndex}][nombre]" class="form-control" placeholder="Nombre del material" required></td>
-                <td><input type="number" name="materiales[${materialIndex}][cantidad]" class="form-control" placeholder="0" min="1" required></td>
-                <td><input type="text" name="materiales[${materialIndex}][tipo]" class="form-control" placeholder="Tipo"></td>
                 <td>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">
+                    <strong>${nombre}</strong>
+                    <input type="hidden" name="materiales[${materialIndex}][inventory_material_id]" value="${id}">
+                </td>
+                <td><span class="badge bg-info">${tipo}</span></td>
+                <td>
+                    <input type="number" name="materiales[${materialIndex}][cantidad]" 
+                        class="form-control form-control-sm" placeholder="0" min="1" required style="width: 100px;">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarMaterial(this, ${id})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
             tbody.appendChild(row);
             materialIndex++;
+            
+            // Agregar a la lista de seleccionados
+            materialesSeleccionados.push(id);
+
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('modalMateriales')).hide();
+
+            // Mostrar mensaje de éxito
+            mostrarNotificacion('Material agregado correctamente', 'success');
         }
 
-        // Eliminar fila
+        // Eliminar material (actualizado para manejar la lista de seleccionados)
+        function eliminarMaterial(button, materialId) {
+            button.closest('tr').remove();
+            
+            // Remover de la lista de seleccionados
+            materialesSeleccionados = materialesSeleccionados.filter(id => id !== materialId);
+        }
+
+        // Búsqueda con debounce
+        document.getElementById('searchMaterial').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                cargarMateriales(1, e.target.value);
+            }, 500);
+        });
+
+        // Renderizar paginación
+        function renderizarPaginacion(data) {
+            const container = document.getElementById('paginationContainer');
+            container.innerHTML = '';
+
+            if (data.last_page <= 1) return;
+
+            const ul = document.createElement('ul');
+            ul.className = 'pagination pagination-sm mb-0';
+
+            // Botón anterior
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${data.current_page === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="event.preventDefault(); cargarMateriales(${data.current_page - 1}, document.getElementById('searchMaterial').value)">Anterior</a>`;
+            ul.appendChild(prevLi);
+
+            // Números de página
+            for (let i = 1; i <= data.last_page; i++) {
+                if (i === 1 || i === data.last_page || (i >= data.current_page - 1 && i <= data.current_page + 1)) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === data.current_page ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#" onclick="event.preventDefault(); cargarMateriales(${i}, document.getElementById('searchMaterial').value)">${i}</a>`;
+                    ul.appendChild(li);
+                } else if (i === data.current_page - 2 || i === data.current_page + 2) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled';
+                    li.innerHTML = '<span class="page-link">...</span>';
+                    ul.appendChild(li);
+                }
+            }
+
+            // Botón siguiente
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${data.current_page === data.last_page ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="event.preventDefault(); cargarMateriales(${data.current_page + 1}, document.getElementById('searchMaterial').value)">Siguiente</a>`;
+            ul.appendChild(nextLi);
+
+            container.appendChild(ul);
+        }
+
+        // Eliminar fila genérica
         function eliminarFila(button) {
             button.closest('tr').remove();
+        }
+
+        // Notificación simple
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
         }
     </script>
 @endpush
