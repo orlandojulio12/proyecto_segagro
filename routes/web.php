@@ -106,6 +106,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/editar', [NeedTransferController::class, 'edit'])->name('edit');
         Route::put('/{id}', [NeedTransferController::class, 'update'])->name('update');
         Route::delete('/{id}', [NeedTransferController::class, 'destroy'])->name('destroy');
+        // Búsqueda de materiales para traslados
+        Route::get('/buscar-materiales', [NeedTransferController::class, 'buscarMateriales'])
+        ->name('buscar-materiales');
     });
 
     Route::get('centros/{centro}/sedes', [FerreteriaController::class, 'getSedesByCentro']);

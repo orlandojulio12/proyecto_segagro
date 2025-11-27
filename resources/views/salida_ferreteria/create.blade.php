@@ -27,9 +27,9 @@
     <form action="{{ route('salida_ferreteria.store') }}" method="POST" id="salidaForm">
         @csrf
         
-        <div class="row">
+        <div class="row g-4">
             {{-- Columna izquierda - Información General --}}
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="content-card mb-4">
                     <h5 class="section-title"><i class="fas fa-info-circle me-2"></i>Información General</h5>
                     <p class="section-subtitle">Datos básicos de la salida de ferretería</p>
@@ -79,7 +79,7 @@
             </div>
 
             {{-- Columna derecha - Datos adicionales --}}
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="content-card mb-4">
                     <h5 class="section-title"><i class="fas fa-clipboard-list me-2"></i>Información Adicional</h5>
                     <p class="section-subtitle">Datos complementarios de la salida</p>
@@ -101,7 +101,9 @@
         </div>
 
         {{-- Materiales de Salida --}}
-        <div class="content-card mb-4">
+        <div class="row g-4 mt-2">
+            <div class="col-12">
+                <div class="content-card mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h5 class="section-title mb-1"><i class="fas fa-boxes me-2"></i>Materiales de Salida</h5>
@@ -133,6 +135,7 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
 
@@ -168,6 +171,33 @@
         margin: 5px 0 0 0;
     }
 
+    .salida-ferreteria-create .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: calc(-0.5 * 1rem);
+        margin-left: calc(-0.5 * 1rem);
+    }
+
+    .salida-ferreteria-create .row.g-4 {
+        --bs-gutter-x: 1.5rem;
+        --bs-gutter-y: 0;
+    }
+
+    .salida-ferreteria-create .col-12 {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+
+    .salida-ferreteria-create .col-md-6 {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+
+    .salida-ferreteria-create .col-12.col-md-6 {
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
+    }
+
     .salida-ferreteria-create .content-card {
         background: white;
         padding: 25px;
@@ -175,6 +205,7 @@
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         border: 1px solid #e9ecef;
         transition: all 0.3s ease;
+        margin-bottom: 15px;
     }
 
     .salida-ferreteria-create .content-card:hover {
@@ -356,6 +387,10 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 15px;
+        }
+
+        .salida-ferreteria-create .col-md-6 {
+            width: 100%;
         }
 
         .salida-ferreteria-create .form-footer {

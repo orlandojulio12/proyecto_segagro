@@ -32,6 +32,18 @@ class NeedTransferController extends Controller
         $materials = InventoryMaterial::all();
         return view('traslados.create', compact('users', 'centros', 'sedes', 'dependencias', 'materials'));
     }
+    public function buscarMateriales(Request $request)
+{
+    $search = $request->get('search', '');
+    $materials = InventoryMaterial::with('inventory.sede')
+        ->when($search, function ($query, $search) {
+            $query->where('material_name', 'like', "%{$search}%")
+                  ->orWhere('material_type', 'like', "%{$search}%");
+        })
+        ->paginate(10);
+
+    return response()->json($materials);
+}
 
     public function store(Request $request)
     {
