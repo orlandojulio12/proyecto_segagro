@@ -42,9 +42,7 @@ Route::middleware('auth')->group(function () {
     // Route::resource('usuarios', UserController::class);
     Route::resource('sedes', SedeController::class);
 
-
     //Modulo Ferretería
-
     Route::prefix('ferreteria')->name('ferreteria.')->group(function () {
         // 1️⃣ PRIMERO: Rutas estáticas (sin parámetros)
         Route::get('/', [FerreteriaController::class, 'index'])->name('index');
@@ -67,11 +65,17 @@ Route::middleware('auth')->group(function () {
     });
 
     // Catalogo de productos
-    Route::get('/catalogo', [CatalogProductController::class, 'index'])
-        ->name('catalogo.index');
+    Route::prefix('inventario')->group(function () {
+        
+        Route::get('/catalogo', [CatalogProductController::class, 'index'])
+            ->name('catalogo.index');
 
-    Route::get('/catalogo/data', [CatalogProductController::class, 'data'])
-        ->name('catalogo.data');
+        Route::get('/catalogo/data', [CatalogProductController::class, 'data'])
+            ->name('catalogo.data');
+
+        Route::get('/catalogo/filters', [CatalogProductController::class, 'filters'])
+            ->name('catalogo.filters');
+    });
 
 
     Route::prefix('salida-ferreteria')->name('salida_ferreteria.')->group(function () {
@@ -108,7 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [NeedTransferController::class, 'destroy'])->name('destroy');
         // Búsqueda de materiales para traslados
         Route::get('/buscar-materiales', [NeedTransferController::class, 'buscarMateriales'])
-        ->name('buscar-materiales');
+            ->name('buscar-materiales');
     });
 
     Route::get('centros/{centro}/sedes', [FerreteriaController::class, 'getSedesByCentro']);
