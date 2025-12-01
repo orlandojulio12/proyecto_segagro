@@ -11,19 +11,25 @@ class CatalogProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // Opcional: eleva límite de memoria temporalmente
         ini_set('memory_limit', '512M');
 
-        $file = database_path('seeders/data/catalogo.xls');
-
-        // Si el archivo puede ser muy grande, se recomienda usar Excel::queueImport (requiere ShouldQueue)
         try {
-            Excel::import(new CatalogProductImport, $file);
+            // 1 = devolutivo
+            Excel::import(
+                new CatalogProductImport(1),
+                database_path('seeders/data/Catalogo_Devolutivos.xls')
+            );
+
+            // 2 = consumo
+            Excel::import(
+                new CatalogProductImport(2),
+                database_path('seeders/data/Catalogo_Consumo.xls')
+            );
+
             $this->command->info('Catalog import finished.');
         } catch (\Exception $e) {
-            // log y mostrar
-            Log::error('Catalog import error: '.$e->getMessage());
-            $this->command->error('Catalog import failed: '.$e->getMessage());
+            Log::error('Catalog import error: ' . $e->getMessage());
+            $this->command->error('Catalog import failed: ' . $e->getMessage());
         }
     }
 }

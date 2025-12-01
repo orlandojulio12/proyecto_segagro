@@ -11,6 +11,8 @@ return new class extends Migration
         Schema::create('catalog_products', function (Blueprint $table) {
             $table->id();
 
+            $table->integer('type_catalogo')->nullable();
+
             $table->string('type_code', 50)->nullable();
             $table->string('type_name')->nullable();
 

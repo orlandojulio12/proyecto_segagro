@@ -5,29 +5,31 @@ namespace App\Http\Controllers\Inventario;
 use App\Http\Controllers\Controller;
 use App\Models\Inventario\CatalogProduct;
 use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class CatalogProductController extends Controller
 {
-    // Vista principal (solo HTML)
     public function index()
     {
         return view('ferreteria.catalogo.index');
     }
 
-    // Endpoint para DataTables Server-Side
-    public function data()
-{
-    $query = CatalogProduct::select([
-        'id',
-        'sku',
-        'consecutive',
-        'element_description',
-        'family_name',
-        'class_name',
-        'segment_description',
-    ]);
+    public function data(Request $request)
+    {
+        $query = CatalogProduct::query();
 
-    return DataTables::of($query)->make(true);
-}
+        if ($request->type) {
+            $query->where('type_catalogo', $request->type);
+        }
+        
+
+        return DataTables::of($query)->make(true);
+    }
+
+    public function filters()
+    {
+        return response()->json([
+            'types' => CatalogProduct::select('type_catalogo')->distinct()->pluck('type_catalogo')
+        ]);
+    }
 }
