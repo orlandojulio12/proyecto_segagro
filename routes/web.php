@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalidaFerreteriaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\CalendarioController;
+use App\Http\Controllers\Complaint\PqrController;
 use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\Infraestructura\InfraestructuraController;
 use App\Http\Controllers\Inventario\SemovienteController;
@@ -66,7 +67,7 @@ Route::middleware('auth')->group(function () {
 
     // Catalogo de productos
     Route::prefix('inventario')->group(function () {
-        
+
         Route::get('/catalogo', [CatalogProductController::class, 'index'])
             ->name('catalogo.index');
 
@@ -126,6 +127,39 @@ Route::middleware('auth')->group(function () {
 
         Route::delete('/{id}', [InfraestructuraController::class, 'destroy'])->name('destroy');
     });
+
+    // PQR
+    Route::prefix('pqr')->group(function () {
+
+        // Listado
+        Route::get('/listado', [PqrController::class, 'index'])
+            ->name('pqr.index');
+
+        // Crear
+        Route::get('/crear', [PqrController::class, 'create'])
+            ->name('pqr.create');
+        Route::post('/store', [PqrController::class, 'store'])
+            ->name('pqr.store');
+
+        // Ver
+        Route::get('/{pqr}/ver', [PqrController::class, 'show'])
+            ->name('pqr.show');
+
+        // Editar
+        Route::get('/{pqr}/editar', [PqrController::class, 'edit'])
+            ->name('pqr.edit');
+        Route::put('/{pqr}/actualizar', [PqrController::class, 'update'])
+            ->name('pqr.update');
+
+        // Eliminar
+        Route::delete('/{pqr}/eliminar', [PqrController::class, 'destroy'])
+            ->name('pqr.destroy');
+
+        // AJAX
+        Route::post('/validar-dias', [PqrController::class, 'validarDias'])
+            ->name('pqr.validarDias');
+    });
+
 
     // Route::resource('calendario', CalendarioController::class);
     // Route::resource('infraestructura', InfraestructuraController::class);
