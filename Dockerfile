@@ -78,6 +78,13 @@ RUN php artisan config:cache \
 # Puerto que expondrá Octane
 EXPOSE 8000
 
+# Configurar permisos y crear carpeta pqrs
+RUN mkdir -p storage/framework/{sessions,views,cache} \
+    && mkdir -p storage/app/public/pqrs \
+    && mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
 # Copiar script de entrada
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
