@@ -89,7 +89,7 @@
             $.get("{{ route('catalogo.filters') }}", function(data) {
 
                 data.types.forEach(t => {
-                    let label = t == 1 ? 'Devoluciones' : 'Catalogos';
+                    let label = t == 1 ? 'Devoluciones' : 'Consumos';
                     $('#filterType').append(`<option value="${t}">${label}</option>`);
                 });
 
