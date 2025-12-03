@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Budget\BudgetController;
 use App\Http\Controllers\CentroController;
 use App\Http\Controllers\FerreteriaController;
 use App\Http\Controllers\ProfileController;
@@ -160,11 +161,36 @@ Route::middleware('auth')->group(function () {
             ->name('pqr.validarDias');
     });
 
+    Route::prefix('budget')->group(function () {
+
+        // List
+        Route::get('/list', [BudgetController::class, 'index'])
+            ->name('budget.index');
+    
+        // Create
+        Route::get('/create', [BudgetController::class, 'create'])
+            ->name('budget.create');
+        Route::post('/store', [BudgetController::class, 'store'])
+            ->name('budget.store');
+    
+        // Show
+        Route::get('/{budget}/show', [BudgetController::class, 'show'])
+            ->name('budget.show');
+    
+        // Edit
+        Route::get('/{budget}/edit', [BudgetController::class, 'edit'])
+            ->name('budget.edit');
+        Route::put('/{budget}/update', [BudgetController::class, 'update'])
+            ->name('budget.update');
+    
+        // Delete
+        Route::delete('/{budget}/delete', [BudgetController::class, 'destroy'])
+            ->name('budget.destroy');
+    });
+
 
     // Route::resource('calendario', CalendarioController::class);
     // Route::resource('infraestructura', InfraestructuraController::class);
-    // Route::resource('presupuesto', PresupuestoController::class);
-    // Route::resource('quejas', QuejaController::class);
     // Route::resource('planes', PlanController::class);
     // Route::resource('traslados', TrasladoController::class);
 
