@@ -110,39 +110,33 @@
                             <div class="summary-label">Dependencias Asignadas</div>
                         </div>
                     </div>
+                    <br>
                 </div>
             </div>
         </div>
         <br>
-        <button type="button" class="btn btn-success btn-sm mt-3" onclick="addDepartment()">
-            <i class="fas fa-plus me-2"></i>Agregar Dependencia
-        </button>
 
-        <div id="departmentsContainer">
-            <!-- Dependencias existentes -->
-            @foreach ($budget->departmentBudgets as $index => $deptBudget)
-                <div class="department-card" data-index="{{ $index }}" data-id="{{ $deptBudget->id }}">
-                    <div class="department-header">
-                        <div class="d-flex align-items-sedes gap-3">
-                            <div class="department-number">{{ $index + 1 }}</div>
-                            <h6 class="mb-0">{{ $deptBudget->department->nombre ?? 'Dependencia ' . ($index + 1) }}
-                            </h6>
-                        </div>
-                        <button type="button" class="btn btn-danger btn-sm"
-                            onclick="removeDepartment({{ $index }})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-sitemap text-success"></i> Dependencia *
-                                </label>
+        <div class="table-responsive">
+            <table class="table-modern" id="departmentsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th><i class="fas fa-sitemap"></i> Dependencia</th>
+                        <th><i class="fas fa-wallet"></i> Presupuesto</th>
+                        <th><i class="fas fa-wallet"></i> Presupuesto gastado</th>
+                        <th><i class="fas fa-user-tie"></i> Responsable</th>
+                        <th><i class="fas fa-cogs"></i> Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($budget->departmentBudgets as $index => $deptBudget)
+                        <tr data-index="{{ $index }}" data-id="{{ $deptBudget->id }}">
+                            <td class="department-number">{{ $index + 1 }}</td>
+                            <td>
                                 <input type="hidden" name="departments[{{ $index }}][id]"
                                     value="{{ $deptBudget->id }}">
-                                <select name="departments[{{ $index }}][department_id]"
-                                    class="form-select modern-input" required>
+                                <select name="departments[{{ $index }}][department_id]" class="modern-input"
+                                    required>
                                     <option value="">Seleccionar...</option>
                                     @foreach ($departments as $dep)
                                         <option value="{{ $dep->id }}"
@@ -151,25 +145,19 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-wallet text-success"></i> Presupuesto *
-                                </label>
+                            </td>
+                            <td>
                                 <input type="text" name="departments[{{ $index }}][total_budget]"
-                                    class="form-control modern-input department-budget"
+                                    class="modern-input department-budget"
                                     value="{{ number_format($deptBudget->total_budget, 0, ',', '.') }}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-user-tie text-success"></i> Responsable *
-                                </label>
-                                <select name="departments[{{ $index }}][manager_id]"
-                                    class="form-select modern-input" required>
+                            </td>
+                            <td>
+                                <input type="text" name="departments[{{ $index }}][total_budget]"
+                                    class="modern-input department-budget"
+                                    value="{{ number_format($deptBudget->spent_budget, 0, ',', '.') }}" required>
+                            </td>
+                            <td>
+                                <select name="departments[{{ $index }}][manager_id]" class="modern-input" required>
                                     <option value="">Seleccionar...</option>
                                     @foreach ($managers as $manager)
                                         <option value="{{ $manager->id }}"
@@ -178,12 +166,23 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    onclick="removeDepartment({{ $index }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <button type="button" class="btn btn-success btn-sm mt-3" onclick="addDepartment()">
+                <i class="fas fa-plus me-2"></i> Agregar Dependencia
+            </button>
         </div>
+
 
         <div class="alert alert-info mt-3">
             <i class="fas fa-info-circle me-2"></i>
@@ -283,6 +282,7 @@
         .budgets-edit .budget-warning strong {
             color: #28a745;
         }
+
         .budgets-edit .modern-input:focus {
             border-color: #4cd137;
             box-shadow: 0 0 0 0.2rem rgba(76, 209, 55, 0.25);
@@ -364,7 +364,8 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            margin-right: 10px;
+            margin-top: 10px;
+            margin-left: 10px
         }
 
         /* Botones */
@@ -418,6 +419,104 @@
                 gap: 10px;
             }
         }
+
+        /* Tabla moderna */
+        .budgets-edit .table-modern {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            margin-bottom: 0;
+            table-layout: auto;
+            /* Ajusta columnas al contenido */
+        }
+
+        /* Encabezado */
+        .budgets-edit .table-modern thead {
+            background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
+            color: #fff;
+        }
+
+        .budgets-edit .table-modern thead th {
+            padding: 5px 5px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 600;
+            border: none;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        /* Iconos del header */
+        .budgets-edit .table-modern thead th i {
+            margin-right: 6px;
+            /* Espacio entre icono y texto */
+            color: #fff;
+        }
+
+        /* Filas */
+        .budgets-edit .table-modern tbody tr {
+            background: #fff;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .budgets-edit .table-modern tbody tr:hover {
+            background: #f8fff9;
+            transform: scale(1.002);
+            box-shadow: 0 2px 8px rgba(76, 209, 55, 0.15);
+        }
+
+        /* Celdas */
+        .budgets-edit .table-modern tbody td {
+            padding: 5px 5px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.95rem;
+            color: #2c3e50;
+        }
+
+        /* Badges de porcentaje */
+        .budgets-edit .table-modern tbody .badge {
+            font-weight: 600;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+
+        /* Colores de badges */
+        .budgets-edit .badge.bg-success {
+            background-color: #2ed573 !important;
+        }
+
+        .budgets-edit .badge.bg-warning {
+            background-color: #ffa502 !important;
+        }
+
+        .budgets-edit .badge.bg-danger {
+            background-color: #e84118 !important;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .budgets-edit .table-modern thead {
+                display: none;
+                /* Se puede ocultar el header y usar tarjetas en móvil */
+            }
+
+            .budgets-edit .table-modern tbody td {
+                display: block;
+                text-align: right;
+                padding: 10px;
+            }
+
+            .budgets-edit .table-modern tbody td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: #2c3e50;
+            }
+        }
     </style>
 @endpush
 
@@ -427,76 +526,62 @@
 
         let departmentCount = {{ $budget->departmentBudgets->count() }};
         const departments = @json($departments);
-
-        function formatMoney(value) {
-            if (!value) return "";
-            value = value.replace(/[^\d]/g, "");
-            let number = parseFloat(value);
-            if (isNaN(number)) return "";
-            return number.toLocaleString("es-CO");
-        }
-
-        function cleanMoney(value) {
-            return value.replace(/[^\d]/g, "");
-        }
+        const managers = @json($managers);
 
         function addDepartment() {
             departmentCount++;
-            const container = document.getElementById('departmentsContainer');
+            const tableBody = document.querySelector('#departmentsTable tbody');
 
-            const departmentHtml = `
-                <div class="department-card" data-index="${departmentCount}">
-                    <div class="department-header">
-                        <div class="d-flex align-items-sedes gap-3">
-                            <div class="department-number">${departmentCount + 1}</div>
-                            <h6 class="mb-0">Nueva Dependencia</h6>
-                        </div>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeDepartment(${departmentCount})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-sitemap text-success"></i> Dependencia *
-                                </label>
-                                <select name="departments[${departmentCount}][id]" 
-                                        class="form-select modern-input" required>
-                                    <option value="">Seleccionar...</option>
-                                    ${departments.map(dep => `<option value="${dep.id}">${dep.nombre}</option>`).join('')}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-wallet text-success"></i> Presupuesto *
-                                </label>
-                                <input type="text" 
-                                       name="departments[${departmentCount}][total_budget]"
-                                       class="form-control modern-input department-budget"
-                                       placeholder="0"
-                                       required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-index', departmentCount);
 
-            container.insertAdjacentHTML('beforeend', departmentHtml);
+            newRow.innerHTML = `
+        <td class="department-number">${departmentCount + 1}</td>
+        <td>
+            <select name="departments[${departmentCount}][department_id]" class="modern-input" required>
+                <option value="">Seleccionar...</option>
+                ${departments.map(dep => `<option value="${dep.id}">${dep.nombre}</option>`).join('')}
+            </select>
+        </td>
+        <td>
+            <input type="text" name="departments[${departmentCount}][total_budget]" 
+                   class="modern-input department-budget" placeholder="0" required>
+        </td>
+        <td>
+            <select name="departments[${departmentCount}][manager_id]" class="modern-input" required>
+                <option value="">Seleccionar...</option>
+                ${managers.map(manager => `<option value="${manager.id}">${manager.name}</option>`).join('')}
+            </select>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeDepartment(${departmentCount})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+
+            tableBody.appendChild(newRow);
             attachMoneyFormatting();
             updateBudgetSummary();
         }
 
         function removeDepartment(index) {
-            const card = document.querySelector(`[data-index="${index}"]`);
-            if (card) {
-                if (confirm('¿Estás seguro de eliminar esta dependencia del presupuesto?')) {
-                    card.remove();
-                    updateBudgetSummary();
-                }
+            const row = document.querySelector(`#departmentsTable tr[data-index="${index}"]`);
+            if (row && confirm('¿Estás seguro de eliminar esta dependencia del presupuesto?')) {
+                row.remove();
+                updateBudgetSummary();
             }
+        }
+
+        function cleanMoney(value) {
+            return value.replace(/[^\d]/g, '');
+        }
+
+        function formatMoney(value) {
+            if (!value) return "";
+            let number = parseInt(value);
+            if (isNaN(number)) return "";
+            return number.toLocaleString("es-CO");
         }
 
         function attachMoneyFormatting() {
@@ -507,34 +592,66 @@
         }
 
         function handleMoneyInput(e) {
-            const input = e.target;
-            const cursorPos = input.selectionStart;
-            const raw = cleanMoney(input.value);
-            input.value = formatMoney(raw);
-            input.setSelectionRange(cursorPos, cursorPos);
-            updateBudgetSummary();
+    const input = e.target;
+    const cursorPos = input.selectionStart;
+    let raw = cleanMoney(input.value);
+
+    // Obtener presupuesto total
+    const totalBudget = parseInt(cleanMoney(document.getElementById('total_budget').value)) || 0;
+
+    // Calcular suma de las demás dependencias
+    let assignedExceptCurrent = 0;
+    document.querySelectorAll('.department-budget').forEach(el => {
+        if (el !== input) {
+            assignedExceptCurrent += parseInt(cleanMoney(el.value)) || 0;
         }
+    });
+
+    // Validar que no supere el total
+    let maxValue = totalBudget - assignedExceptCurrent;
+    if (parseInt(raw) > maxValue) {
+        // Mostrar alerta con número que intentó ingresar
+        alert(
+            `La sumatoria de los presupuestos de las dependencias es superior al presupuesto general.\n` +
+            `Número ingresado: ${formatMoney(raw)}`
+        );
+        raw = maxValue; // corregir al valor máximo permitido
+    }
+
+    input.value = formatMoney(raw);
+    input.setSelectionRange(cursorPos, cursorPos);
+    updateBudgetSummary();
+}
+
 
         function updateBudgetSummary() {
-            let total = 0;
-            document.querySelectorAll('.department-budget').forEach(input => {
-                const value = parseInt(cleanMoney(input.value)) || 0;
-                total += value;
+            let total = parseInt(cleanMoney(document.getElementById('total_budget').value)) || 0;
+            let assigned = 0;
+            let rows = document.querySelectorAll('#departmentsTable tbody tr');
+
+            rows.forEach(row => {
+                const input = row.querySelector('.department-budget');
+                let value = parseInt(cleanMoney(input.value)) || 0;
+                assigned += value;
             });
 
+            // Actualizar valores en el resumen
             document.getElementById('totalBudget').textContent = '$' + formatMoney(total.toString());
-            document.getElementById('availableBudget').textContent = '$' + formatMoney(total.toString());
-            document.getElementById('percentageAssigned').textContent = '100%';
+            document.getElementById('availableBudget').textContent = '$' + formatMoney((total - assigned).toString());
+            let percent = total > 0 ? Math.round((assigned / total) * 100) : 0;
+            document.getElementById('percentageAssigned').textContent = percent + '%';
+            document.getElementById('departmentsCount').textContent = rows.length;
         }
 
+        // Inicializar al cargar la página
+        attachMoneyFormatting();
+        updateBudgetSummary();
+
+        // Limpiar el input antes de enviar el formulario
         document.getElementById('budgetForm').addEventListener('submit', function() {
             document.querySelectorAll('.department-budget').forEach(input => {
                 input.value = cleanMoney(input.value);
             });
         });
-
-        // Inicializar el formateo y el resumen
-        attachMoneyFormatting();
-        updateBudgetSummary();
     </script>
 @endpush

@@ -151,15 +151,16 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="progress-info">
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <span class="fw-bold">Progreso de Ejecución</span>
-                                        <strong class="text-primary">{{ number_format($percentage, 1) }}%</strong>
-                                    </div>
-                                    <div class="progress" style="height: 30px;">
-                                        <div class="progress-bar {{ $statusClass }}" style="width: {{ $percentage }}%">
-                                            {{ number_format($percentage, 1) }}%
+                                    <div class="progress"
+                                        style="height: 30px; background-color: #e9ecef; border-radius: 8px;">
+                                        <div class="progress-bar" id="progressBar" role="progressbar"
+                                            style="width: 0%; height: 100%; border-radius: 8px; background-color: #4cd137;
+                                               display: flex; align-items: center; justify-content: center; color: white;">
+                                            0%
                                         </div>
+
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -605,17 +606,28 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.body.classList.add('budgets-show');
+        // Obtener datos de las dependencias desde Blade
+        const departments = @json($budget->departmentBudgets);
 
-        // Gráfico de ejecución del presupuesto
+        // Calcular porcentaje ponderado total
+        let totalSpent = 0;
+        let totalBudget = 0;
+
+        departments.forEach(dept => {
+            totalSpent += dept.spent_budget;
+            totalBudget += dept.total_budget;
+        });
+
+        const executedPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+        // Configurar gráfico general
         const ctx = document.getElementById('budgetChart').getContext('2d');
         new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Ejecutado', 'Disponible'],
                 datasets: [{
-                    data: [{{ $budget->spent_budget }},
-                        {{ $budget->total_budget - $budget->spent_budget }}
-                    ],
+                    data: [executedPercent, 100 - executedPercent],
                     backgroundColor: ['#e74c3c', '#4cd137'],
                     borderWidth: 0
                 }]
@@ -631,9 +643,29 @@
                                 size: 14
                             }
                         }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw.toFixed(1) + '%';
+                            }
+                        }
                     }
                 }
             }
         });
+
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = executedPercent + '%';
+        progressBar.innerText = executedPercent.toFixed(1) + '%';
+
+        // Cambiar color según porcentaje
+        if (executedPercent >= 90) {
+            progressBar.style.backgroundColor = '#e74c3c';
+        } else if (executedPercent >= 70) {
+            progressBar.style.backgroundColor = '#f39c12';
+        } else {
+            progressBar.style.backgroundColor = '#4cd137';
+        }
     </script>
 @endpush
