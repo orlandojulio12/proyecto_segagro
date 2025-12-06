@@ -159,6 +159,9 @@ Route::middleware('auth')->group(function () {
         // AJAX
         Route::post('/validar-dias', [PqrController::class, 'validarDias'])
             ->name('pqr.validarDias');
+
+            Route::patch('/{pqr}/toggle-state', [PqrController::class, 'toggleState'])
+            ->name('pqr.toggleState');
     });
 
     Route::prefix('budget')->group(function () {
@@ -166,26 +169,29 @@ Route::middleware('auth')->group(function () {
         // List
         Route::get('/list', [BudgetController::class, 'index'])
             ->name('budget.index');
-    
+
         // Create
         Route::get('/create', [BudgetController::class, 'create'])
             ->name('budget.create');
         Route::post('/store', [BudgetController::class, 'store'])
             ->name('budget.store');
-    
+
         // Show
         Route::get('/{budget}/show', [BudgetController::class, 'show'])
             ->name('budget.show');
-    
+
         // Edit
         Route::get('/{budget}/edit', [BudgetController::class, 'edit'])
             ->name('budget.edit');
         Route::put('/{budget}/update', [BudgetController::class, 'update'])
             ->name('budget.update');
-    
+
         // Delete
         Route::delete('/{budget}/delete', [BudgetController::class, 'destroy'])
             ->name('budget.destroy');
+
+        Route::get('/{budget}/adjustments', [BudgetController::class, 'adjustments'])
+            ->name('budget.adjustments');
     });
 
 

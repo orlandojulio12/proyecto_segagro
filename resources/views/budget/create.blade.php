@@ -124,15 +124,14 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th><i class="fas fa-sitemap"></i> Dependencia</th>
-                        <th><i class="fas fa-wallet"></i> Presupuesto</th>
-                        <th><i class="fas fa-user-tie"></i> Responsable</th>
-                        <th><i class="fas fa-cogs"></i> Acciones</th>
+                        <th>Unidad</th>
+                        <th>Subunidad</th>
+                        <th>Presupuesto</th>
+                        <th>Responsable</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Las filas se agregan dinámicamente -->
-                </tbody>
+                <tbody></tbody>
             </table>
 
             <div id="noRowsMessage" class="no-rows-message">
@@ -145,13 +144,12 @@
                 </div>
             </div>
 
-
             <br>
-
             <button type="button" class="btn btn-success btn-sm mt-3" onclick="addDepartment()">
                 <i class="fas fa-plus me-2"></i> Agregar Dependencia
             </button>
         </div>
+
 
 
         <div class="alert alert-info mt-3">
@@ -161,7 +159,7 @@
         </div>
 
         <!-- Botones de acción -->
-        <div class="d-flex justify-content-end gap-2 mt-4">
+        <div class="action-buttons">
             <a href="{{ route('budget.index') }}" class="btn btn-secondary">
                 <i class="fas fa-times me-2"></i>Cancelar
             </a>
@@ -418,7 +416,6 @@
         /* Iconos del header */
         .budgets-edit .table-modern thead th i {
             margin-right: 6px;
-            /* Espacio entre icono y texto */
             color: #fff;
         }
 
@@ -494,6 +491,13 @@
             background-color: #e84118 !important;
         }
 
+        .budgets-edit .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-right: 5px
+        }
+
         /* Responsivo */
         @media (max-width: 768px) {
             .budgets-edit .table-modern thead {
@@ -523,7 +527,7 @@
         document.body.classList.add('budgets-edit');
 
         let departmentCount = 0;
-        const departments = @json($departments);
+        const units = @json($units);
         const managers = @json([$user]); // solo el manager actual para create
 
         function updateNoRowsMessage() {
@@ -545,33 +549,59 @@
             const newRow = document.createElement('tr');
             newRow.setAttribute('data-index', index);
 
+            // Crear options para UNIDADES
+            const unitOptions = units
+                .map(u => `<option value="${u.dependency_unit_id}">${u.short_name}</option>`)
+                .join('');
+
             newRow.innerHTML = `
-                <td class="department-number">${index + 1}</td>
-                <td>
-                    <select name="departments[${index}][department_id]" class="modern-input" required>
-                        <option value="">Seleccionar...</option>
-                        ${departments.map(dep => `<option value="${dep.id}">${dep.nombre}</option>`).join('')}
-                    </select>
-                </td>
-                <td>
-                    <input type="text" name="departments[${index}][total_budget]" 
-                           class="modern-input department-budget" placeholder="0" required>
-                </td>
-                <td>
-                    <input type="text" class="modern-input" value="{{ $user->name }}" disabled>
-                </td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeDepartment(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
+        <td class="department-number">${index + 1}</td>
+
+        <!-- Select Unidad -->
+        <td>
+            <select class="modern-input unit-select" 
+                    name="departments[${index}][unit_id]" 
+                    onchange="loadSubunits(${index})"
+                    required>
+                <option value="">Seleccionar...</option>
+                ${unitOptions}
+            </select>
+        </td>
+
+        <!-- Select Subunidad (dinámico) -->
+        <td>
+            <select class="modern-input subunit-select"
+                    name="departments[${index}][id]"
+                    required>
+                <option value="">Seleccione una unidad primero</option>
+            </select>
+        </td>
+
+        <!-- Presupuesto -->
+        <td>
+            <input type="text" name="departments[${index}][total_budget]"
+                   class="modern-input department-budget"
+                   placeholder="0" required>
+        </td>
+
+        <!-- Responsable -->
+        <td>
+            <input type="text" class="modern-input" value="{{ $user->name }}" disabled>
+        </td>
+
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeDepartment(${index})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
 
             tableBody.appendChild(newRow);
             attachMoneyFormatting();
             updateBudgetSummary();
             updateNoRowsMessage();
         }
+
 
         function removeDepartment(index) {
             const row = document.querySelector(`#departmentsTable tr[data-index="${index}"]`);
@@ -581,6 +611,23 @@
                 updateNoRowsMessage();
             }
         }
+
+        function loadSubunits(index) {
+            const unitSelect = document.querySelector(`tr[data-index="${index}"] .unit-select`);
+            const subunitSelect = document.querySelector(`tr[data-index="${index}"] .subunit-select`);
+
+            const selectedUnit = units.find(u => u.dependency_unit_id == unitSelect.value);
+
+            if (!selectedUnit) {
+                subunitSelect.innerHTML = '<option value="">Seleccione una unidad primero</option>';
+                return;
+            }
+
+            subunitSelect.innerHTML = selectedUnit.subunits
+                .map(s => `<option value="${s.subunit_id}">${s.subunit_code} - ${s.name}</option>`)
+                .join('');
+        }
+
 
         function cleanMoney(value) {
             return value.replace(/[^\d]/g, '');

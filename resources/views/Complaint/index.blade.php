@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('page-title', 'Quejas')
+@section('page-title', 'PQRS')
 
 @section('dashboard-content')
 
@@ -374,9 +374,9 @@
     <!-- HEADER -->
     <div class="section-header mb-4">
         <div>
-            <h2 class="fw-bold">Gestión de Quejas</h2>
-            <p class="text-muted">Listado completo de PQR</p>
+            <p class="text-muted">Listado completo de PQRS((Peticiones, Quejas, Reclamos y Solicitudes))</p>
         </div>
+        <br>
 
         <div class="d-flex gap-2">
 
@@ -407,13 +407,17 @@
             <h4 class="mb-3">Filtrar</h4>
 
             <label class="fw-bold">Dependencia</label>
-            <select id="filterDependency" class="form-select mb-3">
-                <option value="">Todas</option>
+            <select id="filterDependency" name="dependency" class="form-select mb-3">
+                <option value="">-- Todas las dependencias --</option>
+
                 @foreach ($dependencies as $dep)
-                    <option value="{{ $dep }}">{{ $dep }}</option>
+                    <option value="{{ $dep->subunit_id }}"
+                        {{ request('dependency') == $dep->subunit_id ? 'selected' : '' }}>
+                        {{ $dep->name }}
+                    </option>
                 @endforeach
             </select>
-<br>
+            <br>
             <label class="fw-bold">Estado</label>
             <select id="filterStatus" class="form-select mb-3">
                 <option value="">Todos</option>
@@ -434,16 +438,18 @@
         <div class="custom-modal-content">
             <h4 class="mb-3">Ordenar</h4>
 
-            <label class="fw-bold">Tipo de orden</label>
+            <label class="fw-bold">Ordenar por</label>
             <select id="orderColor" class="form-select mb-3">
-                <option value="">Normal</option>
-                <option value="1">Orden por color</option>
+                <option value="">Por fecha</option>
+                <option value="1" {{ request('order_color') == 1 ? 'selected' : '' }}>Por estado/días restantes
+                </option>
             </select>
 
             <button class="btn btn-primary w-100" onclick="applyFilters()">Aplicar orden</button>
             <button class="btn btn-light w-100 mt-2" onclick="closeOrderModal()">Cerrar</button>
         </div>
     </div>
+
 
     <script>
         // abrir modales
@@ -465,7 +471,6 @@
 
         // APLICAR FILTROS AJAX
         function applyFilters() {
-
             closeFilterModal();
             closeOrderModal();
 
@@ -482,12 +487,9 @@
                 }))
                 .then(res => res.text())
                 .then(html => {
-
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, "text/html");
-
                     const newGrid = doc.querySelector('#pqrGrid');
-
                     if (newGrid) {
                         document.getElementById('pqrGrid').innerHTML = newGrid.innerHTML;
                     } else {
@@ -495,6 +497,7 @@
                     }
                 });
         }
+
 
 
         document.addEventListener("DOMContentLoaded", function() {

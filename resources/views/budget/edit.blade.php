@@ -37,15 +37,12 @@
                 <div class="content-card">
                     <div class="form-group mb-3">
                         <label class="form-label fw-semibold">
-                            <i class="fas fa-wallet text-success"></i> Presupuesto Total *
+                            <i class="fas fa-wallet text-success"></i> Presupuesto Total
                         </label>
-                        <input type="text" name="total_budget" id="total_budget"
-                            class="form-control modern-input @error('total_budget') is-invalid @enderror"
-                            value="{{ number_format($budget->total_budget, 0, ',', '.') }}" required>
-                        <small class="text-muted">Debe coincidir con la suma de dependencias</small>
-                        @error('total_budget')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <input type="text" id="total_budget" class="form-control modern-input"
+                            value="{{ number_format($budget->total_budget, 0, ',', '.') }}" readonly>
+                        <small class="text-muted">Este valor se calcula automáticamente sumando los presupuestos de las
+                            dependencias.</small>
                     </div>
 
                     <div class="form-group mb-3">
@@ -71,11 +68,50 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enableAdjustmentSwitch">
+                        <label class="form-check-label fw-semibold" for="enableAdjustmentSwitch">
+                            ¿Aplicar un ajuste al presupuesto?
+                        </label>
+                    </div>
+
+                    <hr class="my-4">
+                    <br>
+                    <div id="adjustmentSection" class="adjustment-hidden">
+                        <h5 class="section-title">
+                            <i class="fas fa-exchange-alt"></i> Ajustar Presupuesto General
+                        </h5>
+                        <p class="text-muted mb-3">
+                            Registre un ajuste positivo o negativo al presupuesto general.
+                            Este ajuste quedará asociado a su usuario y fecha actual.
+                        </p>
+
+                        <br>
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-plus-minus text-success"></i> Monto del Ajuste
+                            </label>
+                            <input type="text" name="adjustment_amount" id="adjustment_amount"
+                                class="form-control modern-input" placeholder="Ej: 2.500.000 o -1.000.000">
+                            <small class="text-muted">Puede ingresar valores positivos o negativos.</small>
+                        </div>
+
+                        <div class="form-group mb-1">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-comment text-success"></i> Descripción del Ajuste
+                            </label>
+                            <textarea name="adjustment_description" class="form-control modern-input" rows="2"
+                                placeholder="Motivo del ajuste (requerido si hay ajuste)"></textarea>
+                        </div>
+                    </div>
+
                     <p class="budget-warning">
                         <strong>Aviso:</strong> Al actualizar cualquiera de estos datos, usted asume la responsabilidad
                         correspondiente.
                         Toda modificación quedará registrada en el sistema de auditoría del aplicativo.
                     </p>
+
                     <br><br>
                 </div>
 
@@ -111,7 +147,11 @@
                         </div>
                     </div>
                     <br>
+                    <div id="adjustments-section">
+                        <p class="text-muted">Cargando historial...</p>
+                    </div>
                 </div>
+                <br>
             </div>
         </div>
         <br>
@@ -121,7 +161,8 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th><i class="fas fa-sitemap"></i> Dependencia</th>
+                        <th><i class="fas fa-sitemap"></i> Unidad</th>
+                        <th><i class="fas fa-sitemap"></i> SubUnidad</th>
                         <th><i class="fas fa-wallet"></i> Presupuesto</th>
                         <th><i class="fas fa-wallet"></i> Presupuesto gastado</th>
                         <th><i class="fas fa-user-tie"></i> Responsable</th>
@@ -133,31 +174,54 @@
                         <tr data-index="{{ $index }}" data-id="{{ $deptBudget->id }}">
                             <td class="department-number">{{ $index + 1 }}</td>
                             <td>
-                                <input type="hidden" name="departments[{{ $index }}][id]"
-                                    value="{{ $deptBudget->id }}">
-                                <select name="departments[{{ $index }}][department_id]" class="modern-input"
-                                    required>
+                                {{-- SELECT UNIDAD --}}
+                                <select name="departments[{{ $index }}][unit_id]" class="modern-input unit-select"
+                                    data-row="{{ $index }}" required>
+
                                     <option value="">Seleccionar...</option>
-                                    @foreach ($departments as $dep)
-                                        <option value="{{ $dep->id }}"
-                                            {{ $deptBudget->department_id == $dep->id ? 'selected' : '' }}>
-                                            {{ $dep->nombre }}
+
+                                    @foreach ($units as $unit)
+                                    <option value="{{ $unit->dependency_unit_id }}"
+                                            {{ $unit->dependency_unit_id == ($deptBudget->SubUnit->dependency_unit_id ?? null) ? 'selected' : '' }}>
+                                            {{ $unit->short_name }}
                                         </option>
                                     @endforeach
                                 </select>
                             </td>
+
+                            <td>
+                                {{-- SELECT SUBUNIDAD (DINÁMICO) --}}
+                                <select name="departments[{{ $index }}][department_id]"
+                                    class="modern-input subunit-select" id="subunit-select-{{ $index }}" required>
+
+                                    <option value="">Seleccionar...</option>
+
+                                    @if ($deptBudget->SubUnit)
+                                        @foreach ($deptBudget->SubUnit->dependencyUnit->subunits as $sub)
+                                            <option value="{{ $sub->subunit_id }}"
+                                                {{ $deptBudget->department_id == $sub->subunit_id ? 'selected' : '' }}>
+                                                {{ $sub->name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+
+                                </select>
+                            </td>
+
                             <td>
                                 <input type="text" name="departments[{{ $index }}][total_budget]"
                                     class="modern-input department-budget"
                                     value="{{ number_format($deptBudget->total_budget, 0, ',', '.') }}" required>
                             </td>
                             <td>
-                                <input type="text" name="departments[{{ $index }}][total_budget]"
-                                    class="modern-input department-budget"
+                                <input type="text" name="departments[{{ $index }}][spent_budget]"
+                                    class="modern-input department-spent-budget"
                                     value="{{ number_format($deptBudget->spent_budget, 0, ',', '.') }}" required>
                             </td>
+
                             <td>
-                                <select name="departments[{{ $index }}][manager_id]" class="modern-input" required>
+                                <select name="departments[{{ $index }}][manager_id]" class="modern-input"
+                                    required>
                                     <option value="">Seleccionar...</option>
                                     @foreach ($managers as $manager)
                                         <option value="{{ $manager->id }}"
@@ -177,7 +241,7 @@
                     @endforeach
                 </tbody>
             </table>
-
+            <br>
             <button type="button" class="btn btn-success btn-sm mt-3" onclick="addDepartment()">
                 <i class="fas fa-plus me-2"></i> Agregar Dependencia
             </button>
@@ -192,7 +256,7 @@
         </div>
 
         <!-- Botones de acción -->
-        <div class="d-flex justify-content-end gap-2 mt-4">
+        <div class="action-buttons">
             <a href="{{ route('budget.show', $budget) }}" class="btn btn-secondary">
                 <i class="fas fa-times me-2"></i>Cancelar
             </a>
@@ -496,6 +560,146 @@
             background-color: #e84118 !important;
         }
 
+        /* Animación para el ajuste */
+        .adjustment-hidden {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.45s ease-in-out;
+        }
+
+        .adjustment-visible {
+            opacity: 1;
+            max-height: 500px;
+            margin-top: 10px;
+            transition: all 0.45s ease-in-out;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination {
+            list-style: none;
+            display: flex;
+            gap: 6px;
+            padding: 0;
+        }
+
+        .pagination .page-item {
+            display: inline-block;
+        }
+
+        .pagination .page-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            height: 38px;
+
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: #ffffff;
+
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.95rem;
+
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pagination .page-link:hover {
+            background: #f2fff0;
+            border-color: #4cd137;
+            transform: translateY(-2px);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, #4cd137, #3db32a);
+            color: #fff !important;
+            border: none;
+            box-shadow: 0 2px 8px rgba(76, 209, 55, 0.35);
+            font-weight: 600;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: #f5f5f5;
+            color: #aaaaaa;
+            border: 1px solid #eeeeee;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .adjustments-table {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        .adjustments-table thead {
+            background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
+            color: white;
+        }
+
+        .adjustments-table th {
+            padding: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            text-align: center;
+        }
+
+        .adjustments-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .adjustments-table tbody tr:nth-child(even) {
+            background: #f9fdf9;
+        }
+
+        .adjustments-table tbody tr:hover {
+            background: #eefbe9;
+            transform: scale(1.005);
+            box-shadow: 0 2px 6px rgba(76, 209, 55, 0.15);
+        }
+
+        .adjustments-table td {
+            padding: 10px;
+            font-size: 0.95rem;
+            vertical-align: middle;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        /* Badges */
+        .adjustments-table .badge {
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            font-weight: 600;
+            border-radius: 12px;
+        }
+
+        .badge.bg-success {
+            background-color: #2ecc71 !important;
+        }
+
+        .badge.bg-danger {
+            background-color: #e74c3c !important;
+        }
+
+        .budgets-edit .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-right: 5px
+        }
+
+
         /* Responsivo */
         @media (max-width: 768px) {
             .budgets-edit .table-modern thead {
@@ -525,8 +729,47 @@
         document.body.classList.add('budgets-edit');
 
         let departmentCount = {{ $budget->departmentBudgets->count() }};
-        const departments = @json($departments);
+        const units = @json($units);
         const managers = @json($managers);
+
+        // Helper: obtiene el id de la unidad soportando dependency_unit_id o id
+        const getUnitId = (u) => (u.dependency_unit_id ?? u.id ?? u.dependencyUnitId ?? null);
+
+        // Carga subunidades según la unidad seleccionada
+        function loadSubunits(unitSelect) {
+            const row = unitSelect.dataset.row;
+            const subunitSelect = document.getElementById('subunit-select-' + row);
+
+            // si no existe el select de subunidad, salir
+            if (!subunitSelect) return;
+
+            const unitId = parseInt(unitSelect.value) || null;
+
+            // limpiar opciones
+            subunitSelect.innerHTML = `<option value="">Seleccionar...</option>`;
+
+            if (!unitId) return;
+
+            const unit = units.find(u => parseInt(getUnitId(u)) === unitId);
+
+            if (!unit || !Array.isArray(unit.subunits)) return;
+
+            unit.subunits.forEach(sub => {
+                const option = document.createElement('option');
+                // tomar sub.subunit_id o sub.id si depende del model
+                const subId = sub.subunit_id ?? sub.id ?? sub.subUnitId ?? sub.id_subunit ?? null;
+                option.value = subId;
+                option.textContent = sub.name;
+                subunitSelect.appendChild(option);
+            });
+
+            // Si el row tiene un valor seleccionado (data attribute), seleccionarlo
+            // data-selected-sub lo ponemos cuando inicializamos filas existentes
+            const selectedSub = subunitSelect.dataset.selected;
+            if (selectedSub) {
+                subunitSelect.value = selectedSub;
+            }
+        }
 
         function addDepartment() {
             departmentCount++;
@@ -537,12 +780,24 @@
 
             newRow.innerHTML = `
         <td class="department-number">${departmentCount + 1}</td>
+
         <td>
-            <select name="departments[${departmentCount}][department_id]" class="modern-input" required>
+            <select name="departments[${departmentCount}][unit_id]" 
+                    class="modern-input unit-select" 
+                    data-row="${departmentCount}" required>
                 <option value="">Seleccionar...</option>
-                ${departments.map(dep => `<option value="${dep.id}">${dep.nombre}</option>`).join('')}
+                ${units.map(u => `<option value="${getUnitId(u)}">${u.short_name}</option>`).join('')}
             </select>
         </td>
+
+        <td>
+            <select name="departments[${departmentCount}][department_id]" 
+                    class="modern-input subunit-select"
+                    id="subunit-select-${departmentCount}" data-selected="" required>
+                <option value="">Seleccionar...</option>
+            </select>
+        </td>
+
         <td>
             <input type="text" name="departments[${departmentCount}][total_budget]" 
                    class="modern-input department-budget" placeholder="0" required>
@@ -561,6 +816,16 @@
     `;
 
             tableBody.appendChild(newRow);
+
+            // event listener para la unidad de la nueva fila
+            const unitSelect = newRow.querySelector('.unit-select');
+            unitSelect.addEventListener('change', function() {
+                // antes de cargar subunidades borrar posible data-selected
+                const subSel = document.getElementById('subunit-select-' + this.dataset.row);
+                if (subSel) subSel.dataset.selected = '';
+                loadSubunits(this);
+            });
+
             attachMoneyFormatting();
             updateBudgetSummary();
         }
@@ -592,37 +857,32 @@
         }
 
         function handleMoneyInput(e) {
-    const input = e.target;
-    const cursorPos = input.selectionStart;
-    let raw = cleanMoney(input.value);
+            const input = e.target;
+            const cursorPos = input.selectionStart;
+            let raw = cleanMoney(input.value);
 
-    // Obtener presupuesto total
-    const totalBudget = parseInt(cleanMoney(document.getElementById('total_budget').value)) || 0;
+            const totalBudget = parseInt(cleanMoney(document.getElementById('total_budget').value)) || 0;
 
-    // Calcular suma de las demás dependencias
-    let assignedExceptCurrent = 0;
-    document.querySelectorAll('.department-budget').forEach(el => {
-        if (el !== input) {
-            assignedExceptCurrent += parseInt(cleanMoney(el.value)) || 0;
+            let assignedExceptCurrent = 0;
+            document.querySelectorAll('.department-budget').forEach(el => {
+                if (el !== input) {
+                    assignedExceptCurrent += parseInt(cleanMoney(el.value)) || 0;
+                }
+            });
+
+            let maxValue = totalBudget - assignedExceptCurrent;
+            if (parseInt(raw) > maxValue) {
+                alert(
+                    `La sumatoria de los presupuestos de las dependencias es superior al presupuesto general.\n` +
+                    `Número ingresado: ${formatMoney(raw)}`
+                );
+                raw = maxValue;
+            }
+
+            input.value = formatMoney(raw);
+            input.setSelectionRange(cursorPos, cursorPos);
+            updateBudgetSummary();
         }
-    });
-
-    // Validar que no supere el total
-    let maxValue = totalBudget - assignedExceptCurrent;
-    if (parseInt(raw) > maxValue) {
-        // Mostrar alerta con número que intentó ingresar
-        alert(
-            `La sumatoria de los presupuestos de las dependencias es superior al presupuesto general.\n` +
-            `Número ingresado: ${formatMoney(raw)}`
-        );
-        raw = maxValue; // corregir al valor máximo permitido
-    }
-
-    input.value = formatMoney(raw);
-    input.setSelectionRange(cursorPos, cursorPos);
-    updateBudgetSummary();
-}
-
 
         function updateBudgetSummary() {
             let total = parseInt(cleanMoney(document.getElementById('total_budget').value)) || 0;
@@ -635,7 +895,6 @@
                 assigned += value;
             });
 
-            // Actualizar valores en el resumen
             document.getElementById('totalBudget').textContent = '$' + formatMoney(total.toString());
             document.getElementById('availableBudget').textContent = '$' + formatMoney((total - assigned).toString());
             let percent = total > 0 ? Math.round((assigned / total) * 100) : 0;
@@ -643,15 +902,79 @@
             document.getElementById('departmentsCount').textContent = rows.length;
         }
 
-        // Inicializar al cargar la página
-        attachMoneyFormatting();
-        updateBudgetSummary();
+        // Inicialización y bindings al cargar la página
+        document.addEventListener("DOMContentLoaded", function() {
+
+            // 1) Para cada fila existente: enlazar evento unit-select y cargar subunits si hay unidad seleccionada
+            document.querySelectorAll('tr[data-index]').forEach(row => {
+                const idx = row.getAttribute('data-index');
+                const unitSelect = row.querySelector('.unit-select');
+                const subSelect = row.querySelector('.subunit-select');
+
+                if (unitSelect) {
+                    // bind change
+                    unitSelect.addEventListener('change', function() {
+                        // limpiar data-selected para evitar selección antigua
+                        if (subSelect) subSelect.dataset.selected = '';
+                        loadSubunits(this);
+                    });
+
+                    // si ya tiene unidad seleccionada, cargar sus subunidades y marcar la subunid. existente
+                    const unitId = parseInt(unitSelect.value) || null;
+                    if (unitId && subSelect) {
+                        // guardar el valor actual de department_id para seleccionarlo después
+                        const currentSub = subSelect.getAttribute('data-existing') || subSelect.value ||
+                            subSelect.dataset.selected || null;
+                        // preferimos usar atributo data-existing si lo pusiste en blade; si no, usamos el value actual
+                        subSelect.dataset.selected = currentSub;
+                        loadSubunits(unitSelect);
+                    }
+                }
+            });
+
+            // 2) Inicializar otras cosas
+            attachMoneyFormatting();
+            updateBudgetSummary();
+
+            // 3) ajustes AJAX (mantengo tu código)
+            loadAdjustmentsInitial();
+
+            function loadAdjustmentsInitial(url = "{{ route('budget.adjustments', $budget->id) }}") {
+                fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById("adjustments-section").innerHTML = data.html;
+                        document.querySelectorAll('#adjustments-section .pagination a').forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                loadAdjustmentsInitial(this.href);
+                            });
+                        });
+                    });
+            }
+        });
 
         // Limpiar el input antes de enviar el formulario
         document.getElementById('budgetForm').addEventListener('submit', function() {
             document.querySelectorAll('.department-budget').forEach(input => {
                 input.value = cleanMoney(input.value);
             });
+        });
+
+        document.getElementById('enableAdjustmentSwitch').addEventListener('change', function() {
+            const section = document.getElementById('adjustmentSection');
+
+            if (this.checked) {
+                section.classList.remove('adjustment-hidden');
+                section.classList.add('adjustment-visible');
+            } else {
+                section.classList.remove('adjustment-visible');
+                section.classList.add('adjustment-hidden');
+            }
         });
     </script>
 @endpush

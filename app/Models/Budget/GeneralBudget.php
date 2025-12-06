@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\Budget;
 
 use App\Models\Centro;
@@ -24,7 +25,7 @@ class GeneralBudget extends Model
     {
         return $this->belongsTo(Sede::class, 'sede_id');
     }
-    
+
 
     public function manager()
     {
@@ -39,7 +40,18 @@ class GeneralBudget extends Model
     // Automatically sum all department budgets
     public function recalculateTotal()
     {
-        $this->total_budget = $this->departmentBudgets()->sum('total_budget');
+        $sumDepartments = $this->departmentBudgets()->sum('total_budget');
+        $sumSpent = $this->departmentBudgets()->sum('spent_budget');
+        $sumAdjustments = $this->adjustments()->sum('amount');
+
+        $this->total_budget = $sumDepartments + $sumAdjustments;
+        $this->spent_budget = $sumSpent;
         $this->save();
+    }
+
+
+    public function adjustments()
+    {
+        return $this->hasMany(GeneralBudgetAdjustment::class, 'general_budget_id');
     }
 }

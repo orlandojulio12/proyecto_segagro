@@ -12,21 +12,22 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('general_budget_id')
-                  ->constrained('general_budgets')
-                  ->onDelete('cascade');
-
-            $table->foreignId('department_id')
-                  ->constrained('dependencias')
-                  ->onDelete('cascade');
+                ->constrained('general_budgets')
+                ->onDelete('cascade');
+                
+            // Aquí cambiamos dependencias → dependency_subunits
+            $table->unsignedBigInteger('department_id');
+            $table->foreign('department_id')
+                ->references('subunit_id')
+                ->on('dependency_subunits')
+                ->onDelete('cascade');
 
             $table->bigInteger('total_budget');
             $table->bigInteger('spent_budget')->default(0);
 
             $table->integer('year');
 
-            $table->foreignId('manager_id')
-                  ->constrained('users')
-                  ->onDelete('cascade');
+            $table->bigInteger('manager_id')->unsigned();
 
             $table->timestamps();
         });

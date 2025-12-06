@@ -43,8 +43,8 @@
                         </div>
                         <div class="ms-3 flex-grow-1">
                             <div class="stat-number">
-                                ${{ number_format($budgets->sum('total_budget'), 0, ',', '.') }}
-                            </div>
+                                ${{ number_format($budgets->sum('total_budget') - $budgets->sum('spent_budget'), 0, ',', '.') }}
+                            </div>                            
                             <div class="stat-label">Presupuesto Total</div>
                         </div>
                     </div>

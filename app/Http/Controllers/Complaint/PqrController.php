@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Complaint;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PqrRequest;
 use App\Models\Complaint\pqr;
+use App\Models\Dependency\DependencySubunit;
+use App\Models\Dependency\DependencyUnit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -12,9 +14,6 @@ use Illuminate\Support\Facades\Auth;
 
 class PqrController extends Controller
 {
-    /**
-     * Muestra el listado de todas las PQR
-     */
     public function index(Request $request)
     {
         $query = Pqr::query();
@@ -24,26 +23,13 @@ class PqrController extends Controller
             $query->where('dependency', $request->dependency);
         }
 
-        // Ordenamiento base
-        $sortBy = $request->get('sort', 'date_desc');
-        
-        switch($sortBy) {
-            case 'date_asc':
-                $query->orderBy('date', 'asc');
-                break;
-            case 'date_desc':
-            default:
-                $query->orderBy('date', 'desc');
-                break;
-        }
-
         // Obtener todas las PQR
         $allPqr = $query->get();
 
-        // Filtro por estado (basado en días restantes)
+        // Filtrar por estado de días si se envía
         if ($request->filled('status')) {
-            $allPqr = $allPqr->filter(function($item) use ($request) {
-                return match($request->status) {
+            $allPqr = $allPqr->filter(function ($item) use ($request) {
+                return match ($request->status) {
                     'verde' => $item->days_remaining >= 6,
                     'amarillo' => $item->days_remaining >= 2 && $item->days_remaining < 6,
                     'rojo' => $item->days_remaining >= 1 && $item->days_remaining < 2,
@@ -53,55 +39,55 @@ class PqrController extends Controller
             });
         }
 
-        // Ordenamiento adicional por días (después del filtro)
-        if (in_array($sortBy, ['days_asc', 'days_desc'])) {
-            $allPqr = $allPqr->sortBy(function($item) {
-                return $item->days_remaining;
-            }, SORT_REGULAR, $sortBy === 'days_desc');
+        // Ordenamiento por estado (pendientes primero)
+        $allPqr = $allPqr->sortBy(fn($item) => $item->state);
+
+        // Ordenamiento adicional según modal de orden
+        $orderColor = $request->get('order_color');
+        if ($orderColor == 1) {
+            // Orden por color/días restantes (urgente primero)
+            $allPqr = $allPqr->sortBy(fn($item) => $item->days_remaining);
+        } else {
+            // Orden por fecha descendente por defecto
+            $allPqr = $allPqr->sortByDesc('date');
         }
 
-        // Obtener lista de dependencias únicas para el filtro
-        $dependencies = Pqr::select('dependency')->distinct()->pluck('dependency');
+        // Obtener lista de dependencias únicas
+        $dependencies = DependencySubunit::select('subunit_id', 'name', 'subunit_code')->get();
 
         return view('Complaint.index', [
             'pqr' => $allPqr,
             'dependencies' => $dependencies,
             'selectedDependency' => $request->dependency,
-            'selectedStatus' => $request->status
+            'selectedStatus' => $request->status,
+            'orderColor' => $orderColor
         ]);
     }
 
-    /**
-     * Muestra el formulario para crear una nueva PQR
-     */
     public function create()
     {
-        return view('Complaint.create');
+        $units = DependencyUnit::with('subunits')->get();
+
+        return view('Complaint.create', compact('units'));
     }
 
-    /**
-     * Almacena una nueva PQR en la base de datos
-     */
     public function store(PqrRequest $request)
     {
         try {
-            $data = $request->validated();
 
-            // Agregar el ID del usuario autenticado
+            $data = $request->validated();
+            $data['dependency'] = $request->dependency; // subunit_id seleccionado
             $data['user_id'] = Auth::id();
 
-            // Si hay un archivo PDF, guardarlo
             if ($request->hasFile('pdf')) {
                 $data['pdf_path'] = $request->file('pdf')->store('pqrs', 'public');
             }
 
-            // Crear la PQR
-            $pqr = Pqr::create($data);
+            Pqr::create($data);
 
             return redirect()
                 ->route('pqr.index')
                 ->with('success', 'PQR registrada exitosamente');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -109,9 +95,6 @@ class PqrController extends Controller
         }
     }
 
-    /**
-     * AJAX: Valida los días transcurridos y retorna color de estado
-     */
     public function validarDias(Request $request)
     {
         $request->validate([
@@ -146,18 +129,17 @@ class PqrController extends Controller
         ]);
     }
 
-    /**
-     * Muestra el formulario para editar una PQR
-     */
     public function edit($id)
     {
         $pqr = Pqr::findOrFail($id);
-        return view('Complaint.edit', compact('pqr'));
+
+        // Traer las unidades y subunidades
+        $units = DependencyUnit::with('subunits')->get();
+
+        return view('Complaint.edit', compact('pqr', 'units'));
     }
 
-    /**
-     * Actualiza una PQR existente
-     */
+
     public function update(PqrRequest $request, $id)
     {
         try {
@@ -178,7 +160,6 @@ class PqrController extends Controller
             return redirect()
                 ->route('pqr.index')
                 ->with('success', 'PQR actualizada exitosamente');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -186,9 +167,6 @@ class PqrController extends Controller
         }
     }
 
-    /**
-     * Elimina una PQR
-     */
     public function destroy($id)
     {
         try {
@@ -204,10 +182,21 @@ class PqrController extends Controller
             return redirect()
                 ->route('pqr.index')
                 ->with('success', 'PQR eliminada exitosamente');
-
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'Error al eliminar la PQR: ' . $e->getMessage());
+        }
+    }
+
+    public function toggleState(Pqr $pqr)
+    {
+        try {
+            $pqr->state = !$pqr->state;
+            $pqr->save();
+
+            return back()->with('success', 'Estado de la PQR actualizado correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
         }
     }
 }

@@ -90,9 +90,10 @@
                                 <i class="fas fa-calendar text-success"></i> Año:
                             </span>
                             <span class="detail-value">
-                                <span class="badge bg-secondary">{{ $budget->year }}</span>
+                                <span class="badge" style="background-color: #2ed573; color:#fff;">{{ $budget->year }}</span>
+
                             </span>
-                        </div>
+                        </div>                        
 
                         <div class="detail-item">
                             <span class="detail-label">
@@ -188,7 +189,8 @@
                     <table class="table table-modern">
                         <thead>
                             <tr>
-                                <th>Dependencia</th>
+                                <th>Unidad</th>
+                                <th>Subunidades</th>
                                 <th>Presupuesto</th>
                                 <th>Ejecutado</th>
                                 <th>Disponible</th>
@@ -206,18 +208,43 @@
                                 @endphp
 
                                 <tr>
-                                    <td><strong>{{ $dept->department->nombre ?? 'N/A' }}</strong></td>
-                                    <td><span
-                                            class="text-primary">${{ number_format($dept->total_budget, 0, ',', '.') }}</span>
+                                    <td class="col-small">
+                                        <strong>{{ $dept->SubUnit->dependencyUnit->short_name }}</strong>
                                     </td>
-                                    <td><span
-                                            class="text-danger">${{ number_format($dept->spent_budget, 0, ',', '.') }}</span>
+
+                                    <td class="col-small">
+                                        @if ($dept->SubUnit->dependencyUnit->subunits->count())
+                                            <ul class="mb-0">
+                                                <li>{{ $dept->SubUnit->name }}</li>
+                                            </ul>
+                                        @else
+                                            <span class="text-muted">Sin subunidades</span>
+                                        @endif
                                     </td>
-                                    <td><span
-                                            class="text-success">${{ number_format($dept->total_budget - $dept->spent_budget, 0, ',', '.') }}</span>
+
+                                    <td>
+                                        <span class="text-primary">
+                                            ${{ number_format($dept->total_budget, 0, ',', '.') }}
+                                        </span>
                                     </td>
-                                    <td><span class="badge {{ $dpClass }}">{{ number_format($dp, 1) }}%</span></td>
+
+                                    <td>
+                                        <span class="text-danger">
+                                            ${{ number_format($dept->spent_budget, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="text-success">
+                                            ${{ number_format($dept->total_budget - $dept->spent_budget, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge {{ $dpClass }}">{{ number_format($dp, 1) }}%</span>
+                                    </td>
                                 </tr>
+
 
                             @empty
                                 <tr>
@@ -453,6 +480,26 @@
             /* Ajusta columnas al contenido */
         }
 
+        .budgets-show .badge {
+            font-weight: 600;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+
+        /* Colores de badges */
+        .budgets-show .badge.bg-success {
+            background-color: #2ed573 !important;
+        }
+
+        .budgets-show .badge.bg-warning {
+            background-color: #ffa502 !important;
+        }
+
+        .budgets-show .badge.bg-danger {
+            background-color: #e84118 !important;
+        }
+
         /* Encabezado */
         .budgets-show .table-modern thead {
             background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
@@ -518,6 +565,19 @@
         .budgets-show .badge.bg-danger {
             background-color: #e84118 !important;
         }
+
+        .budgets-show .table-modern tbody td.col-small {
+            font-size: 0.78rem;
+            /* más pequeño */
+            line-height: 1.15;
+            /* contenido más compacto */
+            max-width: 180px;
+            /* evita que se estire demasiado */
+            white-space: normal;
+            /* permite salto de línea */
+            word-wrap: break-word;
+        }
+
 
         /* Responsivo */
         @media (max-width: 768px) {

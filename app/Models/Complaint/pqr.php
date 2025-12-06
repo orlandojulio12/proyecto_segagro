@@ -2,6 +2,7 @@
 
 namespace App\Models\Complaint;
 
+use App\Models\Dependency\DependencySubunit;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,8 @@ class pqr extends Model
         'responsible',
         'dependency',
         'pdf_path',
-        'user_id'
+        'user_id',
+        'state'
     ];
 
     protected $casts = [
@@ -33,17 +35,11 @@ class pqr extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Obtiene los días transcurridos desde la fecha de creación
-     */
     public function getDaysPassedAttribute()
     {
         return Carbon::parse($this->date)->diffInDays(Carbon::now());
     }
 
-    /**
-     * Obtiene los días restantes para resolver la PQR (máximo 12 días)
-     */
     public function getDaysRemainingAttribute()
     {
         $maxDias = 12;
@@ -52,9 +48,6 @@ class pqr extends Model
         return max(0, $maxDias - $diasTranscurridos);
     }
 
-    /**
-     * Obtiene el color del estado según los días restantes
-     */
     public function getColorStatusAttribute()
     {
         $dias = $this->days_remaining;
@@ -69,10 +62,6 @@ class pqr extends Model
             return '#B71C1C';      // Rojo oscuro → vencido
         }
     }
-
-    /**
-     * Obtiene el texto del estado según los días restantes
-     */
     public function getStatusTextAttribute()
     {
         $dias = $this->days_remaining;
@@ -88,29 +77,20 @@ class pqr extends Model
         }
     }
 
-    /**
-     * Verifica si la PQR está vencida
-     */
     public function getIsExpiredAttribute()
     {
         return $this->days_remaining === 0;
     }
 
-    /**
-     * Obtiene la fecha límite para resolver la PQR
-     */
     public function getDeadlineDateAttribute()
     {
         return Carbon::parse($this->date)->addDays(12);
     }
 
-    /**
-     * Scope para filtrar PQR por estado
-     */
     public function scopeByStatus($query, $status)
     {
-        return $query->get()->filter(function($pqr) use ($status) {
-            return match($status) {
+        return $query->get()->filter(function ($pqr) use ($status) {
+            return match ($status) {
                 'en_tiempo' => $pqr->days_remaining >= 6,
                 'por_vencer' => $pqr->days_remaining >= 2 && $pqr->days_remaining < 6,
                 'urgente' => $pqr->days_remaining >= 1 && $pqr->days_remaining < 2,
@@ -120,13 +100,20 @@ class pqr extends Model
         });
     }
 
-    /**
-     * Scope para filtrar PQR vencidas
-     */
     public function scopeExpired($query)
     {
-        return $query->get()->filter(function($pqr) {
+        return $query->get()->filter(function ($pqr) {
             return $pqr->is_expired;
         });
+    }
+
+    public function subunit()
+    {
+        return $this->belongsTo(DependencySubunit::class, 'dependency', 'subunit_id');
+    }
+
+    public function getStateTextAttribute()
+    {
+        return $this->state ? 'Completada' : 'Pendiente';
     }
 }

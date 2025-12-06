@@ -22,9 +22,7 @@ return new class extends Migration
             $table->integer('year');
             $table->string('resolution')->nullable();
 
-            $table->foreignId('manager_id')
-                ->constrained('users')
-                ->onDelete('cascade');
+            $table->bigInteger('manager_id')->unsigned();
 
             $table->timestamps();
         });
@@ -32,6 +30,11 @@ return new class extends Migration
 
     public function down()
     {
+        Schema::disableForeignKeyConstraints();
+
+        Schema::dropIfExists('department_budgets');
         Schema::dropIfExists('general_budgets');
+
+        Schema::enableForeignKeyConstraints();
     }
 };

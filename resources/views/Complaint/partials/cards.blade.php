@@ -1,12 +1,16 @@
 {{-- resources/views/Complaint/partials/cards.blade.php --}}
 
-@if($pqr->count() > 0)
+@if ($pqr->count() > 0)
     @foreach ($pqr as $item)
         <div class="card custom-card">
             <div class="card-body">
                 <div class="card-tags">
-                    <span class="tag tag--frequency">PQR</span>
-                    <span class="tag tag--type">{{ $item->dependency }}</span>
+                    <span class="tag tag--frequency">
+                        {{ $item->subunit->subunit_code ?? 'Sin código' }}
+                    </span>
+                    <span class="tag tag--type">
+                        {{ $item->subunit->name ?? 'Sin dependencia' }}
+                    </span>
                 </div>
 
                 <div class="title">{{ $item->title }}</div>
@@ -26,9 +30,15 @@
                 <a href="{{ route('pqr.edit', $item->id) }}" class="btn-action btn-action-edit" title="Editar">
                     <i class="fas fa-edit"></i>
                 </a>
-                <button onclick="confirmDelete({{ $item->id }})" class="btn-action btn-action-delete" title="Eliminar">
+                <button onclick="confirmDelete({{ $item->id }})" class="btn-action btn-action-delete"
+                    title="Eliminar">
                     <i class="fas fa-trash"></i>
                 </button>
+                <button onclick="toggleState({{ $item->id }})" class="btn-action btn-action-complete"
+                    title="{{ $item->state ? 'Marcar como pendiente' : 'Marcar como completada' }}">
+                    <i class="fas {{ $item->state ? 'fa-undo' : 'fa-check' }}"></i>
+                </button>
+
             </div>
 
             <div class="card-footer custom-footer">
@@ -36,23 +46,23 @@
                     <div class="avatar">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode($item->responsible) }}&background=6366f1&color=fff&bold=true">
                     </div>
-                    <div class="responsible-name">
-                        {{ $item->responsible }}
-                    </div>
-                </div>
-
-                <div class="footer-right">
-                    <div class="dias-text">
+                    <!-- Días restantes con color de estado -->
+                    <div class="dias-text" style="background: {{ $item->color_status }}; color: white; padding: 4px 10px; border-radius: 12px; font-weight: 600; display: inline-block;">
                         @if ($item->days_remaining > 0)
-                            {{ intval($item->days_remaining) }} día{{ intval($item->days_remaining) != 1 ? 's' : '' }}
-                            restante{{ intval($item->days_remaining) != 1 ? 's' : '' }}
+                            {{ intval($item->days_remaining) }} día{{ intval($item->days_remaining) != 1 ? 's' : '' }} restante{{ intval($item->days_remaining) != 1 ? 's' : '' }}
                         @else
                             Vencido
                         @endif
                     </div>
-                    <div class="state-dot" style="background: {{ $item->color_status }};"></div>
                 </div>
-            </div>
+            
+                <div class="footer-right">
+                    <!-- Cartel llamativo del estado -->
+                    <div class="status-badge mt-2" data-status="{{ $item->state_text }}">
+                        {{ $item->state_text }}
+                    </div>
+                </div>
+            </div>            
         </div>
     @endforeach
 
@@ -69,11 +79,11 @@
                     <i class="fas fa-clipboard-list"></i>
                 </div>
             </div>
-            
+
             <h3 class="empty-state-title">No hay PQR registradas</h3>
-            
+
             <p class="empty-state-description">
-                @if(request('dependency') || request('status'))
+                @if (request('dependency') || request('status'))
                     No se encontraron PQR que coincidan con los filtros seleccionados.
                     <br>Intenta ajustar tus criterios de búsqueda.
                 @else
@@ -83,7 +93,7 @@
             </p>
 
             <div class="empty-state-actions">
-                @if(request('dependency') || request('status'))
+                @if (request('dependency') || request('status'))
                     <button onclick="clearFilters()" class="btn-empty-primary">
                         <i class="fas fa-redo-alt"></i>
                         Limpiar filtros
@@ -94,30 +104,36 @@
                         Crear primera PQR
                     </a>
                 @endif
-                
-                
+
+
             </div>
 
             <!-- Ilustración decorativa -->
             <div class="empty-state-illustration">
-                <svg width="200" height="160" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="200" height="160" viewBox="0 0 200 160" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
                     <!-- Documento principal -->
-                    <rect x="40" y="30" width="120" height="100" rx="8" fill="#f0fdf4" stroke="#4cd137" stroke-width="2"/>
-                    
+                    <rect x="40" y="30" width="120" height="100" rx="8" fill="#f0fdf4" stroke="#4cd137"
+                        stroke-width="2" />
+
                     <!-- Líneas de texto -->
-                    <line x1="60" y1="50" x2="140" y2="50" stroke="#86efac" stroke-width="3" stroke-linecap="round"/>
-                    <line x1="60" y1="65" x2="120" y2="65" stroke="#86efac" stroke-width="3" stroke-linecap="round"/>
-                    <line x1="60" y1="80" x2="130" y2="80" stroke="#86efac" stroke-width="3" stroke-linecap="round"/>
-                    
+                    <line x1="60" y1="50" x2="140" y2="50" stroke="#86efac" stroke-width="3"
+                        stroke-linecap="round" />
+                    <line x1="60" y1="65" x2="120" y2="65" stroke="#86efac" stroke-width="3"
+                        stroke-linecap="round" />
+                    <line x1="60" y1="80" x2="130" y2="80" stroke="#86efac" stroke-width="3"
+                        stroke-linecap="round" />
+
                     <!-- Ícono de búsqueda -->
-                    <circle cx="100" cy="105" r="12" fill="white" stroke="#4cd137" stroke-width="2"/>
-                    <line x1="109" y1="114" x2="118" y2="123" stroke="#4cd137" stroke-width="2" stroke-linecap="round"/>
-                    
+                    <circle cx="100" cy="105" r="12" fill="white" stroke="#4cd137" stroke-width="2" />
+                    <line x1="109" y1="114" x2="118" y2="123" stroke="#4cd137" stroke-width="2"
+                        stroke-linecap="round" />
+
                     <!-- Partículas decorativas -->
-                    <circle cx="30" cy="40" r="3" fill="#86efac" opacity="0.6"/>
-                    <circle cx="170" cy="50" r="4" fill="#4ade80" opacity="0.5"/>
-                    <circle cx="180" cy="100" r="3" fill="#86efac" opacity="0.6"/>
-                    <circle cx="25" cy="100" r="4" fill="#4ade80" opacity="0.5"/>
+                    <circle cx="30" cy="40" r="3" fill="#86efac" opacity="0.6" />
+                    <circle cx="170" cy="50" r="4" fill="#4ade80" opacity="0.5" />
+                    <circle cx="180" cy="100" r="3" fill="#86efac" opacity="0.6" />
+                    <circle cx="25" cy="100" r="4" fill="#4ade80" opacity="0.5" />
                 </svg>
             </div>
         </div>
@@ -180,7 +196,7 @@
     /* ================================ */
     /* EMPTY STATE MEJORADO - VERDE */
     /* ================================ */
-    
+
     .empty-state-wrapper {
         grid-column: 1 / -1;
         display: flex;
@@ -196,7 +212,7 @@
         padding: 48px 40px;
         max-width: 560px;
         width: 100%;
-        box-shadow: 
+        box-shadow:
             0 10px 40px rgba(76, 209, 55, 0.08),
             0 0 0 1px rgba(76, 209, 55, 0.1);
         text-align: center;
@@ -210,6 +226,7 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -230,22 +247,25 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 
+        box-shadow:
             0 8px 24px rgba(76, 209, 55, 0.3),
             0 0 0 12px rgba(76, 209, 55, 0.1);
         animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
-        0%, 100% {
+
+        0%,
+        100% {
             transform: scale(1);
-            box-shadow: 
+            box-shadow:
                 0 8px 24px rgba(76, 209, 55, 0.3),
                 0 0 0 12px rgba(76, 209, 55, 0.1);
         }
+
         50% {
             transform: scale(1.05);
-            box-shadow: 
+            box-shadow:
                 0 12px 32px rgba(76, 209, 55, 0.4),
                 0 0 0 16px rgba(76, 209, 55, 0.15);
         }
@@ -334,10 +354,83 @@
         animation: float 3s ease-in-out infinite;
     }
 
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 12px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    /* Colores según el estado */
+    .status-badge:before {
+        content: '';
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: middle;
+        background: currentColor;
+    }
+
+    /* Estado Pendiente */
+    .status-badge:empty[data-status="Pendiente"],
+    .status-badge[data-status="Pendiente"] {
+        background: #f59e0b;
+        /* naranja */
+    }
+
+    /* Estado Completada */
+    .status-badge:empty[data-status="Completada"],
+    .status-badge[data-status="Completada"] {
+        background: #10b981;
+        /* verde */
+    }
+
+    /* Estado Vencido */
+    .status-badge:empty[data-status="Vencido"],
+    .status-badge[data-status="Vencido"] {
+        background: #ef4444;
+        /* rojo */
+    }
+
+    /* Estado Urgente */
+    .status-badge:empty[data-status="Urgente"],
+    .status-badge[data-status="Urgente"] {
+        background: #f97316;
+        /* naranja oscuro */
+    }
+
+    /* Animación ligera */
+    .status-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .dias-text {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dias-text:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+
+
     @keyframes float {
-        0%, 100% {
+
+        0%,
+        100% {
             transform: translateY(0px);
         }
+
         50% {
             transform: translateY(-10px);
         }
@@ -392,5 +485,17 @@
             form.action = '/pqr/eliminar/' + id;
             form.submit();
         }
+    }
+
+    function toggleState(id) {
+        fetch('/pqr/' + id + '/toggle-state', {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(() => location.reload())
+            .catch(err => alert('Error al cambiar estado'));
     }
 </script>
