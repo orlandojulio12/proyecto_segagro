@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             DependencisSeeder::class,
             HiringModalitiesSeeder::class,
             ContractTypesSeeder::class,
-            CatalogProductSeeder::class,
+            /* CatalogProductSeeder::class, */
             DependencyUnitsSeeder::class,
             DependencySubunitsSeeder::class,
         ]);
