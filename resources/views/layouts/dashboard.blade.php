@@ -86,10 +86,12 @@
                     Infraestructura
                 </a>
 
-                <a href="#" class="nav-item {{ request()->routeIs('presupuesto.*') ? 'active' : '' }}">
+                <a href="{{ route('budget.index') }}"
+                    class="nav-item {{ request()->routeIs('budget.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     Presupuesto
                 </a>
+
                 <a href="{{ route('pqr.index') }}" class="nav-item {{ request()->routeIs('pqr.index') ? 'active' : '' }}">
                     <i class="fas fa-comment-dots"></i>
                     Quejas / PQR

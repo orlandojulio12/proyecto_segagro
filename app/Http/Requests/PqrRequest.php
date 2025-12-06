@@ -24,7 +24,7 @@ class PqrRequest extends FormRequest
             'date' => 'required|date',
             'description' => 'required|string|min:10',
             'responsible' => 'required|string|max:255',
-            'dependency' => 'required|string|max:255',
+            'dependency' => 'required|exists:dependency_subunits,subunit_id',
             'pdf' => 'nullable|file|mimes:pdf|max:10240', // Máximo 10MB
         ];
     }

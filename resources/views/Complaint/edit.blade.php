@@ -50,34 +50,36 @@
                         <small class="text-muted">Fecha en que se registró la PQR</small>
                     </div>
 
+                    <!-- Unidad -->
                     <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Dependencia *</label>
-                        <select name="dependency" class="form-select modern-input" required>
-                            <option value="">Seleccionar dependencia</option>
-                            <option value="Administración"
-                                {{ old('dependency', $pqr->dependency) == 'Administración' ? 'selected' : '' }}>
-                                Administración</option>
-                            <option value="Recursos Humanos"
-                                {{ old('dependency', $pqr->dependency) == 'Recursos Humanos' ? 'selected' : '' }}>Recursos
-                                Humanos</option>
-                            <option value="Tecnología"
-                                {{ old('dependency', $pqr->dependency) == 'Tecnología' ? 'selected' : '' }}>Tecnología
-                            </option>
-                            <option value="Operaciones"
-                                {{ old('dependency', $pqr->dependency) == 'Operaciones' ? 'selected' : '' }}>Operaciones
-                            </option>
-                            <option value="Atención al Cliente"
-                                {{ old('dependency', $pqr->dependency) == 'Atención al Cliente' ? 'selected' : '' }}>
-                                Atención al Cliente</option>
-                            <option value="Mantenimiento"
-                                {{ old('dependency', $pqr->dependency) == 'Mantenimiento' ? 'selected' : '' }}>
-                                Mantenimiento</option>
-                            <option value="Calidad"
-                                {{ old('dependency', $pqr->dependency) == 'Calidad' ? 'selected' : '' }}>Calidad</option>
-                            <option value="Otros" {{ old('dependency', $pqr->dependency) == 'Otros' ? 'selected' : '' }}>
-                                Otros</option>
+                        <label class="form-label text-success fw-semibold">Unidad *</label>
+                        <select name="unit_id" id="unitSelect" class="form-select modern-input" required>
+                            <option value="">Seleccionar unidad</option>
+                            @foreach ($units as $unit)
+                                <option value="{{ $unit->dependency_unit_id }}"
+                                    {{ $pqr->subunit && $pqr->subunit->unit_id == $unit->dependency_unit_id ? 'selected' : '' }}>
+                                    {{ $unit->short_name }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
+
+                    <!-- Subunidad -->
+                    <div class="form-group mb-3">
+                        <label class="form-label text-success fw-semibold">Subunidad *</label>
+                        <select name="dependency" id="subunitSelect" class="form-select modern-input" required>
+                            <option value="">Selecciona primero una unidad</option>
+                            @foreach ($units as $unit)
+                                @foreach ($unit->subunits as $subunit)
+                                    <option value="{{ $subunit->subunit_id }}" data-unit="{{ $unit->dependency_unit_id }}"
+                                        {{ $pqr->dependency == $subunit->subunit_id ? 'selected' : '' }}>
+                                        {{ $subunit->name }}
+                                    </option>
+                                @endforeach
+                            @endforeach
+                        </select>
+                    </div>
+
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Responsable *</label>
@@ -353,6 +355,41 @@
             // Escuchar cambios en la fecha
             dateInput.addEventListener('change', calcularDias);
             dateInput.addEventListener('input', calcularDias);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const unitSelect = document.getElementById('unitSelect');
+            const subunitSelect = document.getElementById('subunitSelect');
+
+            // Obtener la unidad seleccionada por Blade al cargar
+            const selectedUnitFromBlade = unitSelect.querySelector('option[selected]')?.value;
+            if (selectedUnitFromBlade) {
+                unitSelect.value = selectedUnitFromBlade;
+            }
+
+            function filterSubunits() {
+                const selectedUnit = unitSelect.value;
+                const options = subunitSelect.querySelectorAll('option');
+
+                options.forEach(option => {
+                    if (!option.value) return;
+                    option.style.display = option.dataset.unit === selectedUnit ? 'block' : 'none';
+                });
+
+                // Mantener subunidad seleccionada si sigue visible
+                const selectedSubunit = subunitSelect.querySelector('option:checked');
+                if (selectedSubunit && selectedSubunit.style.display === 'block') return;
+
+                // Si no hay seleccionada visible, seleccionar la primera visible
+                const firstVisible = Array.from(options).find(opt => opt.style.display === 'block');
+                if (firstVisible) firstVisible.selected = true;
+            }
+
+            // Filtrar al cargar
+            filterSubunits();
+
+            // Escuchar cambios en la unidad
+            unitSelect.addEventListener('change', filterSubunits);
         });
     </script>
 @endpush
