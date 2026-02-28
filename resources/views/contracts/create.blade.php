@@ -4,6 +4,8 @@
 @section('page-title', 'Crear Contrato')
 
 @section('dashboard-content')
+<div class="contracts-create"> {{-- ✅ Wrapper para scope de estilos (NO en body) --}}
+
     <div class="section-header mb-4">
         <div>
             <h2 class="fw-bold">Nuevo Contrato</h2>
@@ -29,6 +31,7 @@
     <form action="{{ route('contracts.store') }}" method="POST" id="contractForm">
         @csrf
 
+        {{-- Row 1: Contrato + Contratista --}}
         <div class="row g-4">
             <div class="col-6">
                 <div class="content-card mb-4">
@@ -72,7 +75,8 @@
                         <label class="form-label fw-semibold">
                             <i class="fas fa-align-left text-success"></i> Objeto del Contrato *
                         </label>
-                        <textarea name="contract_object" class="form-control modern-input @error('contract_object') is-invalid @enderror"
+                        <textarea name="contract_object"
+                            class="form-control modern-input @error('contract_object') is-invalid @enderror"
                             rows="4" placeholder="Describe el objeto del contrato..." required>{{ old('contract_object') }}</textarea>
                         @error('contract_object')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -81,7 +85,7 @@
                 </div>
             </div>
 
-            <!-- Información del Contratista -->
+            {{-- Información del Contratista --}}
             <div class="col-6">
                 <div class="content-card mb-4">
                     <h5 class="section-title">
@@ -118,7 +122,7 @@
                             <i class="fas fa-sitemap text-success"></i> Dependencia *
                         </label>
                         <select name="dependencia_id" id="dependenciaSelect"
-                            class="form-select modern-input @error('contract_type_id') is-invalid @enderror" required>
+                            class="form-select modern-input @error('dependencia_id') is-invalid @enderror" required>
                             <option value="">Seleccionar dependencia...</option>
                             @foreach ($dependencias as $dependencia)
                                 <option value="{{ $dependencia->id }}"
@@ -137,8 +141,8 @@
                             <i class="fas fa-file-alt text-success"></i> Tipo de Contrato *
                         </label>
                         <select name="contract_type_id" id="contractTypeSelect"
-                            class="form-select modern-input @error('contract_type_id') is-invalid @enderror" required
-                            disabled>
+                            class="form-select modern-input @error('contract_type_id') is-invalid @enderror"
+                            required disabled>
                             <option value="">Primero selecciona una dependencia...</option>
                         </select>
                         @error('contract_type_id')
@@ -149,9 +153,9 @@
             </div>
         </div>
 
-        <!-- Segundo Row: Ubicación y Fechas/Valores -->
+        {{-- Row 2: Ubicación + Fechas/Valores --}}
         <div class="row g-4">
-            <!-- Ubicación -->
+            {{-- Ubicación --}}
             <div class="col-6">
                 <div class="content-card mb-4">
                     <h5 class="section-title">
@@ -159,37 +163,19 @@
                     </h5>
                     <p class="section-subtitle">Sede donde se ejecuta el contrato</p>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-building text-success"></i> Centro *
-                        </label>
-                        <select id="centroSelect" class="form-select modern-input" required>
-                            <option value="">Seleccionar centro...</option>
-                            @foreach ($centros as $centro)
-                                <option value="{{ $centro->id }}"
-                                    {{ old('centro_id') == $centro->id ? 'selected' : '' }}>
-                                    {{ $centro->nom_centro }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-map-marker-alt text-success"></i> Sede *
-                        </label>
-                        <select name="sede_id" id="sedeSelect"
-                            class="form-select modern-input @error('sede_id') is-invalid @enderror" required disabled>
-                            <option value="">Primero selecciona un centro...</option>
-                        </select>
-                        @error('sede_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    {{-- ✅ Componente Centro y Sede --}}
+                    <x-centros-sedes-selector
+                        :centros="$centros"
+                        :required="true"
+                        :centroId="old('centro_id')"
+                        :sedeId="old('sede_id')"
+                        :centroNombre="''"
+                        :sedeNombre="''"
+                    />
                 </div>
             </div>
 
-            <!-- Información Financiera y Fechas -->
+            {{-- Información Financiera y Fechas --}}
             <div class="col-6">
                 <div class="content-card mb-4">
                     <h5 class="section-title">
@@ -251,7 +237,6 @@
                                 <input type="text" name="initial_value" id="initial_value"
                                     class="form-control modern-input @error('initial_value') is-invalid @enderror"
                                     value="{{ old('initial_value') }}" placeholder="0.00" required>
-
                                 @error('initial_value')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -279,7 +264,7 @@
             </div>
         </div>
 
-        <!-- Botones de acción -->
+        {{-- Botones de acción --}}
         <div class="d-flex justify-content-end gap-2 mt-4">
             <a href="{{ route('contracts.index') }}" class="btn btn-secondary">
                 <i class="fas fa-times me-2"></i>Cancelar
@@ -289,332 +274,264 @@
             </button>
         </div>
     </form>
+
+</div> {{-- fin .contracts-create --}}
 @endsection
 
 @push('styles')
-    <style>
-        /* Estilos específicos para contracts-create */
-        .contracts-create .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+<style>
+    .contracts-create .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .contracts-create .section-header h2 {
-            font-weight: 700;
-            color: #2c3e50;
-            margin: 0;
-        }
+    .contracts-create .section-header h2 {
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
 
-        .contracts-create .section-header p {
-            color: #6c757d;
-            margin: 5px 0 0 0;
-            font-size: 0.95rem;
-        }
+    .contracts-create .section-header p {
+        color: #6c757d;
+        margin: 5px 0 0 0;
+        font-size: 0.95rem;
+    }
 
-        .contracts-create .row {
-            display: flex;
-            margin-right: -0.5rem;
-            margin-left: -0.5rem;
-            margin-top: 22px;
-        }
+    .contracts-create .row {
+        display: flex;
+        margin-right: -0.5rem;
+        margin-left: -0.5rem;
+        margin-top: 22px;
+    }
 
-        .contracts-create .col-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-            padding-right: 0.5rem;
-            padding-left: 0.5rem;
-        }
+    .contracts-create .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+    }
 
-        .contracts-create .content-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e9ecef;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            height: 100%;
-        }
+    .contracts-create .content-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e9ecef;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        height: 100%;
+    }
 
-        .contracts-create .section-title {
-            color: #2c3e50;
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #4cd137;
-        }
+    .contracts-create .section-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #4cd137;
+    }
 
-        .contracts-create .section-title i {
-            color: #4cd137;
-            margin-right: 8px;
-        }
+    .contracts-create .section-title i {
+        color: #4cd137;
+        margin-right: 8px;
+    }
 
-        .contracts-create .section-subtitle {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
+    .contracts-create .section-subtitle {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
 
-        .contracts-create .form-label {
-            color: #2c3e50;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
+    .contracts-create .form-label {
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
 
-        .contracts-create .form-label i {
-            margin-right: 5px;
-        }
+    .contracts-create .form-label i {
+        margin-right: 5px;
+    }
 
-        .contracts-create .modern-input {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 10px 15px;
-            transition: all 0.3s ease;
-            font-size: 0.95rem;
-            width: 100%
-        }
+    .contracts-create .modern-input {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+        width: 100%;
+    }
 
-        .contracts-create .modern-input:focus {
-            border-color: #4cd137;
-            box-shadow: 0 0 0 0.2rem rgba(76, 209, 55, 0.25);
-        }
+    .contracts-create .modern-input:focus {
+        border-color: #4cd137;
+        box-shadow: 0 0 0 0.2rem rgba(76, 209, 55, 0.25);
+    }
 
-        #contractForm i {
-            color: #28a745 !important;
-            /* mismo verde de Bootstrap */
-        }
+    #contractForm i {
+        color: #28a745 !important;
+    }
 
-        .contracts-create .modern-input.is-invalid {
-            border-color: #dc3545;
-        }
+    .contracts-create .modern-input.is-invalid {
+        border-color: #dc3545;
+    }
 
-        .contracts-create .modern-input.is-invalid:focus {
-            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-        }
+    .contracts-create .modern-input.is-invalid:focus {
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
 
-        .contracts-create .btn {
-            border-radius: 8px;
-            font-weight: 500;
-            padding: 10px 24px;
-            transition: all 0.3s ease;
-            border: none;
-            margin-right: 15px;
-        }
+    .contracts-create .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 10px 24px;
+        transition: all 0.3s ease;
+        border: none;
+        margin-right: 15px;
+    }
 
-        .contracts-create .btn-success {
-            background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
-        }
+    .contracts-create .btn-success {
+        background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
+    }
 
-        .contracts-create .btn-success:hover {
-            background: linear-gradient(135deg, #3db32a 0%, #2d9e24 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 209, 55, 0.4);
-        }
+    .contracts-create .btn-success:hover {
+        background: linear-gradient(135deg, #3db32a 0%, #2d9e24 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(76, 209, 55, 0.4);
+    }
 
-        .contracts-create .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-            color: white;
-        }
+    .contracts-create .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        color: white;
+    }
 
-        .contracts-create .btn-secondary:hover {
-            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
-        }
+    .contracts-create .btn-secondary:hover {
+        background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    }
 
-        .contracts-create .btn-outline-secondary {
-            border: 2px solid #6c757d;
-            color: #6c757d;
-            background: white;
-        }
+    .contracts-create .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        background: white;
+    }
 
-        .contracts-create .btn-outline-secondary:hover {
-            background: #6c757d;
-            color: white;
-            transform: translateY(-2px);
-        }
+    .contracts-create .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+    }
 
-        .contracts-create .alert {
-            border-radius: 10px;
-            border: none;
-            padding: 15px 20px;
-        }
+    .contracts-create .alert {
+        border-radius: 10px;
+        border: none;
+        padding: 15px 20px;
+    }
 
-        .contracts-create .alert-danger {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            border-left: 4px solid #e74c3c;
-        }
+    .contracts-create .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border-left: 4px solid #e74c3c;
+    }
 
-        .contracts-create .invalid-feedback {
-            display: block;
-            font-size: 0.875rem;
-            color: #dc3545;
-            margin-top: 5px;
-        }
+    .contracts-create .invalid-feedback {
+        display: block;
+        font-size: 0.875rem;
+        color: #dc3545;
+        margin-top: 5px;
+    }
 
-        /* Forzar 2 columnas */
-        .contracts-create .row>.col-6 {
-            flex: 0 0 50% !important;
-            max-width: 50% !important;
-        }
+    .contracts-create .row > .col-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .contracts-create .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .contracts-create .row>.col-6 {
-                flex: 0 0 100% !important;
-                max-width: 100% !important;
-            }
-        }
-    </style>
+    @media (max-width: 768px) {
+        .contracts-create .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .contracts-create .row > .col-6 { flex: 0 0 100% !important; max-width: 100% !important; }
+    }
+</style>
 @endpush
 
 @push('scripts')
-    <script>
-        // Agregar clase al body para scope de estilos
-        document.body.classList.add('contracts-create');
+<script>
+    // ✅ Sin body.classList — el wrapper div hace el scope
 
-        // Cargar sedes cuando se selecciona un centro
-        document.getElementById('centroSelect').addEventListener('change', function() {
-            const centroId = this.value;
-            const sedeSelect = document.getElementById('sedeSelect');
+    // Cargar tipos de contrato cuando se selecciona una dependencia
+    document.getElementById('dependenciaSelect').addEventListener('change', function () {
+        const dependenciaId = this.value;
+        const typeSelect = document.getElementById('contractTypeSelect');
 
-            sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
-            sedeSelect.disabled = true;
+        typeSelect.innerHTML = '<option value="">Cargando tipos...</option>';
+        typeSelect.disabled = true;
 
-            if (!centroId) {
-                sedeSelect.innerHTML = '<option value="">Primero selecciona un centro...</option>';
-                return;
-            }
+        if (!dependenciaId) {
+            typeSelect.innerHTML = '<option value="">Primero selecciona una dependencia...</option>';
+            return;
+        }
 
-            fetch(`/contracts/sedes/centro/${centroId}`)
-                .then(response => response.json())
-                .then(sedes => {
-                    sedeSelect.innerHTML = '<option value="">Seleccionar sede...</option>';
-                    sedes.forEach(sede => {
-                        const option = document.createElement('option');
-                        option.value = sede.id;
-                        option.textContent = sede.nom_sede;
-                        sedeSelect.appendChild(option);
-                    });
-                    sedeSelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Error al cargar sedes:', error);
-                    sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>';
+        fetch(`/contracts/types/dependencia/${dependenciaId}`)
+            .then(response => response.json())
+            .then(types => {
+                typeSelect.innerHTML = '<option value="">Seleccionar tipo...</option>';
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.textContent = type.type_name;
+                    if (type.description) option.title = type.description;
+                    typeSelect.appendChild(option);
                 });
-        });
-
-        // Cargar tipos de contrato cuando se selecciona una dependencia
-        document.getElementById('dependenciaSelect').addEventListener('change', function() {
-            const dependenciaId = this.value;
-            const typeSelect = document.getElementById('contractTypeSelect');
-
-            typeSelect.innerHTML = '<option value="">Cargando tipos...</option>';
-            typeSelect.disabled = true;
-
-            if (!dependenciaId) {
-                typeSelect.innerHTML = '<option value="">Primero selecciona una dependencia...</option>';
-                return;
-            }
-
-            fetch(`/contracts/types/dependencia/${dependenciaId}`)
-                .then(response => response.json())
-                .then(types => {
-                    typeSelect.innerHTML = '<option value="">Seleccionar tipo...</option>';
-                    types.forEach(type => {
-                        const option = document.createElement('option');
-                        option.value = type.id;
-                        option.textContent = type.type_name;
-                        if (type.description) {
-                            option.title = type.description;
-                        }
-                        typeSelect.appendChild(option);
-                    });
-                    typeSelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Error al cargar tipos:', error);
-                    typeSelect.innerHTML = '<option value="">Error al cargar tipos</option>';
-                });
-        });
-
-        // Validación de fechas
-        const startDateInput = document.querySelector('input[name="start_date"]');
-        const endDateInput = document.querySelector('input[name="initial_end_date"]');
-        const extensionDateInput = document.querySelector('input[name="extension_date"]');
-
-        endDateInput.addEventListener('change', function() {
-            if (startDateInput.value && endDateInput.value) {
-                if (new Date(endDateInput.value) < new Date(startDateInput.value)) {
-                    alert('⚠️ La fecha de terminación debe ser posterior a la fecha de inicio');
-                    endDateInput.value = '';
-                }
-            }
-        });
-
-        extensionDateInput.addEventListener('change', function() {
-            if (endDateInput.value && extensionDateInput.value) {
-                if (new Date(extensionDateInput.value) <= new Date(endDateInput.value)) {
-                    alert('⚠️ La fecha de prórroga debe ser posterior a la fecha de terminación inicial');
-                    extensionDateInput.value = '';
-                }
-            }
-        });
-
-        // Formateador colombiano
-function formatMoney(value) {
-    if (!value) return "";
-    // Eliminar todo excepto números y coma/punto
-    value = value.replace(/[^\d]/g, "");
-
-    // Convertir a número
-    let number = parseFloat(value);
-    if (isNaN(number)) return "";
-
-    // Formato colombiano: 1.234.567
-    return number.toLocaleString("es-CO");
-}
-
-// Eliminar formato para enviar a la BD
-function cleanMoney(value) {
-    return value.replace(/[^\d]/g, "");
-}
-
-// Inputs a formatear
-const moneyInputs = ["initial_value", "addition_value"];
-
-moneyInputs.forEach(id => {
-    const input = document.getElementById(id);
-
-    input.addEventListener("input", function () {
-        const cursor = input.selectionStart;
-
-        // Valor sin formato
-        const raw = cleanMoney(input.value);
-
-        // Volver a aplicar formato
-        input.value = formatMoney(raw);
-
-        // Mantener cursor sin saltos
-        input.setSelectionRange(cursor, cursor);
+                typeSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error al cargar tipos:', error);
+                typeSelect.innerHTML = '<option value="">Error al cargar tipos</option>';
+            });
     });
-});
 
-// Antes de enviar el formulario → limpiar valores
-document.getElementById("contractForm").addEventListener("submit", function () {
-    moneyInputs.forEach(id => {
+    // Validación de fechas
+    const startDateInput     = document.querySelector('input[name="start_date"]');
+    const endDateInput       = document.querySelector('input[name="initial_end_date"]');
+    const extensionDateInput = document.querySelector('input[name="extension_date"]');
+
+    endDateInput.addEventListener('change', function () {
+        if (startDateInput.value && new Date(endDateInput.value) < new Date(startDateInput.value)) {
+            alert('⚠️ La fecha de terminación debe ser posterior a la fecha de inicio');
+            endDateInput.value = '';
+        }
+    });
+
+    extensionDateInput.addEventListener('change', function () {
+        if (endDateInput.value && new Date(extensionDateInput.value) <= new Date(endDateInput.value)) {
+            alert('⚠️ La fecha de prórroga debe ser posterior a la fecha de terminación inicial');
+            extensionDateInput.value = '';
+        }
+    });
+
+    // Formato de moneda colombiano
+    function formatMoney(value) {
+        if (!value) return '';
+        const number = parseFloat(value.replace(/[^\d]/g, ''));
+        return isNaN(number) ? '' : number.toLocaleString('es-CO');
+    }
+
+    function cleanMoney(value) {
+        return value.replace(/[^\d]/g, '');
+    }
+
+    ['initial_value', 'addition_value'].forEach(id => {
         const input = document.getElementById(id);
-        input.value = cleanMoney(input.value); 
+        input.addEventListener('input', function () {
+            const cursor = input.selectionStart;
+            input.value = formatMoney(input.value);
+            input.setSelectionRange(cursor, cursor);
+        });
     });
-});
-    </script>
+
+    document.getElementById('contractForm').addEventListener('submit', function () {
+        ['initial_value', 'addition_value'].forEach(id => {
+            const input = document.getElementById(id);
+            input.value = cleanMoney(input.value);
+        });
+    });
+</script>
 @endpush

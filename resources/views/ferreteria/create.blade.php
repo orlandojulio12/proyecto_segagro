@@ -44,31 +44,22 @@
                     <select name="staff_name" class="form-select modern-input" required>
                         <option value="">Seleccionar funcionario</option>
                         @foreach ($users as $user)
-                        <option value="{{ $user->id }}" {{ old('staff_name')==$user->id ? 'selected' : '' }}>
+                        <option value="{{ $user->id }}" {{ old('staff_name') == $user->id ? 'selected' : '' }}>
                             {{ $user->name }}
                         </option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="form-group mb-3">
-                    <label class="form-label text-success fw-semibold">Centro de formación *</label>
-                    <select name="centro_id" id="centroSelect" class="form-select modern-input" required>
-                        <option value="">Seleccionar centro</option>
-                        @foreach ($centros as $centro)
-                        <option value="{{ $centro->id }}" {{ old('centro_id')==$centro->id ? 'selected' : '' }}>
-                            {{ $centro->nom_centro }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label class="form-label text-success fw-semibold">Sede de formación *</label>
-                    <select name="sede_id" id="sedeSelect" class="form-select modern-input" required>
-                        <option value="">Primero selecciona un centro</option>
-                    </select>
-                </div>
+                {{-- ✅ Componente Centro y Sede --}}
+                <x-centros-sedes-selector
+                    :centros="$centros"
+                    :required="true"
+                    :centroId="old('centro_id')"
+                    :sedeId="old('sede_id')"
+                    :centroNombre="''"
+                    :sedeNombre="''"
+                />
             </div>
         </div>
 
@@ -121,20 +112,15 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td><input type="text" name="materials[0][material_name]" class="form-control modern-input"
-                                required></td>
-                        <td><input type="number" name="materials[0][material_quantity]"
-                                class="form-control modern-input" required></td>
+                        <td><input type="text" name="materials[0][material_name]" class="form-control modern-input" required></td>
+                        <td><input type="number" name="materials[0][material_quantity]" class="form-control modern-input" required></td>
                         <td>
                             <select name="materials[0][material_type]" class="form-control modern-input">
                                 <option value="Consumible">Consumible</option>
                                 <option value="Herramienta">Herramienta</option>
                             </select>
                         </td>
-                        <td><input type="number" name="materials[0][material_price]" class="form-control modern-input"
-                                step="0.01" required></td>
-
-                        <!-- Select IVA -->
+                        <td><input type="number" name="materials[0][material_price]" class="form-control modern-input" step="0.01" required></td>
                         <td>
                             <select name="materials[0][iva_percentage]" class="form-control modern-input">
                                 <option value="0">0%</option>
@@ -143,19 +129,11 @@
                                 <option value="19">19%</option>
                             </select>
                         </td>
-
-                        <!-- Totales calculados en JS -->
-                        <td><input type="text" name="materials[0][total_without_tax]" class="form-control modern-input"
-                                readonly></td>
-                        <td><input type="text" name="materials[0][total_with_tax]" class="form-control modern-input"
-                                readonly></td>
-
-                        <td><input type="text" name="materials[0][observations]" class="form-control modern-input">
-                        </td>
-
+                        <td><input type="text" name="materials[0][total_without_tax]" class="form-control modern-input" readonly></td>
+                        <td><input type="text" name="materials[0][total_with_tax]" class="form-control modern-input" readonly></td>
+                        <td><input type="text" name="materials[0][observations]" class="form-control modern-input"></td>
                         <td>
-                            <button type="button" class="btn btn-outline-danger btn-sm shadow-sm"
-                                onclick="removeMaterial(this)">
+                            <button type="button" class="btn btn-outline-danger btn-sm shadow-sm" onclick="removeMaterial(this)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -165,9 +143,9 @@
             <div id="paginationControls" class="d-flex justify-content-center mt-3"></div>
             <br>
         </div>
+
         <div class="content-card mb-4">
             <h5 class="section-title"><i class="fas fa-file-excel"></i> Importar desde Excel</h5>
-
             <div class="input-group mb-3">
                 <input type="file" id="excelUpload" accept=".xlsx,.xls" class="form-control mb-3">
                 <button type="button" class="btn btn-success btn-lg shadow-sm"
@@ -175,15 +153,11 @@
                     <i class="fas fa-upload"></i> Importar
                 </button>
             </div>
-
-            <small class="text-muted">Descarga la plantilla de ejemplo para organizar tus datos antes de
-                importar.</small>
-            <a href="{{ route('ferreteria.template.download') }}" class="btn btn-outline-success btn-sm mt-2"
-                target="_blank">
+            <small class="text-muted">Descarga la plantilla de ejemplo para organizar tus datos antes de importar.</small>
+            <a href="{{ route('ferreteria.template.download') }}" class="btn btn-outline-success btn-sm mt-2" target="_blank">
                 <i class="fas fa-download"></i> Descargar Plantilla
             </a>
         </div>
-
     </div>
 
     <div class="d-flex justify-content-between">
@@ -244,7 +218,6 @@
         border-radius: 8px;
     }
 
-    /* Tabla moderna */
     .table-modern {
         border-collapse: separate;
         border-spacing: 0 8px;
@@ -285,7 +258,6 @@
         text-align: center;
     }
 
-    /* Botones de acciones */
     .btn-outline-danger {
         border-radius: 6px;
         padding: 6px 10px;
@@ -300,15 +272,14 @@
 </style>
 @endpush
 
-
 @push('scripts')
 <script>
     let materialIndex = 1;
 
-        function addMaterial() {
-            const tbody = document.querySelector('#materialsTable tbody');
-            const row = document.createElement('tr');
-            row.innerHTML = `
+    function addMaterial() {
+        const tbody = document.querySelector('#materialsTable tbody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
             <td><input type="text" name="materials[${materialIndex}][material_name]" class="form-control modern-input" required></td>
             <td><input type="number" name="materials[${materialIndex}][material_quantity]" class="form-control modern-input" required></td>
             <td>
@@ -328,231 +299,167 @@
             </td>
             <td><input type="text" name="materials[${materialIndex}][total_without_tax]" class="form-control modern-input" readonly></td>
             <td><input type="text" name="materials[${materialIndex}][total_with_tax]" class="form-control modern-input" readonly></td>
-            <td><input type="text" name="materials[${materialIndex}][observations]" value="${mat.observations || ''}" class="form-control modern-input"></td>
+            <td><input type="text" name="materials[${materialIndex}][observations]" class="form-control modern-input"></td>
             <td>
                 <button type="button" class="btn btn-outline-danger btn-sm shadow-sm" onclick="removeMaterial(this)">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
         `;
-            tbody.appendChild(row);
-            materialIndex++;
+        tbody.appendChild(row);
+        materialIndex++;
+        goToLastPage();
+    }
 
-            goToLastPage(); // 👈 siempre mostrar última página
+    function removeMaterial(button) {
+        button.closest('tr').remove();
+        updateMaterialTotals();
+        refreshPagination();
+    }
+
+    function updateMaterialTotals() {
+        const rows = document.querySelectorAll('#materialsTable tbody tr');
+        rows.forEach((row) => {
+            const qtyInput   = row.querySelector('[name*="[material_quantity]"]');
+            const priceInput = row.querySelector('[name*="[material_price]"]');
+            const ivaInput   = row.querySelector('[name*="[iva_percentage]"]');
+            const totalWithoutInput = row.querySelector('[name*="[total_without_tax]"]');
+            const totalWithInput    = row.querySelector('[name*="[total_with_tax]"]');
+
+            if (!qtyInput || !priceInput || !ivaInput) return;
+
+            const quantity        = parseFloat(qtyInput.value)   || 0;
+            const price           = parseFloat(priceInput.value)  || 0;
+            const iva             = parseFloat(ivaInput.value)    || 0;
+            const totalWithoutTax = quantity * price;
+            const totalWithTax    = totalWithoutTax + (totalWithoutTax * iva / 100);
+
+            if (totalWithoutInput) totalWithoutInput.value = totalWithoutTax.toFixed(2);
+            if (totalWithInput)    totalWithInput.value    = totalWithTax.toFixed(2);
+        });
+    }
+
+    document.addEventListener('input',  e => { if (e.target.closest('#materialsTable')) updateMaterialTotals(); });
+    document.addEventListener('change', e => { if (e.target.closest('#materialsTable')) updateMaterialTotals(); });
+    document.addEventListener('DOMContentLoaded', updateMaterialTotals);
+
+    // ── Importar desde Excel ──────────────────────────────────────────────────
+    document.getElementById('excelUpload').addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) { alert('⚠️ No seleccionaste ningún archivo.'); return; }
+
+        const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        if (!['.xls', '.xlsx'].includes(ext)) {
+            alert('❌ Solo se permiten archivos Excel (.xls, .xlsx)');
+            this.value = '';
+            return;
         }
 
-        function removeMaterial(button) {
-            button.closest('tr').remove();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/ferreteria/import-materials', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+        })
+        .then(async res => {
+            const raw = await res.text();
+            let data;
+            try { data = JSON.parse(raw); } catch (e) { throw new Error(raw || 'Respuesta no válida'); }
+            if (!res.ok) throw new Error(data.message || raw);
+            return data;
+        })
+        .then(data => {
+            if (!Array.isArray(data) || data.length === 0) {
+                alert('⚠️ El archivo está vacío o no tiene formato válido.');
+                return;
+            }
+
+            const tbody = document.querySelector('#materialsTable tbody');
+            data.forEach(mat => {
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td><input type="text"   name="materials[${materialIndex}][material_name]"     value="${mat.material_name}"     class="form-control modern-input"></td>
+                        <td><input type="number" name="materials[${materialIndex}][material_quantity]"  value="${mat.material_quantity}"  class="form-control modern-input"></td>
+                        <td><input type="text"   name="materials[${materialIndex}][material_type]"     value="${mat.material_type}"     class="form-control modern-input"></td>
+                        <td><input type="number" name="materials[${materialIndex}][material_price]"    value="${mat.material_price}"    class="form-control modern-input"></td>
+                        <td>
+                            <select name="materials[${materialIndex}][iva_percentage]" class="form-control modern-input">
+                                <option value="0"  ${mat.iva_percentage == 0  ? 'selected' : ''}>0%</option>
+                                <option value="5"  ${mat.iva_percentage == 5  ? 'selected' : ''}>5%</option>
+                                <option value="12" ${mat.iva_percentage == 12 ? 'selected' : ''}>12%</option>
+                                <option value="19" ${mat.iva_percentage == 19 ? 'selected' : ''}>19%</option>
+                            </select>
+                        </td>
+                        <td><input type="number" name="materials[${materialIndex}][total_without_tax]" value="${mat.total_without_tax}" class="form-control modern-input" readonly></td>
+                        <td><input type="number" name="materials[${materialIndex}][total_with_tax]"    value="${mat.total_with_tax}"    class="form-control modern-input" readonly></td>
+                        <td><input type="text"   name="materials[${materialIndex}][observations]"      value="${mat.observations || ''}" class="form-control modern-input"></td>
+                        <td>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMaterial(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`);
+                materialIndex++;
+            });
+
             updateMaterialTotals();
-            refreshPagination(); // 👈 actualizar paginación al eliminar
-        }
-
-        function updateMaterialTotals() {
-            const table = document.getElementById("materialsTable");
-            const rows = table.querySelectorAll("tbody tr");
-
-            rows.forEach((row) => {
-                const qtyInput = row.querySelector('[name*="[material_quantity]"]');
-                const priceInput = row.querySelector('[name*="[material_price]"]');
-                const ivaInput = row.querySelector('[name*="[iva_percentage]"]');
-                const totalWithoutInput = row.querySelector('[name*="[total_without_tax]"]');
-                const totalWithInput = row.querySelector('[name*="[total_with_tax]"]');
-
-                if (!qtyInput || !priceInput || !ivaInput) return;
-
-                const quantity = parseFloat(qtyInput.value) || 0;
-                const price = parseFloat(priceInput.value) || 0;
-                const iva = parseFloat(ivaInput.value) || 0;
-
-                const totalWithoutTax = quantity * price;
-                const totalWithTax = totalWithoutTax + (totalWithoutTax * iva / 100);
-
-                if (totalWithoutInput) totalWithoutInput.value = totalWithoutTax.toFixed(2);
-                if (totalWithInput) totalWithInput.value = totalWithTax.toFixed(2);
-            });
-        }
-
-        // Eventos para recalcular totales
-        document.addEventListener("input", function(e) {
-            if (e.target.closest("#materialsTable")) updateMaterialTotals();
+            goToLastPage();
+        })
+        .catch(err => {
+            console.error('❌ Error importando materiales:', err);
+            alert(`❌ No se pudo importar el archivo:\n${err.message}`);
+            document.getElementById('excelUpload').value = '';
         });
+    });
 
-        document.addEventListener("change", function(e) {
-            if (e.target.closest("#materialsTable")) updateMaterialTotals();
-        });
+    // ── Paginación ────────────────────────────────────────────────────────────
+    let currentPage  = 1;
+    const rowsPerPage = 5;
 
-        document.addEventListener("DOMContentLoaded", updateMaterialTotals);
+    function renderTablePage() {
+        const rows  = document.querySelectorAll('#materialsTable tbody tr');
+        const start = (currentPage - 1) * rowsPerPage;
+        const end   = start + rowsPerPage;
+        rows.forEach((row, i) => row.style.display = (i >= start && i < end) ? '' : 'none');
+        renderPaginationControls(rows.length);
+    }
 
-        // 📌 Importar desde Excel
-        document.getElementById('excelUpload').addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) {
-                alert("⚠️ No seleccionaste ningún archivo.");
-                return;
-            }
+    function renderPaginationControls(totalRows) {
+        const controls   = document.getElementById('paginationControls');
+        controls.innerHTML = '';
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        if (totalPages <= 1) return;
 
-            const allowedExtensions = [".xls", ".xlsx"];
-            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-            if (!allowedExtensions.includes(ext)) {
-                alert("❌ Solo se permiten archivos Excel (.xls, .xlsx)");
-                this.value = "";
-                return;
-            }
+        const prevBtn = document.createElement('button');
+        prevBtn.className   = 'btn btn-outline-success btn-sm mx-1';
+        prevBtn.textContent = '← Anterior';
+        prevBtn.disabled    = currentPage === 1;
+        prevBtn.onclick     = () => { currentPage--; renderTablePage(); };
+        controls.appendChild(prevBtn);
 
-            const formData = new FormData();
-            formData.append('file', file);
+        const pageIndicator       = document.createElement('span');
+        pageIndicator.className   = 'mx-2 fw-bold';
+        pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
+        controls.appendChild(pageIndicator);
 
-            fetch(`/ferreteria/import-materials`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                })
-                .then(async res => {
-                    const raw = await res.text();
-                    let data;
-                    try {
-                        data = JSON.parse(raw);
-                    } catch (e) {
-                        throw new Error(raw || "Respuesta no válida del servidor");
-                    }
-                    if (!res.ok) throw new Error(data.message || raw);
-                    return data;
-                })
-                .then(data => {
-                    if (!Array.isArray(data) || data.length === 0) {
-                        alert("⚠️ El archivo está vacío o no tiene formato válido.");
-                        return;
-                    }
+        const nextBtn = document.createElement('button');
+        nextBtn.className   = 'btn btn-outline-success btn-sm mx-1';
+        nextBtn.textContent = 'Siguiente →';
+        nextBtn.disabled    = currentPage === totalPages;
+        nextBtn.onclick     = () => { currentPage++; renderTablePage(); };
+        controls.appendChild(nextBtn);
+    }
 
-                    console.log("✅ Materiales importados:", data);
-                    const tbody = document.querySelector("#materialsTable tbody");
+    function refreshPagination() { renderTablePage(); }
 
-                    data.forEach((mat) => {
-                        const row = `
-                        <tr>
-                            <td><input type="text" name="materials[${materialIndex}][material_name]" value="${mat.material_name}" class="form-control modern-input"></td>
-                            <td><input type="number" name="materials[${materialIndex}][material_quantity]" value="${mat.material_quantity}" class="form-control modern-input"></td>
-                            <td><input type="text" name="materials[${materialIndex}][material_type]" value="${mat.material_type}" class="form-control modern-input"></td>
-                            <td><input type="number" name="materials[${materialIndex}][material_price]" value="${mat.material_price}" class="form-control modern-input"></td>
-                            <td>
-                                <select name="materials[${materialIndex}][iva_percentage]" class="form-control modern-input">
-                                    <option value="0"  ${mat.iva_percentage == 0 ? 'selected' : ''}>0%</option>
-                                    <option value="5"  ${mat.iva_percentage == 5 ? 'selected' : ''}>5%</option>
-                                    <option value="12" ${mat.iva_percentage == 12 ? 'selected' : ''}>12%</option>
-                                    <option value="19" ${mat.iva_percentage == 19 ? 'selected' : ''}>19%</option>
-                                </select>
-                            </td>
-                            <td><input type="number" value="${mat.total_without_tax}" class="form-control modern-input" readonly></td>
-                            <td><input type="number" value="${mat.total_with_tax}" class="form-control modern-input" readonly></td>
-                           <td><input type="text" name="materials[${materialIndex}][observations]" value="${mat.observations || ''}" class="form-control modern-input"></td>
-                            <td>
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMaterial(this)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>`;
-                        tbody.insertAdjacentHTML("beforeend", row);
-                        materialIndex++;
-                    });
+    function goToLastPage() {
+        const totalRows = document.querySelectorAll('#materialsTable tbody tr').length;
+        currentPage = Math.ceil(totalRows / rowsPerPage) || 1;
+        renderTablePage();
+    }
 
-                    updateMaterialTotals();
-                    goToLastPage(); // 👈 ir a la última página al importar
-                })
-                .catch(err => {
-                    console.error("❌ Error importando materiales:", err);
-                    alert(`❌ No se pudo importar el archivo:\n${err.message}`);
-                    document.getElementById('excelUpload').value = "";
-                });
-        });
-
-        // 🔄 Paginación
-        let currentPage = 1;
-        const rowsPerPage = 5;
-
-        function renderTablePage() {
-            const tbody = document.querySelector("#materialsTable tbody");
-            const rows = tbody.querySelectorAll("tr");
-
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-
-            rows.forEach((row, index) => {
-                row.style.display = (index >= start && index < end) ? "" : "none";
-            });
-
-            renderPaginationControls(rows.length);
-        }
-
-        function renderPaginationControls(totalRows) {
-            const controls = document.getElementById("paginationControls");
-            controls.innerHTML = "";
-
-            const totalPages = Math.ceil(totalRows / rowsPerPage);
-            if (totalPages <= 1) return;
-
-            const prevBtn = document.createElement("button");
-            prevBtn.className = "btn btn-outline-success btn-sm mx-1";
-            prevBtn.textContent = "← Anterior";
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => {
-                currentPage--;
-                renderTablePage();
-            };
-            controls.appendChild(prevBtn);
-
-            const pageIndicator = document.createElement("span");
-            pageIndicator.className = "mx-2 fw-bold";
-            pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
-            controls.appendChild(pageIndicator);
-
-            const nextBtn = document.createElement("button");
-            nextBtn.className = "btn btn-outline-success btn-sm mx-1";
-            nextBtn.textContent = "Siguiente →";
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => {
-                currentPage++;
-                renderTablePage();
-            };
-            controls.appendChild(nextBtn);
-        }
-
-        function refreshPagination() {
-            renderTablePage();
-        }
-
-        function goToLastPage() {
-            const totalRows = document.querySelectorAll("#materialsTable tbody tr").length;
-            currentPage = Math.ceil(totalRows / rowsPerPage);
-            renderTablePage();
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            renderTablePage();
-        });
-
-        document.getElementById('centroSelect').addEventListener('change', function() {
-                const centroId = this.value;
-                const sedeSelect = document.getElementById('sedeSelect');
-                sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
-
-                if (centroId) {
-                    fetch(`/centros/${centroId}/sedes`)
-                        .then(response => response.json())
-                        .then(sedes => {
-                            sedeSelect.innerHTML = '<option value="">Seleccionar sede</option>';
-                            sedes.forEach(sede => {
-                                const option = document.createElement('option');
-                                option.value = sede.id;
-                                option.textContent = sede.nom_sede;
-                                sedeSelect.appendChild(option);
-                            });
-                        })
-                        .catch(() => sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>');
-                } else {
-                    sedeSelect.innerHTML = '<option value="">Primero selecciona un centro</option>';
-                }
-            });
+    document.addEventListener('DOMContentLoaded', () => renderTablePage());
 </script>
 @endpush
