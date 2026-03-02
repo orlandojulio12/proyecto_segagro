@@ -1,4 +1,3 @@
-{{-- resources/views/semoviente/edit.blade.php --}}
 @extends('layouts.dashboard')
 
 @section('page-title', 'Editar Semoviente')
@@ -33,7 +32,7 @@
                         </div>
 
                         {{-- ✅ Componente Centro y Sede --}}
-                        <x-centros-sedes
+                        <x-centros-sedes-selector
                             :centros="$centros"
                             :required="true"
                             :centroId="old('centro_id', $semoviente->centro_id)"
@@ -258,4 +257,5 @@
         margin-bottom: 20px;
     }
 </style>
+
 @endpush
