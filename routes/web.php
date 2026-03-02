@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Budget\BudgetController;
 use App\Http\Controllers\CentroController;
 use App\Http\Controllers\FerreteriaController;
 use App\Http\Controllers\ProfileController;
@@ -8,7 +9,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalidaFerreteriaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\CalendarioController;
-use App\Http\Controllers\ContabilidadController;
+use App\Http\Controllers\Complaint\PqrController;
+use App\Http\Controllers\PresupuestoController;
 use App\Http\Controllers\Infraestructura\InfraestructuraController;
 use App\Http\Controllers\Inventario\SemovienteController;
 use App\Http\Controllers\QuejaController;
@@ -18,9 +20,7 @@ use App\Http\Controllers\TrasladoController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Contrato\ContractController;
-
-
-
+use App\Http\Controllers\Inventario\CatalogProductController;
 
 // Redirigir raíz a login
 Route::get('/', function () {
@@ -44,9 +44,7 @@ Route::middleware('auth')->group(function () {
     // Route::resource('usuarios', UserController::class);
     Route::resource('sedes', SedeController::class);
 
-
-//Modulo Ferretería
-
+    //Modulo Ferretería
     Route::prefix('ferreteria')->name('ferreteria.')->group(function () {
         // 1️⃣ PRIMERO: Rutas estáticas (sin parámetros)
         Route::get('/', [FerreteriaController::class, 'index'])->name('index');
@@ -67,6 +65,20 @@ Route::middleware('auth')->group(function () {
         Route::put('/{inventory}', [FerreteriaController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [FerreteriaController::class, 'destroy'])->name('destroy');
     });
+
+    // Catalogo de productos
+    Route::prefix('inventario')->group(function () {
+
+        Route::get('/catalogo', [CatalogProductController::class, 'index'])
+            ->name('catalogo.index');
+
+        Route::get('/catalogo/data', [CatalogProductController::class, 'data'])
+            ->name('catalogo.data');
+
+        Route::get('/catalogo/filters', [CatalogProductController::class, 'filters'])
+            ->name('catalogo.filters');
+    });
+
 
     Route::prefix('salida-ferreteria')->name('salida_ferreteria.')->group(function () {
         Route::get('/', [SalidaFerreteriaController::class, 'index'])->name('index');
@@ -102,7 +114,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [NeedTransferController::class, 'destroy'])->name('destroy');
         // Búsqueda de materiales para traslados
         Route::get('/buscar-materiales', [NeedTransferController::class, 'buscarMateriales'])
-        ->name('buscar-materiales');
+            ->name('buscar-materiales');
     });
 
     Route::get('centros/{centro}/sedes', [FerreteriaController::class, 'getSedesByCentro']);
@@ -117,10 +129,74 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [InfraestructuraController::class, 'destroy'])->name('destroy');
     });
 
+    // PQR
+    Route::prefix('pqr')->group(function () {
+
+        // Listado
+        Route::get('/listado', [PqrController::class, 'index'])
+            ->name('pqr.index');
+
+        // Crear
+        Route::get('/crear', [PqrController::class, 'create'])
+            ->name('pqr.create');
+        Route::post('/store', [PqrController::class, 'store'])
+            ->name('pqr.store');
+
+        // Ver
+        Route::get('/{pqr}/ver', [PqrController::class, 'show'])
+            ->name('pqr.show');
+
+        // Editar
+        Route::get('/{pqr}/editar', [PqrController::class, 'edit'])
+            ->name('pqr.edit');
+        Route::put('/{pqr}/actualizar', [PqrController::class, 'update'])
+            ->name('pqr.update');
+
+        // Eliminar
+        Route::delete('/{pqr}/eliminar', [PqrController::class, 'destroy'])
+            ->name('pqr.destroy');
+
+        // AJAX
+        Route::post('/validar-dias', [PqrController::class, 'validarDias'])
+            ->name('pqr.validarDias');
+
+            Route::patch('/{pqr}/toggle-state', [PqrController::class, 'toggleState'])
+            ->name('pqr.toggleState');
+    });
+
+    Route::prefix('budget')->group(function () {
+
+        // List
+        Route::get('/list', [BudgetController::class, 'index'])
+            ->name('budget.index');
+
+        // Create
+        Route::get('/create', [BudgetController::class, 'create'])
+            ->name('budget.create');
+        Route::post('/store', [BudgetController::class, 'store'])
+            ->name('budget.store');
+
+        // Show
+        Route::get('/{budget}/show', [BudgetController::class, 'show'])
+            ->name('budget.show');
+
+        // Edit
+        Route::get('/{budget}/edit', [BudgetController::class, 'edit'])
+            ->name('budget.edit');
+        Route::put('/{budget}/update', [BudgetController::class, 'update'])
+            ->name('budget.update');
+
+        // Delete
+        Route::delete('/{budget}/delete', [BudgetController::class, 'destroy'])
+            ->name('budget.destroy');
+
+        Route::get('/{budget}/adjustments', [BudgetController::class, 'adjustments'])
+            ->name('budget.adjustments');
+    });
+
+
     // Route::resource('calendario', CalendarioController::class);
     // Route::resource('infraestructura', InfraestructuraController::class);
-    // Route::resource('contabilidad', ContabilidadController::class);
-    // Route::resource('quejas', QuejaController::class);
     // Route::resource('planes', PlanController::class);
     // Route::resource('traslados', TrasladoController::class);
 
@@ -135,32 +211,31 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('contracts')->name('contracts.')->group(function () {
-    // Listado
-    Route::get('/', [ContractController::class, 'index'])->name('index');
-    
-    // Crear
-    Route::get('/create', [ContractController::class, 'create'])->name('create');
-    Route::post('/', [ContractController::class, 'store'])->name('store');
-    
-    // Ver detalle
-    Route::get('/{contract}', [ContractController::class, 'show'])->name('show');
-    
-    // Editar
-    Route::get('/{contract}/edit', [ContractController::class, 'edit'])->name('edit');
-    Route::put('/{contract}', [ContractController::class, 'update'])->name('update');
-    
-    // Eliminar
-    Route::delete('/{contract}', [ContractController::class, 'destroy'])->name('destroy');
-    
-    // Rutas AJAX
-    Route::get('/sedes/centro/{centroId}', [ContractController::class, 'getSedesByCentro'])->name('sedes.centro');
-    Route::get('/types/dependencia/{dependenciaId}', [ContractController::class, 'getTypesByDependencia'])->name('types.dependencia');
-    
-    // Estadísticas y reportes
-    Route::get('/api/statistics', [ContractController::class, 'statistics'])->name('statistics');
-    Route::get('/report/generate', [ContractController::class, 'report'])->name('report');
-});
+        // Listado
+        Route::get('/', [ContractController::class, 'index'])->name('index');
 
+        // Crear
+        Route::get('/create', [ContractController::class, 'create'])->name('create');
+        Route::post('/', [ContractController::class, 'store'])->name('store');
+
+        // Ver detalle
+        Route::get('/{contract}', [ContractController::class, 'show'])->name('show');
+
+        // Editar
+        Route::get('/{contract}/edit', [ContractController::class, 'edit'])->name('edit');
+        Route::put('/{contract}', [ContractController::class, 'update'])->name('update');
+
+        // Eliminar
+        Route::delete('/{contract}', [ContractController::class, 'destroy'])->name('destroy');
+
+        // Rutas AJAX
+        Route::get('/sedes/centro/{centroId}', [ContractController::class, 'getSedesByCentro'])->name('sedes.centro');
+        Route::get('/types/dependencia/{dependenciaId}', [ContractController::class, 'getTypesByDependencia'])->name('types.dependencia');
+
+        // Estadísticas y reportes
+        Route::get('/api/statistics', [ContractController::class, 'statistics'])->name('statistics');
+        Route::get('/report/generate', [ContractController::class, 'report'])->name('report');
+    });
 });
 
 require __DIR__ . '/auth.php';

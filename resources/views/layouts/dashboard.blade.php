@@ -43,7 +43,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="javascript:void(0)" 
+                        <a href="javascript:void(0)"
                             class="has-submenu {{ request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') ? 'open' : '' }}">
                             Ferretería
                             <span class="submenu-arrow">▼</span>
@@ -69,7 +69,12 @@
                             Semoviente
                         </a>
                     </li>
-
+                    <li>
+                        <a href="{{ route('catalogo.index') }}"
+                            class="{{ request()->routeIs('catalogo.*') ? 'active' : '' }}">
+                            Catálogo
+                        </a>
+                    </li>
                 </ul>
                 <a href="#" class="nav-item {{ request()->routeIs('calendario.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar"></i>
@@ -81,17 +86,20 @@
                     Infraestructura
                 </a>
 
-                <a href="#" class="nav-item {{ request()->routeIs('contabilidad.*') ? 'active' : '' }}">
+                <a href="{{ route('budget.index') }}"
+                    class="nav-item {{ request()->routeIs('budget.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
-                    Contabilidad
+                    Presupuesto
                 </a>
-                <a href="#" class="nav-item {{ request()->routeIs('quejas.*') ? 'active' : '' }}">
+
+                <a href="{{ route('pqr.index') }}" class="nav-item {{ request()->routeIs('pqr.index') ? 'active' : '' }}">
                     <i class="fas fa-comment-dots"></i>
-                    Quejas
+                    Quejas / PQR
                 </a>
-                <a href="{{ route('contracts.index') }}" class="nav-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
+                <a href="{{ route('contracts.index') }}"
+                    class="nav-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
-                    Contrataciones  
+                    Contrataciones
                 </a>
                 <a href="{{ route('traslados.index') }}"
                     class="nav-item {{ request()->routeIs('traslados.*') ? 'active' : '' }}">
@@ -150,15 +158,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Manejar todos los elementos con submenú (nivel 1 y nivel 2)
             const menuItems = document.querySelectorAll('.has-submenu');
-            
+
             menuItems.forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     // Toggle clase 'open'
                     this.classList.toggle('open');
-                    
+
                     // Obtener el submenu siguiente
                     const submenu = this.nextElementSibling;
                     if (submenu && submenu.classList.contains('submenu')) {

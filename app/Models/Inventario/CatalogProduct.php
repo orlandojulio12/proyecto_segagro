@@ -25,5 +25,7 @@ class CatalogProduct extends Model
         'sku_description',
         'consecutive',
         'element_description',
+        'type_catalogo', // nuevo
     ];
+    
 }

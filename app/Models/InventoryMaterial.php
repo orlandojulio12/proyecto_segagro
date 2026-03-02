@@ -14,6 +14,7 @@ class InventoryMaterial extends Model
         'inventory_id',
         'material_name',
         'material_quantity',
+        'consecutive', 
         'material_type',
         'material_brand',     // NUEVO
         'material_model',     // NUEVO

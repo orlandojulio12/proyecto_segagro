@@ -19,6 +19,8 @@ services:
       - REDIS_PORT=6379
     ports:
       - "8000:8000"
+    volumes:
+      - ./storage:/var/www/storage   # <-- persistencia de storage
     networks:
       - dokploy-network
     depends_on:

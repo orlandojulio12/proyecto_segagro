@@ -226,6 +226,15 @@
         background: #e0e0e0;
     }
 
+    .custom-modal.show {
+    display: flex !important;
+    }
+
+    .custom-modal-content {
+    will-change: transform;
+    }
+
+
     @keyframes zoomIn {
         from {
             transform: scale(0.9);
@@ -293,13 +302,17 @@
         }
 
         window.openModal = function(id) {
-            document.getElementById(id).style.display = 'flex';
-            if (id === 'centroModal') renderTableCentros();
-        };
+    const modal = document.getElementById(id);
+    modal.classList.add('show');
 
-        window.closeModal = function(id) {
-            document.getElementById(id).style.display = 'none';
-        };
+    // Forzar repaint inmediato
+    modal.offsetHeight;
+};
+
+window.closeModal = function(id) {
+    document.getElementById(id).classList.remove('show');
+};
+
 
         window.openModalSede = function() {
             const centroId = document.getElementById('centro_id').value;

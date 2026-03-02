@@ -117,7 +117,7 @@ function getCalendarEvents() {
 }
 
 function initializeCharts() {
-    // Simular gráfico de contabilidad
+    // Simular gráfico de presupuesto
     const accountingCanvas = document.getElementById('accountingChart');
     if (accountingCanvas) {
         const accountingCtx = accountingCanvas.getContext('2d');
