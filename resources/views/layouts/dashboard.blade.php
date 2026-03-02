@@ -85,13 +85,11 @@
                     <i class="fas fa-warehouse"></i>
                     Infraestructura
                 </a>
-
                 <a href="{{ route('budget.index') }}"
                     class="nav-item {{ request()->routeIs('budget.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     Presupuesto
                 </a>
-
                 <a href="{{ route('pqr.index') }}" class="nav-item {{ request()->routeIs('pqr.index') ? 'active' : '' }}">
                     <i class="fas fa-comment-dots"></i>
                     Quejas / PQR
@@ -106,6 +104,24 @@
                     <i class="fas fa-truck"></i>
                     Traslados
                 </a>
+
+                {{-- CONFIGURACIÓN --}}
+                <a href="javascript:void(0)"
+                    class="nav-item has-submenu {{ request()->routeIs('dependencies.*') ? 'open' : '' }}">
+                    <i class="fas fa-cogs"></i>
+                    Configuración
+                    <span class="submenu-arrow">▼</span>
+                </a>
+
+                <ul class="submenu">
+                    <li>
+                        <a href="{{ route('dependencies.index') }}"
+                            class="{{ request()->routeIs('dependencies.*') ? 'active' : '' }}">
+                            <i class="fas fa-sitemap"></i>
+                            Dependencias
+                        </a>
+                    </li>
+                </ul>
 
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
@@ -155,32 +171,36 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Manejar todos los elementos con submenú (nivel 1 y nivel 2)
-            const menuItems = document.querySelectorAll('.has-submenu');
-
-            menuItems.forEach(item => {
-                item.addEventListener('click', function(e) {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a.has-submenu').forEach(trigger => {
+                trigger.addEventListener('click', e => {
                     e.preventDefault();
-                    e.stopPropagation();
 
-                    // Toggle clase 'open'
-                    this.classList.toggle('open');
+                    const submenu = trigger.nextElementSibling;
+                    const isOpen = trigger.classList.contains('open');
 
-                    // Obtener el submenu siguiente
-                    const submenu = this.nextElementSibling;
-                    if (submenu && submenu.classList.contains('submenu')) {
-                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                    // Cerrar otros submenús del mismo nivel
+                    document.querySelectorAll('a.has-submenu.open').forEach(item => {
+                        if (item !== trigger) {
+                            item.classList.remove('open');
+                            const sm = item.nextElementSibling;
+                            if (sm?.classList.contains('submenu')) sm.style.display =
+                            'none';
+                        }
+                    });
+
+                    // Toggle actual
+                    trigger.classList.toggle('open', !isOpen);
+                    if (submenu?.classList.contains('submenu')) {
+                        submenu.style.display = !isOpen ? 'block' : 'none';
                     }
                 });
             });
 
-            // Asegurar que los submenús con clase 'open' estén visibles al cargar
-            document.querySelectorAll('.has-submenu.open').forEach(item => {
+            // Abrir automáticamente los activos
+            document.querySelectorAll('a.has-submenu.open').forEach(item => {
                 const submenu = item.nextElementSibling;
-                if (submenu && submenu.classList.contains('submenu')) {
-                    submenu.style.display = 'block';
-                }
+                if (submenu?.classList.contains('submenu')) submenu.style.display = 'block';
             });
         });
     </script>
