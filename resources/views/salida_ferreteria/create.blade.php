@@ -4,6 +4,9 @@
 @section('page-title', 'Registrar Salida de Ferretería')
 
 @section('dashboard-content')
+<div class="salida-ferreteria-create">
+
+
     <div class="section-header mb-4">
         <div>
             <h2 class="fw-bold">Registrar Salida de Ferretería</h2>
@@ -26,7 +29,7 @@
 
     <form action="{{ route('salida_ferreteria.store') }}" method="POST" id="salidaForm">
         @csrf
-        
+
         <div class="row g-4">
             {{-- Columna izquierda - Información General --}}
             <div class="col-12 col-md-6">
@@ -46,33 +49,19 @@
                         </select>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Centro de formación *</label>
-                        <select name="centro_id" id="centroSelect" class="form-select modern-input" required>
-                            <option value="">Seleccionar centro</option>
-                            @foreach ($centros as $centro)
-                                <option value="{{ $centro->id }}" {{ old('centro_id') == $centro->id ? 'selected' : '' }}>
-                                    {{ $centro->nom_centro }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Sede *</label>
-                        <select name="sede_id" id="sedeSelect" class="form-select modern-input" required>
-                            <option value="">Seleccionar sede</option>
-                            @foreach ($sedes as $sede)
-                                <option value="{{ $sede->id }}" data-centro="{{ $sede->centro_id }}" {{ old('sede_id') == $sede->id ? 'selected' : '' }}>
-                                    {{ $sede->nom_sede }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    {{-- ✅ Componente Centro y Sede --}}
+                    <x-centros-sedes-selector
+                        :centros="$centros"
+                        :required="true"
+                        :centroId="old('centro_id')"
+                        :sedeId="old('sede_id')"
+                        :centroNombre="''"
+                        :sedeNombre="''"
+                    />
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Fecha de salida *</label>
-                        <input type="date" name="fecha_salida" class="form-control modern-input" 
+                        <input type="date" name="fecha_salida" class="form-control modern-input"
                             value="{{ old('fecha_salida', date('Y-m-d')) }}" required>
                     </div>
                 </div>
@@ -86,14 +75,14 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Formato F14 (opcional)</label>
-                        <input type="text" name="f14" class="form-control modern-input" 
+                        <input type="text" name="f14" class="form-control modern-input"
                             value="{{ old('f14') }}" placeholder="Número de F14">
                         <small class="text-muted">Formato de salida institucional</small>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Observaciones generales</label>
-                        <textarea name="observaciones" class="form-control modern-input" rows="7" 
+                        <textarea name="observaciones" class="form-control modern-input" rows="7"
                             placeholder="Observaciones sobre la salida de materiales...">{{ old('observaciones') }}</textarea>
                     </div>
                 </div>
@@ -104,38 +93,39 @@
         <div class="row g-4 mt-2">
             <div class="col-12">
                 <div class="content-card mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="section-title mb-1"><i class="fas fa-boxes me-2"></i>Materiales de Salida</h5>
-                    <p class="section-subtitle mb-0">Seleccione los materiales y cantidades que salen del inventario</p>
-                </div>
-                <button type="button" class="btn btn-success shadow-sm" onclick="addMaterial()">
-                    <i class="fas fa-plus me-2"></i>Agregar Material
-                </button>
-            </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="section-title mb-1"><i class="fas fa-boxes me-2"></i>Materiales de Salida</h5>
+                            <p class="section-subtitle mb-0">Seleccione los materiales y cantidades que salen del inventario</p>
+                        </div>
+                        <button type="button" class="btn btn-success shadow-sm" onclick="addMaterial()">
+                            <i class="fas fa-plus me-2"></i>Agregar Material
+                        </button>
+                    </div>
 
-            <div class="table-responsive">
-                <table class="table table-modern" id="materialsTable">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-box me-1"></i>Material</th>
-                            <th><i class="fas fa-tag me-1"></i>Tipo</th>
-                            <th><i class="fas fa-warehouse me-1"></i>Stock</th>
-                            <th><i class="fas fa-arrow-right me-1"></i>Cantidad Salida</th>
-                            <th><i class="fas fa-comment me-1"></i>Observación</th>
-                            <th><i class="fas fa-trash me-1"></i>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="empty-state">
-                            <td colspan="6" class="text-center py-4">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <p class="text-muted mb-0">No hay materiales agregados. Haz clic en "Agregar Material" para comenzar.</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                    <div class="table-responsive">
+                        <table class="table table-modern" id="materialsTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-box me-1"></i>Material</th>
+                                    <th><i class="fas fa-tag me-1"></i>Tipo</th>
+                                    <th><i class="fas fa-warehouse me-1"></i>Stock</th>
+                                    <th><i class="fas fa-arrow-right me-1"></i>Cantidad Salida</th>
+                                    <th><i class="fas fa-comment me-1"></i>Observación</th>
+                                    <th><i class="fas fa-trash me-1"></i>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="empty-state">
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted mb-0">No hay materiales agregados. Haz clic en "Agregar Material" para comenzar.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -148,11 +138,11 @@
             </button>
         </div>
     </form>
+    </div>
 @endsection
 
 @push('styles')
 <style>
-    /* Estilos específicos para salida_ferreteria create - No afectan al layout */
     .salida-ferreteria-create .section-header {
         display: flex;
         justify-content: space-between;
@@ -245,7 +235,6 @@
         font-size: 0.95rem;
     }
 
-    /* Tabla moderna */
     .salida-ferreteria-create .table-modern {
         border-collapse: separate;
         border-spacing: 0;
@@ -287,10 +276,7 @@
         border-bottom: 1px solid #f0f0f0;
     }
 
-    .salida-ferreteria-create .table-modern .empty-state {
-        background: #fafafa;
-    }
-
+    .salida-ferreteria-create .table-modern .empty-state,
     .salida-ferreteria-create .table-modern .empty-state:hover {
         background: #fafafa;
         transform: none;
@@ -303,7 +289,6 @@
         border-top: 2px solid #e9ecef;
         display: flex;
         justify-content: flex-end;
-        gap: 0;
     }
 
     .salida-ferreteria-create .btn {
@@ -317,7 +302,7 @@
     .salida-ferreteria-create .btn-success {
         background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
         border: none;
-        margin-left: 8px
+        margin-left: 8px;
     }
 
     .salida-ferreteria-create .btn-success:hover {
@@ -354,7 +339,6 @@
         font-size: 0.85rem;
     }
 
-    /* Badges */
     .salida-ferreteria-create .badge {
         padding: 6px 12px;
         border-radius: 6px;
@@ -374,75 +358,73 @@
         background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
     }
 
-    /* Alerts */
     .salida-ferreteria-create .alert {
         border-radius: 10px;
         border: none;
         padding: 15px 20px;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
-        .salida-ferreteria-create .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .salida-ferreteria-create .col-md-6 {
-            width: 100%;
-        }
-
-        .salida-ferreteria-create .form-footer {
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .salida-ferreteria-create .form-footer .btn {
-            width: 100%;
-            margin: 0 !important;
-        }
+        .salida-ferreteria-create .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .salida-ferreteria-create .col-md-6 { width: 100%; }
+        .salida-ferreteria-create .form-footer { flex-direction: column; gap: 10px; }
+        .salida-ferreteria-create .form-footer .btn { width: 100%; margin: 0 !important; }
     }
+
+    #centroModal .btn,
+#sedeModal .btn {
+    border-radius: 4px !important;
+    padding: 0.375rem 0.75rem !important;
+    margin-left: 0 !important;
+    font-weight: 400 !important;
+}
+
+#centroModal .btn-success,
+#sedeModal .btn-success {
+    background: #198754 !important;
+    background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+#centroModal .btn-success:hover,
+#sedeModal .btn-success:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+#centroModal input,
+#sedeModal input {
+    border-radius: 12px !important;
+    border: 2px solid #e0e0e0 !important;
+    padding: 12px 40px 12px 16px !important;
+    font-size: 14px !important;
+    background: #f9f9f9 !important;
+}
+
+#centroModal table th,
+#centroModal table td,
+#sedeModal table th,
+#sedeModal table td {
+    text-align: left !important;
+    padding: 8px 12px !important;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
-    // Agregar clase al body para scope de estilos
-    document.body.classList.add('salida-ferreteria-create');
+    //document.body.classList.add('salida-ferreteria-create');
 
     let materialIndex = 0;
     let materialesDisponibles = @json($materiales);
 
-    // Filtrar sedes según centro seleccionado
-    document.getElementById('centroSelect').addEventListener('change', function() {
-        const centroId = this.value;
-        const sedeSelect = document.getElementById('sedeSelect');
-        const options = sedeSelect.querySelectorAll('option');
-        
-        options.forEach(option => {
-            if (option.value === '') {
-                option.style.display = 'block';
-            } else {
-                option.style.display = option.dataset.centro == centroId ? 'block' : 'none';
-            }
-        });
-        
-        sedeSelect.value = '';
-    });
-
     function addMaterial() {
         const tbody = document.querySelector('#materialsTable tbody');
-        
-        // Remover el mensaje de "vacío" si existe
+
         const emptyState = tbody.querySelector('.empty-state');
-        if (emptyState) {
-            emptyState.remove();
-        }
-        
-        const row = document.createElement('tr');
-        
-        // Crear select de materiales
+        if (emptyState) emptyState.remove();
+
         let materialesOptions = '<option value="">Seleccionar material</option>';
         materialesDisponibles.forEach(mat => {
             if (mat.material_quantity > 0) {
@@ -451,26 +433,23 @@
                 </option>`;
             }
         });
-        
+
+        const row = document.createElement('tr');
         row.innerHTML = `
             <td>
                 <select name="materiales[${materialIndex}][inventory_material_id]" class="form-select modern-input" required onchange="updateMaterialInfo(this)">
                     ${materialesOptions}
                 </select>
             </td>
+            <td><span class="badge bg-info material-type">-</span></td>
+            <td><span class="badge bg-success material-stock">-</span></td>
             <td>
-                <span class="badge bg-info material-type">-</span>
-            </td>
-            <td>
-                <span class="badge bg-success material-stock">-</span>
-            </td>
-            <td>
-                <input type="number" name="materiales[${materialIndex}][cantidad]" 
-                    class="form-control modern-input" min="0.01" step="0.01" required 
+                <input type="number" name="materiales[${materialIndex}][cantidad]"
+                    class="form-control modern-input" min="0.01" step="0.01" required
                     placeholder="0.00" onchange="validateStock(this)">
             </td>
             <td>
-                <input type="text" name="materiales[${materialIndex}][observacion]" 
+                <input type="text" name="materiales[${materialIndex}][observacion]"
                     class="form-control modern-input" placeholder="Opcional">
             </td>
             <td>
@@ -479,34 +458,25 @@
                 </button>
             </td>
         `;
-        
         tbody.appendChild(row);
         materialIndex++;
     }
 
     function updateMaterialInfo(select) {
         const row = select.closest('tr');
-        const selectedOption = select.options[select.selectedIndex];
-        
-        const tipo = selectedOption.dataset.tipo || '-';
-        const stock = selectedOption.dataset.stock || '-';
-        
-        row.querySelector('.material-type').textContent = tipo;
-        row.querySelector('.material-stock').textContent = stock;
-        
-        // Actualizar límite del input de cantidad
+        const opt  = select.options[select.selectedIndex];
+        row.querySelector('.material-type').textContent  = opt.dataset.tipo  || '-';
+        row.querySelector('.material-stock').textContent = opt.dataset.stock || '-';
         const cantidadInput = row.querySelector('input[name*="[cantidad]"]');
-        cantidadInput.max = stock;
+        cantidadInput.max   = opt.dataset.stock || '';
         cantidadInput.value = '';
     }
 
     function validateStock(input) {
-        const row = input.closest('tr');
-        const stockText = row.querySelector('.material-stock').textContent;
-        const stock = parseFloat(stockText);
-        const cantidad = parseFloat(input.value);
-        
-        if (cantidad > stock) {
+        const row    = input.closest('tr');
+        const stock  = parseFloat(row.querySelector('.material-stock').textContent);
+        const cant   = parseFloat(input.value);
+        if (cant > stock) {
             alert(`⚠️ La cantidad no puede ser mayor al stock disponible (${stock})`);
             input.value = stock;
         }
@@ -515,8 +485,7 @@
     function removeMaterial(button) {
         const tbody = document.querySelector('#materialsTable tbody');
         button.closest('tr').remove();
-        
-        // Si no quedan filas, mostrar mensaje vacío
+
         if (tbody.children.length === 0) {
             tbody.innerHTML = `
                 <tr class="empty-state">
@@ -524,16 +493,13 @@
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                         <p class="text-muted mb-0">No hay materiales agregados. Haz clic en "Agregar Material" para comenzar.</p>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         }
     }
 
-    // Validación antes de enviar
-    document.getElementById('salidaForm').addEventListener('submit', function(e) {
-        const tbody = document.querySelector('#materialsTable tbody');
+    document.getElementById('salidaForm').addEventListener('submit', function (e) {
+        const tbody      = document.querySelector('#materialsTable tbody');
         const emptyState = tbody.querySelector('.empty-state');
-        
         if (emptyState || tbody.children.length === 0) {
             e.preventDefault();
             alert('⚠️ Debe agregar al menos un material');

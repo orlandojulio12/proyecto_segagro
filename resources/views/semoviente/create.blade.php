@@ -1,8 +1,11 @@
+{{-- resources/views/semoviente/create.blade.php --}}
 @extends('layouts.dashboard')
 
 @section('page-title', 'Registrar Nuevo Semoviente')
 
 @section('dashboard-content')
+<div class="semoviente-create"> {{-- ✅ Wrapper para scope de estilos (NO en body) --}}
+
     <div class="section-header mb-4">
         <div>
             <h2 class="fw-bold">Registrar Nuevo Semoviente</h2>
@@ -52,25 +55,15 @@
                         </select>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Centro de formación *</label>
-                        <select name="centro_id" id="centroSelect" class="form-select modern-input" required>
-                            <option value="">Seleccionar centro</option>
-                            @foreach ($centros as $centro)
-                                <option value="{{ $centro->id }}"
-                                    {{ old('centro_id') == $centro->id ? 'selected' : '' }}>
-                                    {{ $centro->nom_centro }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Sede de formación *</label>
-                        <select name="sede_id" id="sedeSelect" class="form-select modern-input" required>
-                            <option value="">Primero selecciona un centro</option>
-                        </select>
-                    </div>
+                    {{-- ✅ Componente Centro y Sede --}}
+                    <x-centros-sedes-selector
+                        :centros="$centros"
+                        :required="true"
+                        :centroId="old('centro_id')"
+                        :sedeId="old('sede_id')"
+                        :centroNombre="''"
+                        :sedeNombre="''"
+                    />
                 </div>
 
                 <div class="content-card mb-4">
@@ -79,13 +72,13 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Fecha de nacimiento *</label>
-                        <input type="date" name="birth_date" class="form-control modern-input" 
+                        <input type="date" name="birth_date" class="form-control modern-input"
                             value="{{ old('birth_date') }}" required>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Hora de nacimiento *</label>
-                        <input type="time" name="birth_time" class="form-control modern-input" 
+                        <input type="time" name="birth_time" class="form-control modern-input"
                             value="{{ old('birth_time') }}" required>
                     </div>
 
@@ -93,7 +86,7 @@
                         <label class="form-label text-success fw-semibold">Área de nacimiento *</label>
                         <select name="birth_area" class="form-select modern-input" required>
                             <option value="">Seleccionar área</option>
-                            <option value="Rural" {{ old('birth_area') == 'Rural' ? 'selected' : '' }}>Rural</option>
+                            <option value="Rural"  {{ old('birth_area') == 'Rural'  ? 'selected' : '' }}>Rural</option>
                             <option value="Urbano" {{ old('birth_area') == 'Urbano' ? 'selected' : '' }}>Urbano</option>
                         </select>
                     </div>
@@ -127,7 +120,7 @@
                         <label class="form-label text-success fw-semibold">Género *</label>
                         <select name="gender" class="form-select modern-input" required>
                             <option value="">Seleccionar género</option>
-                            <option value="Macho" {{ old('gender') == 'Macho' ? 'selected' : '' }}>Macho</option>
+                            <option value="Macho"    {{ old('gender') == 'Macho'    ? 'selected' : '' }}>Macho</option>
                             <option value="Femenino" {{ old('gender') == 'Femenino' ? 'selected' : '' }}>Femenino</option>
                         </select>
                     </div>
@@ -145,27 +138,27 @@
                         <label class="form-label text-success fw-semibold">Tipo de semoviente *</label>
                         <select name="animal_type" class="form-select modern-input" required>
                             <option value="">Seleccionar tipo</option>
-                            <option value="Vaca" {{ old('animal_type') == 'Vaca' ? 'selected' : '' }}>Vaca</option>
-                            <option value="Toro" {{ old('animal_type') == 'Toro' ? 'selected' : '' }}>Toro</option>
+                            <option value="Vaca"    {{ old('animal_type') == 'Vaca'    ? 'selected' : '' }}>Vaca</option>
+                            <option value="Toro"    {{ old('animal_type') == 'Toro'    ? 'selected' : '' }}>Toro</option>
                             <option value="Becerro" {{ old('animal_type') == 'Becerro' ? 'selected' : '' }}>Becerro</option>
                         </select>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Raza *</label>
-                        <input type="text" name="breed" class="form-control modern-input" 
+                        <input type="text" name="breed" class="form-control modern-input"
                             value="{{ old('breed') }}" required>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Peso (kg) *</label>
-                        <input type="number" name="weight" class="form-control modern-input" 
+                        <input type="number" name="weight" class="form-control modern-input"
                             value="{{ old('weight') }}" step="0.01" required>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Color *</label>
-                        <input type="text" name="color" class="form-control modern-input" 
+                        <input type="text" name="color" class="form-control modern-input"
                             value="{{ old('color') }}" required>
                     </div>
 
@@ -185,9 +178,9 @@
                         <label class="form-label text-success fw-semibold">Estado del semoviente *</label>
                         <select name="status" class="form-select modern-input" required>
                             <option value="">Seleccionar estado</option>
-                            <option value="En venta" {{ old('status') == 'En venta' ? 'selected' : '' }}>En venta</option>
-                            <option value="Vivo" {{ old('status') == 'Vivo' ? 'selected' : '' }}>Vivo</option>
-                            <option value="Muerto" {{ old('status') == 'Muerto' ? 'selected' : '' }}>Muerto</option>
+                            <option value="En venta"   {{ old('status') == 'En venta'   ? 'selected' : '' }}>En venta</option>
+                            <option value="Vivo"       {{ old('status') == 'Vivo'       ? 'selected' : '' }}>Vivo</option>
+                            <option value="Muerto"     {{ old('status') == 'Muerto'     ? 'selected' : '' }}>Muerto</option>
                             <option value="Sacrificio" {{ old('status') == 'Sacrificio' ? 'selected' : '' }}>Sacrificio</option>
                         </select>
                     </div>
@@ -206,9 +199,11 @@
         </div>
     </form>
 
+</div> {{-- fin .semoviente-create --}}
+@endsection
+
 @push('styles')
 <style>
-    /* Estilos específicos para semoviente create - No afectan al layout */
     .semoviente-create .section-header {
         display: flex;
         justify-content: space-between;
@@ -307,7 +302,6 @@
         border-top: 2px solid #e9ecef;
         display: flex;
         justify-content: flex-end;
-        gap: 0;
     }
 
     .semoviente-create .btn {
@@ -353,7 +347,6 @@
         color: white;
     }
 
-    /* Alerts */
     .semoviente-create .alert {
         border-radius: 10px;
         border: none;
@@ -366,59 +359,15 @@
         border-left: 4px solid #e74c3c;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
-        .semoviente-create .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .semoviente-create .col-md-6 {
-            width: 100%;
-        }
-
-        .semoviente-create .form-footer {
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .semoviente-create .form-footer .btn {
-            width: 100%;
-            margin: 0 !important;
-        }
+        .semoviente-create .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .semoviente-create .col-md-6 { width: 100%; }
+        .semoviente-create .form-footer { flex-direction: column; gap: 10px; }
+        .semoviente-create .form-footer .btn { width: 100%; margin: 0 !important; }
     }
 </style>
 @endpush
 
 @push('scripts')
-<script>
-    // Agregar clase al body para scope de estilos
-    document.body.classList.add('semoviente-create');
-
-    document.getElementById('centroSelect').addEventListener('change', function() {
-        const centroId = this.value;
-        const sedeSelect = document.getElementById('sedeSelect');
-        sedeSelect.innerHTML = '<option value="">Cargando sedes...</option>';
-
-        if (centroId) {
-            fetch(`/centros/${centroId}/sedes`)
-                .then(response => response.json())
-                .then(sedes => {
-                    sedeSelect.innerHTML = '<option value="">Seleccionar sede</option>';
-                    sedes.forEach(sede => {
-                        const option = document.createElement('option');
-                        option.value = sede.id;
-                        option.textContent = sede.nom_sede;
-                        sedeSelect.appendChild(option);
-                    });
-                })
-                .catch(() => sedeSelect.innerHTML = '<option value="">Error al cargar sedes</option>');
-        } else {
-            sedeSelect.innerHTML = '<option value="">Primero selecciona un centro</option>';
-        }
-    });
-</script>
+{{-- ✅ Sin script de centroSelect: el componente lo maneja internamente --}}
 @endpush
-
-@endsection
