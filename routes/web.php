@@ -20,6 +20,7 @@ use App\Http\Controllers\TrasladoController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Contrato\ContractController;
+use App\Http\Controllers\Dependency\DependencyController;
 use App\Http\Controllers\Inventario\CatalogProductController;
 
 // Redirigir raíz a login
@@ -49,15 +50,12 @@ Route::middleware('auth')->group(function () {
         // 1️⃣ PRIMERO: Rutas estáticas (sin parámetros)
         Route::get('/', [FerreteriaController::class, 'index'])->name('index');
         Route::get('/create', [FerreteriaController::class, 'create'])->name('create');
-
         // ✅ PLANTILLA DEBE IR ANTES DE LAS RUTAS DINÁMICAS
         Route::get('/plantilla/descargar', [FerreteriaController::class, 'downloadTemplate'])
             ->name('template.download');
-
         // ✅ IMPORT TAMBIÉN ES ESTÁTICA
         Route::post('/import-materials', [FerreteriaController::class, 'importMaterials'])
             ->name('import.materials');
-
         // 2️⃣ DESPUÉS: Rutas dinámicas (con {parámetros})
         Route::post('/', [FerreteriaController::class, 'store'])->name('store');
         Route::get('/{inventory}', [FerreteriaController::class, 'show'])->name('show');
@@ -131,69 +129,71 @@ Route::middleware('auth')->group(function () {
 
     // PQR
     Route::prefix('pqr')->group(function () {
-
         // Listado
         Route::get('/listado', [PqrController::class, 'index'])
             ->name('pqr.index');
-
         // Crear
         Route::get('/crear', [PqrController::class, 'create'])
             ->name('pqr.create');
         Route::post('/store', [PqrController::class, 'store'])
             ->name('pqr.store');
-
         // Ver
         Route::get('/{pqr}/ver', [PqrController::class, 'show'])
             ->name('pqr.show');
-
         // Editar
         Route::get('/{pqr}/editar', [PqrController::class, 'edit'])
             ->name('pqr.edit');
         Route::put('/{pqr}/actualizar', [PqrController::class, 'update'])
             ->name('pqr.update');
-
         // Eliminar
         Route::delete('/{pqr}/eliminar', [PqrController::class, 'destroy'])
             ->name('pqr.destroy');
-
         // AJAX
         Route::post('/validar-dias', [PqrController::class, 'validarDias'])
             ->name('pqr.validarDias');
-
-            Route::patch('/{pqr}/toggle-state', [PqrController::class, 'toggleState'])
+        Route::patch('/{pqr}/toggle-state', [PqrController::class, 'toggleState'])
             ->name('pqr.toggleState');
     });
 
     Route::prefix('budget')->group(function () {
-
         // List
         Route::get('/list', [BudgetController::class, 'index'])
             ->name('budget.index');
-
         // Create
         Route::get('/create', [BudgetController::class, 'create'])
             ->name('budget.create');
         Route::post('/store', [BudgetController::class, 'store'])
             ->name('budget.store');
-
         // Show
         Route::get('/{budget}/show', [BudgetController::class, 'show'])
             ->name('budget.show');
-
         // Edit
         Route::get('/{budget}/edit', [BudgetController::class, 'edit'])
             ->name('budget.edit');
         Route::put('/{budget}/update', [BudgetController::class, 'update'])
             ->name('budget.update');
-
         // Delete
         Route::delete('/{budget}/delete', [BudgetController::class, 'destroy'])
             ->name('budget.destroy');
-
         Route::get('/{budget}/adjustments', [BudgetController::class, 'adjustments'])
             ->name('budget.adjustments');
     });
 
+    Route::prefix('dependencies')->name('dependencies.')->group(function () {
+        Route::get('/', [DependencyController::class, 'index'])->name('index');
+        Route::get('/create', [DependencyController::class, 'create'])->name('create');
+        Route::post('/', [DependencyController::class, 'store'])->name('store');
+        Route::get('/{dependency}', [DependencyController::class, 'show'])->name('show');
+        Route::get('/{dependency}/edit', [DependencyController::class, 'edit'])->name('edit');
+        Route::put('/{dependency}', [DependencyController::class, 'update'])->name('update');
+        Route::delete('/{dependency}', [DependencyController::class, 'destroy'])->name('destroy');
+        Route::post('/subunits/reorder', [DependencyController::class, 'reorder']);
+        // Subdependencias
+        Route::post('/{dependency}/subunit', [DependencyController::class, 'storeSubunit'])
+            ->name('subunit.store');
+        Route::delete('/subunit/{subunit}', [DependencyController::class, 'destroySubunit'])
+            ->name('subunit.destroy');
+    });
 
     // Route::resource('calendario', CalendarioController::class);
     // Route::resource('infraestructura', InfraestructuraController::class);
@@ -213,25 +213,19 @@ Route::middleware('auth')->group(function () {
     Route::prefix('contracts')->name('contracts.')->group(function () {
         // Listado
         Route::get('/', [ContractController::class, 'index'])->name('index');
-
         // Crear
         Route::get('/create', [ContractController::class, 'create'])->name('create');
         Route::post('/', [ContractController::class, 'store'])->name('store');
-
         // Ver detalle
         Route::get('/{contract}', [ContractController::class, 'show'])->name('show');
-
         // Editar
         Route::get('/{contract}/edit', [ContractController::class, 'edit'])->name('edit');
         Route::put('/{contract}', [ContractController::class, 'update'])->name('update');
-
         // Eliminar
         Route::delete('/{contract}', [ContractController::class, 'destroy'])->name('destroy');
-
         // Rutas AJAX
         Route::get('/sedes/centro/{centroId}', [ContractController::class, 'getSedesByCentro'])->name('sedes.centro');
         Route::get('/types/dependencia/{dependenciaId}', [ContractController::class, 'getTypesByDependencia'])->name('types.dependencia');
-
         // Estadísticas y reportes
         Route::get('/api/statistics', [ContractController::class, 'statistics'])->name('statistics');
         Route::get('/report/generate', [ContractController::class, 'report'])->name('report');
