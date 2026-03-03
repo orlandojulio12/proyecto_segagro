@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Complaint;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PqrRequest;
-use App\Models\Complaint\pqr;
+use App\Models\Complaint\Pqr;
 use App\Models\Dependency\DependencySubunit;
 use App\Models\Dependency\DependencyUnit;
 use App\Models\User;
