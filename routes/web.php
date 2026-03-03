@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Contrato\ContractController;
 use App\Http\Controllers\Dependency\DependencyController;
 use App\Http\Controllers\Inventario\CatalogProductController;
+use App\Http\Controllers\Inventario\InventoriesGenController;
 
 // Redirigir raíz a login
 Route::get('/', function () {
@@ -77,6 +78,10 @@ Route::middleware('auth')->group(function () {
             ->name('catalogo.filters');
     });
 
+    Route::prefix('inventoriesGen')->name('inventoriesGen.')->group(function () {
+        Route::get('/', [InventoriesGenController::class, 'index'])->name('index');
+        Route::get('/ajax', [InventoriesGenController::class, 'indexAjax'])->name('inventario.index.ajax');
+    });
 
     Route::prefix('salida-ferreteria')->name('salida_ferreteria.')->group(function () {
         Route::get('/', [SalidaFerreteriaController::class, 'index'])->name('index');
