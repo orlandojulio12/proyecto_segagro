@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Contract\Contract;
 use App\Models\Infraestructura\Infraestructura;
 use App\Models\Traslado\NeedTransfer;
-use App\Models\Complaint\Pqr;
+use App\Models\Complaint\pqr;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
@@ -21,7 +21,7 @@ class DashboardController extends Controller
         $totalTraslados = NeedTransfer::count() ?? 0;
 
         $totalNecesidades = $totalInfra + $totalTraslados;
-        $totalPqr = Pqr::count() ?? 0;
+        $totalPqr = pqr::count() ?? 0;
 
         /* ================= PRESUPUESTO ================= */
         $presupuestoSolicitado =
