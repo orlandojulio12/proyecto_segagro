@@ -14,53 +14,58 @@ class DashboardController extends Controller
     public function index()
     {
         /* ================= CARDS ================= */
-        $totalContratos = Contract::count();
-        $totalUsuarios  = User::count();
+        $totalContratos = Contract::count() ?? 0;
+        $totalUsuarios  = User::count() ?? 0;
 
-        $totalInfra     = Infraestructura::count();
-        $totalTraslados = NeedTransfer::count();
+        $totalInfra     = Infraestructura::count() ?? 0;
+        $totalTraslados = NeedTransfer::count() ?? 0;
 
-        // 🔹 Combinado
         $totalNecesidades = $totalInfra + $totalTraslados;
-
-        // 🔹 PQR
-        $totalPqr = Pqr::count();
+        $totalPqr = Pqr::count() ?? 0;
 
         /* ================= PRESUPUESTO ================= */
         $presupuestoSolicitado =
-            Infraestructura::sum('presupuesto_solicitado')
-            + NeedTransfer::sum('presupuesto_solicitado');
+            (Infraestructura::sum('presupuesto_solicitado') ?? 0)
+            + (NeedTransfer::sum('presupuesto_solicitado') ?? 0);
 
         $presupuestoAceptado =
-            Infraestructura::sum('presupuesto_aceptado')
-            + NeedTransfer::sum('presupuesto_aceptado');
+            (Infraestructura::sum('presupuesto_aceptado') ?? 0)
+            + (NeedTransfer::sum('presupuesto_aceptado') ?? 0);
 
         $balance = $presupuestoAceptado - $presupuestoSolicitado;
 
         /* ================= EVENTOS ================= */
-        $infraEventos = collect(Infraestructura::get()->map(fn($i) => [
+
+        $infraEventos = Infraestructura::get()->map(fn ($i) => [
             'type'  => 'infra',
             'title' => 'Infraestructura: ' . str($i->descripcion)->limit(30),
-            'date'  => $i->fecha_inicio->format('Y-m-d'),
-            'color' => '#2563eb'
-        ]));
+            'date'  => optional($i->fecha_inicio)->format('Y-m-d'),
+            'color' => '#2563eb',
+        ])->filter(fn ($e) => $e['date']);
 
-        $trasladoEventos = collect(NeedTransfer::get()->map(fn($t) => [
+        $trasladoEventos = NeedTransfer::get()->map(fn ($t) => [
             'type'  => 'traslado',
             'title' => 'Traslado: ' . str($t->descripcion)->limit(30),
-            'date'  => $t->fecha_inicio->format('Y-m-d'),
-            'color' => '#16a34a'
-        ]));
+            'date'  => optional($t->fecha_inicio)->format('Y-m-d'),
+            'color' => '#16a34a',
+        ])->filter(fn ($e) => $e['date']);
 
-        // 🔹 PQR: la fecha es 12 días después de la creación
-        $pqrEventos = collect(Pqr::get()->map(fn($p) => [
-            'type'  => 'pqr',
-            'title' => 'PQR: ' . str($p->title)->limit(30),
-            'date'  => Carbon::parse($p->created_at)->addDays(12)->format('Y-m-d'),
-            'color' => $p->is_expired ? '#dc2626' : '#f59e0b'
-        ]));
+        // 🔴 PQR: vencido si hoy > created_at + 12 días
+        $pqrEventos = Pqr::get()->map(function ($p) {
+            $fechaLimite = Carbon::parse($p->created_at)->addDays(12);
+            $isExpired   = now()->gt($fechaLimite);
 
-        $eventosCalendario = $infraEventos
+            return [
+                'type'      => 'pqr',
+                'title'     => 'PQR: ' . str($p->title)->limit(30),
+                'date'      => $fechaLimite->format('Y-m-d'),
+                'color'     => $isExpired ? '#dc2626' : '#f59e0b',
+                'expired'   => $isExpired,
+            ];
+        });
+
+        $eventosCalendario = collect()
+            ->merge($infraEventos)
             ->merge($trasladoEventos)
             ->merge($pqrEventos)
             ->values();
