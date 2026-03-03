@@ -12,13 +12,22 @@
                 <div class="col-md-6">
                     <h5>Información General</h5>
 
+                    <!-- Unidad -->
                     <div class="form-group mb-3">
-                        <label>Dependencia Responsable <span class="text-danger">*</span></label>
-                        <select name="dependencia_id" class="form-control" required>
-                            <option value="">Seleccione una dependencia</option>
-                            @foreach ($dependencias ?? [] as $dep)
-                                <option value="{{ $dep->id }}">{{ $dep->nombre }}</option>
+                        <label>Unidad Responsable <span class="text-danger">*</span></label>
+                        <select name="unidad_id" id="unidadSelect" class="form-control" required>
+                            <option value="">Seleccione una unidad</option>
+                            @foreach ($units as $unit)
+                                <option value="{{ $unit->dependency_unit_id }}">{{ $unit->full_name }}</option>
                             @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Subunidad -->
+                    <div class="form-group mb-3">
+                        <label>Subunidad Responsable <span class="text-danger">*</span></label>
+                        <select name="subunidad_id" id="subunidadSelect" class="form-control" required>
+                            <option value="">Seleccione una subunidad</option>
                         </select>
                     </div>
 
@@ -112,21 +121,11 @@
                         </div>
                     </div>
 
-                    <div class="form-group mb-3" id="centroSecundarioDiv" style="display: none;">
-                        <label>Centro Destino del Traslado</label>
-                        <select name="centro_final_id" class="form-control">
-                            <option value="">Seleccione el centro destino</option>
-                            @foreach ($centros ?? [] as $centro)
-                                <option value="{{ $centro->id }}">{{ $centro->nom_centro }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3" id="sedeSecundariaDiv" style="display: none;">
-                        <label>Sede Destino del Traslado</label>
-                        <select name="sede_final_id" class="form-control">
-                            <option value="">Seleccione la sede destino</option>
-                        </select>
+                    <div id="trasladoDestinos" style="display: none;">
+                        <!-- Usamos el mismo componente de centros y sedes -->
+                        <x-centros-sedes-selector :centros="$centros" :required="false"
+                            centroId="{{ old('centro_final_id') }}" sedeId="{{ old('sede_final_id') }}"
+                            centroNombre="{{ old('centro_final_name') }}" sedeNombre="{{ old('sede_final_name') }}" />
                     </div>
                 </div>
             </div>
@@ -245,10 +244,6 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('requiereTraslado').addEventListener('change', function() {
-            document.getElementById('sedeSecundariaDiv').style.display = this.checked ? 'block' : 'none';
-        });
-
         document.getElementById('imagenInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const preview = document.getElementById('imagenPreview');
@@ -262,6 +257,29 @@
             } else {
                 preview.innerHTML = '';
             }
+        });
+
+        // Mapeamos unidades → subunidades
+        const unitsData = @json($units->mapWithKeys(fn($u) => [$u->dependency_unit_id => $u->subunits]));
+
+        document.getElementById('unidadSelect').addEventListener('change', function() {
+            const unitId = this.value;
+            const subSelect = document.getElementById('subunidadSelect');
+            subSelect.innerHTML = '<option value="">Seleccione una subunidad</option>';
+
+            if (unitId && unitsData[unitId]) {
+                unitsData[unitId].forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.subunit_id;
+                    opt.textContent = s.name;
+                    subSelect.appendChild(opt);
+                });
+            }
+        });
+
+        document.getElementById('requiereTraslado').addEventListener('change', function() {
+            const trasladoDiv = document.getElementById('trasladoDestinos');
+            trasladoDiv.style.display = this.checked ? 'block' : 'none';
         });
     </script>
 @endpush
