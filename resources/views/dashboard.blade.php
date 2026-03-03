@@ -445,4 +445,64 @@
             renderCalendar();
         }
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            renderCalendar();
+
+            /* ================= CHART 1: PRESUPUESTO ================= */
+            const accountingCtx = document.getElementById('accountingChart');
+            if (accountingCtx) {
+                new Chart(accountingCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Enero', 'Febrero', 'Marzo', 'Abril'],
+                        datasets: [{
+                            label: 'Presupuesto',
+                            data: [1200000, 950000, 1400000, 1100000],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            /* ================= CHART 2: BALANCE ================= */
+            const balanceCtx = document.getElementById('balanceChart');
+            if (balanceCtx) {
+                new Chart(balanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Enero', 'Febrero', 'Marzo', 'Abril'],
+                        datasets: [{
+                            label: 'Balance',
+                            data: [300000, 450000, 200000, 600000],
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+            }
+
+        });
+    </script>
 @endpush
