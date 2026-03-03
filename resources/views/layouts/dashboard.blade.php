@@ -11,29 +11,32 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}"title="Dashboard"
+                    class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fas fa-home"></i>
-                    Dashboard
+                    <span class="nav-text">Dashboard</span>
                 </a>
-                <a href="{{ route('users.index') }}" class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                <a href="{{ route('users.index') }}" title="Usuarios"
+                    class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
                     <i class="fas fa-user"></i>
-                    Usuarios
+                    <span class="nav-text">Usuarios</span>
                 </a>
 
-                <a href="{{ route('centros.index') }}"
+                <a href="{{ route('centros.index') }}" title="Centros"
                     class="nav-item {{ request()->routeIs('centros.*') ? 'active' : '' }}">
                     <i class="fas fa-building"></i>
-                    Centros
+                    <span class="nav-text">Centros</span>
                 </a>
-                <a href="{{ route('sedes.index') }}" class="nav-item {{ request()->routeIs('sedes.*') ? 'active' : '' }}">
+                <a href="{{ route('sedes.index') }}"title="Sedes"
+                    class="nav-item {{ request()->routeIs('sedes.*') ? 'active' : '' }}">
                     <i class="fas fa-building"></i>
-                    Sedes
+                    <span class="nav-text">Sedes</span>
                 </a>
-                <a href="javascript:void(0)"
+                <a href="javascript:void(0)" title="Inventario"
                     class="nav-item has-submenu {{ request()->routeIs('inventories.*') || request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') || request()->routeIs('semoviente.*') ? 'open' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
-                    Inventario
-                    <span class="submenu-arrow">▼</span>
+                    <span class="nav-text">Inventario</span>
+                    {{-- <span class="submenu-arrow">▼</span> --}}
                 </a>
 
                 <ul class="submenu">
@@ -64,12 +67,12 @@
                             </li>
                         </ul>
                     </li>
-                    <li>
+                    {{-- <li>
                         <a href="{{ route('semoviente.index') }}"
                             class="{{ request()->routeIs('semoviente.*') ? 'active' : '' }}">
                             Semoviente
                         </a>
-                    </li>
+                    </li> --}}
                     <li>
                         <a href="{{ route('catalogo.index') }}"
                             class="{{ request()->routeIs('catalogo.*') ? 'active' : '' }}">
@@ -77,41 +80,43 @@
                         </a>
                     </li>
                 </ul>
-                <a href="#" class="nav-item {{ request()->routeIs('calendario.*') ? 'active' : '' }}">
+                <a href="#" title="Calendario"
+                    class="nav-item {{ request()->routeIs('calendario.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar"></i>
-                    Calendario
+                    <span class="nav-text">Calendario</span>
                 </a>
-                <a href="{{ route('infraestructura.index') }}"
+                <a href="{{ route('infraestructura.index') }}" title="Infraestructura"
                     class="nav-item {{ request()->routeIs('infraestructura.*') ? 'active' : '' }}">
                     <i class="fas fa-warehouse"></i>
-                    Infraestructura
+                    <span class="nav-text">Infraestructura</span>
                 </a>
-                <a href="{{ route('budget.index') }}"
+                <a href="{{ route('budget.index') }}" title="Presupuesto"
                     class="nav-item {{ request()->routeIs('budget.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
-                    Presupuesto
+                    <span class="nav-text">Presupuesto</span>
                 </a>
-                <a href="{{ route('pqr.index') }}" class="nav-item {{ request()->routeIs('pqr.index') ? 'active' : '' }}">
+                <a href="{{ route('pqr.index') }}" title="Quejas"
+                    class="nav-item {{ request()->routeIs('pqr.index') ? 'active' : '' }}">
                     <i class="fas fa-comment-dots"></i>
-                    Quejas / PQR
+                    <span class="nav-text">Quejas / PQR</span>
                 </a>
-                <a href="{{ route('contracts.index') }}"
+                <a href="{{ route('contracts.index') }}" title="Contrataciones"
                     class="nav-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
-                    Contrataciones
+                    <span class="nav-text">Contrataciones</span>
                 </a>
-                <a href="{{ route('traslados.index') }}"
+                <a href="{{ route('traslados.index') }}" title="Traslados"
                     class="nav-item {{ request()->routeIs('traslados.*') ? 'active' : '' }}">
                     <i class="fas fa-truck"></i>
-                    Traslados
+                    <span class="nav-text">Traslados</span>
                 </a>
 
                 {{-- CONFIGURACIÓN --}}
-                <a href="javascript:void(0)"
+                <a href="javascript:void(0)" title="Configuración"
                     class="nav-item has-submenu {{ request()->routeIs('dependencies.*') ? 'open' : '' }}">
                     <i class="fas fa-cogs"></i>
-                    Configuración
-                    <span class="submenu-arrow">▼</span>
+                    <span class="nav-text">Configuración</span>
+                    {{-- <span class="submenu-arrow">▼</span> --}}
                 </a>
 
                 <ul class="submenu">
@@ -129,7 +134,7 @@
                     <button type="submit" class="nav-item"
                         style="border: none; background: none; width: 100%; text-align: left;">
                         <i class="fas fa-sign-out-alt"></i>
-                        Sign Out
+                        <span class="nav-text">Sign Out</span>
                     </button>
                 </form>
             </nav>
@@ -148,12 +153,16 @@
 
         <div class="main-content">
             <header class="header">
-                {{-- <h1>@yield('page-title', 'Dashboard')</h1> --}} <h1></h1>
                 <div class="header-right">
+                    <button id="toggleSidebar" class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
                     <div class="search-box">
                         <input type="text" placeholder="Buscador...">
                         <i class="fas fa-search"></i>
                     </div>
+
                     <div class="user-info">
                         <div class="user-avatar">{{ substr(Auth::user()->name, 0, 1) }}</div>
                         <div>
@@ -173,36 +182,366 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('a.has-submenu').forEach(trigger => {
+
+            // 🔓 Inicializar submenús abiertos por Blade
+            document.querySelectorAll('.has-submenu').forEach(trigger => {
+                const submenu = trigger.nextElementSibling;
+                if (trigger.classList.contains('open') && submenu?.classList.contains('submenu')) {
+                    submenu.style.display = 'block';
+                }
+            });
+
+            // 🔁 Control manual de apertura / cierre
+            document.querySelectorAll('.has-submenu').forEach(trigger => {
+
                 trigger.addEventListener('click', e => {
                     e.preventDefault();
 
                     const submenu = trigger.nextElementSibling;
-                    const isOpen = trigger.classList.contains('open');
+                    if (!submenu || !submenu.classList.contains('submenu')) return;
 
-                    // Cerrar otros submenús del mismo nivel
-                    document.querySelectorAll('a.has-submenu.open').forEach(item => {
-                        if (item !== trigger) {
+                    const isOpen = submenu.style.display === 'block';
+
+                    // 🔒 Cerrar submenús hermanos (mismo nivel)
+                    const container = trigger.parentElement;
+                    container.querySelectorAll(':scope > .has-submenu').forEach(item => {
+                        const sm = item.nextElementSibling;
+                        if (sm?.classList.contains('submenu')) {
+                            sm.style.display = 'none';
                             item.classList.remove('open');
-                            const sm = item.nextElementSibling;
-                            if (sm?.classList.contains('submenu')) sm.style.display =
-                                'none';
                         }
                     });
 
-                    // Toggle actual
-                    trigger.classList.toggle('open', !isOpen);
-                    if (submenu?.classList.contains('submenu')) {
-                        submenu.style.display = !isOpen ? 'block' : 'none';
+                    // 🔁 Toggle actual
+                    if (!isOpen) {
+                        submenu.style.display = 'block';
+                        trigger.classList.add('open');
+                    } else {
+                        submenu.style.display = 'none';
+                        trigger.classList.remove('open');
                     }
                 });
+
             });
 
-            // Abrir automáticamente los activos
-            document.querySelectorAll('a.has-submenu.open').forEach(item => {
-                const submenu = item.nextElementSibling;
-                if (submenu?.classList.contains('submenu')) submenu.style.display = 'block';
+            const dashboard = document.querySelector('.dashboard');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            // 🔁 Restaurar estado
+            if (localStorage.getItem('sidebar-collapsed') === 'true') {
+                dashboard.classList.add('collapsed');
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                dashboard.classList.toggle('collapsed');
+
+                // 💾 Guardar estado
+                localStorage.setItem(
+                    'sidebar-collapsed',
+                    dashboard.classList.contains('collapsed')
+                );
             });
+
         });
     </script>
 @endsection
+
+{{-- ================= STYLES ================= --}}
+@push('styles')
+    <style>
+        /* ================= VARIABLES ================= */
+        :root {
+            --primary: #16a34a;
+            /* Verde principal */
+            --primary-soft: #dcfce7;
+            /* Verde claro */
+            --primary-dark: #15803d;
+
+            --sidebar-bg: #ffffff;
+            --sidebar-border: #e5e7eb;
+            --hover-bg: #f0fdf4;
+
+            --text-main: #111827;
+            --text-muted: #6b7280;
+
+            --text-white: #fff;
+
+            --bg-main: #f8fafc;
+            --radius: 10px;
+            --transition: 0.25s ease;
+        }
+
+        /* ================= SIDEBAR COLLAPSED ================= */
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--primary);
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .dashboard.collapsed .sidebar {
+            width: 80px;
+            min-width: 80px;
+        }
+
+        .dashboard.collapsed .logo-text,
+        .dashboard.collapsed .submenu,
+        .dashboard.collapsed .sidebar-footer {
+            display: none !important;
+        }
+
+        .nav-text {
+            white-space: nowrap;
+            transition:
+                opacity 0.2s ease,
+                transform 0.2s ease,
+                max-width 0.3s ease;
+            opacity: 1;
+            max-width: 200px;
+            overflow: hidden;
+        }
+
+        .dashboard.collapsed .submenu {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .submenu-arrow {
+            transition: transform 0.25s ease, opacity 0.2s ease;
+        }
+
+        .dashboard.collapsed .submenu-arrow {
+            opacity: 0;
+        }
+
+        .dashboard.collapsed .nav-item {
+            justify-content: center;
+        }
+
+        .dashboard.collapsed .nav-item i {
+            margin: 0;
+        }
+
+        .dashboard.collapsed .nav-text {
+            opacity: 0;
+            transform: translateX(-10px);
+            max-width: 0;
+        }
+
+        /* Ajuste del contenido principal */
+        .dashboard.collapsed .main-content {
+            margin-left: 0;
+        }
+
+        /* Tooltip simple al hover */
+        .dashboard.collapsed .nav-item {
+            position: relative;
+        }
+
+        .dashboard.collapsed .nav-item::after {
+            content: attr(title);
+            position: absolute;
+            left: 85px;
+            background: #111827;
+            color: white;
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.2s;
+        }
+
+        .dashboard.collapsed .nav-item:hover::after {
+            opacity: 1;
+        }
+
+        /* ================= LAYOUT ================= */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg-main);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ================= SIDEBAR ================= */
+        .sidebar {
+            width: 270px;
+            min-width: 270px;
+            transition: width 0.3s ease;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        /* HEADER */
+        .sidebar-header {
+            padding: 22px;
+            border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        .logo-icon {
+            background: var(--primary);
+            color: white;
+        }
+
+        .logo-text {
+            color: var(--text-main);
+        }
+
+        /* ================= NAV ================= */
+        .sidebar-nav {
+            padding: 15px 10px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            border-radius: var(--radius);
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .nav-item {
+            transition: padding 0.3s ease, justify-content 0.3s ease;
+        }
+
+        .dashboard.collapsed .nav-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .nav-item i {
+            transition: margin 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--hover-bg);
+            color: var(--primary-dark);
+        }
+
+        .nav-item.active {
+            background: var(--primary-soft);
+            color: var(--primary-dark);
+            font-weight: 600;
+            box-shadow: inset 4px 0 0 var(--primary);
+        }
+
+        /* ================= SUBMENU ================= */
+
+        .submenu-arrow {
+            font-size: 11px;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .has-submenu.open .submenu-arrow {
+            transform: rotate(180deg);
+        }
+
+        .submenu {
+            display: none;
+            margin: 6px 0 10px 12px;
+            padding-left: 12px;
+            border-left: 2px solid var(--primary-soft);
+        }
+
+        .submenu a {
+            display: block;
+            padding: 9px 14px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .submenu a:hover,
+        .submenu a.active {
+            background: var(--hover-bg);
+            color: var(--primary-dark);
+        }
+
+        /* ================= FOOTER ================= */
+        .sidebar-footer {
+            padding: 18px;
+            border-top: 1px solid var(--sidebar-border);
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-white);
+        }
+
+        .sidebar-footer button {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        /* ================= MAIN CONTENT ================= */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ================= HEADER ================= */
+        /* HEADER layout */
+        .header {
+            display: flex;
+            align-items: center;
+            height: 70px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--sidebar-border);
+            padding: 0 25px;
+        }
+
+        /* Contenedor interno */
+        .header-right {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 15px;
+        }
+
+        /* Empuja el user-info totalmente a la derecha */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+            /* 🔥 clave */
+            cursor: pointer;
+        }
+
+        /* Avatar */
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* ================= CONTENT ================= */
+        .content {
+            padding: 25px;
+        }
+    </style>
+@endpush
