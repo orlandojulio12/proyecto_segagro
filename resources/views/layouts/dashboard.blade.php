@@ -38,7 +38,8 @@
 
                 <ul class="submenu">
                     <li>
-                        <a href="#" class="{{ request()->routeIs('inventoriesGen.*') ? 'active' : '' }}">
+                        <a href="{{ route('inventoriesGen.index') }}"
+                            class="{{ request()->routeIs('inventoriesGen.*') ? 'active' : '' }}">
                             Inventario General
                         </a>
                     </li>
@@ -147,7 +148,7 @@
 
         <div class="main-content">
             <header class="header">
-                <h1>@yield('page-title', 'Dashboard')</h1>
+                {{-- <h1>@yield('page-title', 'Dashboard')</h1> --}} <h1></h1>
                 <div class="header-right">
                     <div class="search-box">
                         <input type="text" placeholder="Buscador...">
@@ -185,7 +186,7 @@
                             item.classList.remove('open');
                             const sm = item.nextElementSibling;
                             if (sm?.classList.contains('submenu')) sm.style.display =
-                            'none';
+                                'none';
                         }
                     });
 
