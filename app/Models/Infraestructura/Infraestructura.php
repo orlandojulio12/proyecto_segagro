@@ -13,6 +13,8 @@ class Infraestructura extends Model
 {
     protected $fillable = [
         'dependencia_id',
+        'unidad_id',
+        'subunidad_id',
         'user_id',
         'centro_id',
         'sede_id',

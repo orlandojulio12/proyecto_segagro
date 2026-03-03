@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Infraestructura;
 use App\Http\Controllers\Controller;
 use App\Models\Centro;
 use App\Models\Dependencia\Dependencia;
+use App\Models\Dependency\DependencySubunit;
+use App\Models\Dependency\DependencyUnit;
 use App\Models\Infraestructura\Infraestructura;
 use App\Models\Sede;
 use App\Models\Traslado\NeedTransfer;
@@ -23,18 +25,19 @@ class InfraestructuraController extends Controller
 
     public function create()
     {
-        $dependencias = Dependencia::all();
+        $units = DependencyUnit::with('subunits')->get();
         $users = User::all();
         $centros = Centro::all();
         $sedes = Sede::all();
 
-        return view('Infraestructura.create', compact('dependencias', 'users', 'centros', 'sedes'));
+        return view('Infraestructura.create', compact('units', 'users', 'centros', 'sedes'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'dependencia_id' => 'required|exists:dependencias,id',
+            'unidad_id' => 'required|exists:dependency_units,dependency_unit_id',
+            'subunidad_id' => 'required|exists:dependency_subunits,subunit_id',
             'user_id' => 'required|exists:users,id',
             'centro_id' => 'required|exists:centros,id',
             'sede_id' => 'required|exists:sedes,id',
@@ -49,15 +52,17 @@ class InfraestructuraController extends Controller
 
         DB::beginTransaction();
         try {
-            // Subir imagen si existe
             $path = null;
             if ($request->hasFile('imagen')) {
                 $path = $request->file('imagen')->store('infraestructuras', 'public');
             }
 
-            // 📦 Datos listos para crear
+            $subunidad = DependencySubunit::findOrFail($request->subunidad_id);
+
             $data = [
                 ...$validated,
+                 'dependencia_id' => $subunidad->dependency_unit_id, // unidad principal
+                'subunidad_id' => $subunidad->subunit_id,           // subunidad seleccionada
                 'ambiente' => $request->ambiente,
                 'requiere_traslado' => $request->boolean('requiere_traslado'),
                 'personal' => $request->personal ?? [],
@@ -72,13 +77,10 @@ class InfraestructuraController extends Controller
                 'presupuesto_aceptado' => null,
             ];
 
-            // 🚀 Aquí lo retornamos en JSON para que veas qué se envía
-            /* return response()->json($data); */
-
-            // Si quisieras guardar después, lo descomentas
             Infraestructura::create($data);
             DB::commit();
-            return redirect()->route('Infraestructura.index')
+
+            return redirect()->route('infraestructura.index')
                 ->with('success', 'Infraestructura creada correctamente');
         } catch (\Exception $e) {
             DB::rollBack();

@@ -12,7 +12,10 @@ class CreateInfraestructurasTable extends Migration
             $table->id();
 
             // Información general
-            $table->foreignId('dependencia_id')->constrained('dependencias');
+            $table->foreignId('dependencia_id')->nullable()->constrained('dependencias'); // opcional, puedes mantenerlo
+            // Información general
+            $table->foreignId('unidad_id')->constrained('dependency_units', 'dependency_unit_id');
+            $table->foreignId('subunidad_id')->constrained('dependency_subunits', 'subunit_id');
             $table->foreignId('user_id')->constrained('users'); // funcionario
             $table->foreignId('centro_id')->constrained('centros');
             $table->foreignId('sede_id')->constrained('sedes');
@@ -27,19 +30,19 @@ class CreateInfraestructurasTable extends Migration
             $table->text('descripcion')->nullable();
 
             // Características adicionales
-            $table->enum('nivel_riesgo', ['bajo','medio','alto']);
-            $table->enum('nivel_prioridad', ['baja','media','alta'])->nullable();
+            $table->enum('nivel_riesgo', ['bajo', 'medio', 'alto']);
+            $table->enum('nivel_prioridad', ['baja', 'media', 'alta'])->nullable();
             $table->string('tipo_necesidad');
-            $table->string('area_necesidad')->nullable(); // 🔹 nuevo
-            $table->enum('nivel_complejidad', ['baja','media','alta'])->default('baja'); // 🔹 nuevo
+            $table->string('area_necesidad')->nullable();
+            $table->enum('nivel_complejidad', ['baja', 'media', 'alta'])->default('baja');
             $table->string('motivo_necesidad')->nullable();
 
             // Requiere traslado
             $table->boolean('requiere_traslado')->default(false);
 
             // Centros y sedes destino (si hay traslado)
-            $table->foreignId('centro_final_id')->nullable()->constrained('centros'); // 🔹 nuevo
-            $table->foreignId('sede_final_id')->nullable()->constrained('sedes');   // 🔹 nuevo
+            $table->foreignId('centro_final_id')->nullable()->constrained('centros');
+            $table->foreignId('sede_final_id')->nullable()->constrained('sedes');
 
             // Información personal
             $table->json('personal')->nullable(); // guarda [{nombre,documento,cargo},...]
