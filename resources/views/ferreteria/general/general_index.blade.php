@@ -1,295 +1,504 @@
 @extends('layouts.dashboard')
 
-@section('page-title', 'Inventario General')
+@section('page-title', 'Gestión de Inventarios')
 
 @section('dashboard-content')
-<div class="section-header mb-4 d-flex justify-content-between align-items-center">
-    <div>
-        <h2 class="fw-bold">Inventario General</h2>
-        <p class="text-muted">Listado completo de inventarios de sedes, incluyendo materiales y semovientes</p>
-    </div>
-</div>
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-    <i class="fas fa-check-circle me-2"></i>
-    {{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
+    <div class="dashboard-wrapper">
 
-<div class="content-card">
-    <div class="table-header mb-3 d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Listado General de Inventarios</h5>
-
-        <div>
-            <select id="dependency_filter" class="form-select form-select-sm">
-                <option value="">-- Todas las dependencias --</option>
-                @foreach($dependencies as $dep)
-                    <option value="{{ $dep->dependency_unit_id }}">{{ $dep->short_name }}</option>
-                @endforeach
-            </select>
+        <div class="section-header mb-4">
+            <div>
+                <h2 class="fw-bold">Inventario General</h2>
+                <p class="text-muted">Panel analítico del inventario institucional</p>
+            </div>
         </div>
-    </div>
 
-    <div class="table-responsive">
-        <table class="table table-modern" id="generalInventoryTable">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-hashtag me-1"></i>ID</th>
-                    <th><i class="fas fa-map-marker-alt me-1"></i>Sede</th>
-                    <th><i class="fas fa-building me-1"></i>Centro</th>
-                    <th><i class="fas fa-user-tie me-1"></i>Responsable</th>
-                    <th><i class="fas fa-user me-1"></i>Funcionario</th>
-                    <th><i class="fas fa-boxes me-1"></i>Tipo</th>
-                    <th><i class="fas fa-info-circle me-1"></i>Detalle</th>
-                    <th><i class="fas fa-calendar me-1"></i>Fecha</th>
-                    <th><i class="fas fa-layer-group me-1"></i>Cantidad</th>
-                    <th><i class="fas fa-dollar-sign me-1"></i>Valor Aprox.</th>
-                    <th><i class="fas fa-cogs me-1"></i>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- AJAX cargará los datos --}}
-            </tbody>
-        </table>
-    </div>
-</div>
-@endsection
+        {{-- KPI DASHBOARD --}}
 
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+        <div class="stats-grid">
 
-<style>
-.inventario-index .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+            <div class="stat-card green">
+                <div class="stat-icon"><i class="fas fa-warehouse"></i></div>
+                <div class="stat-content">
+                    <span class="stat-number counter" data-target="{{ $totalInventarios }}">0</span>
+                    <span class="stat-label">Inventarios</span>
 
-.inventario-index .content-card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    border: 1px solid #e9ecef;
-}
-
-.inventario-index .table-header {
-    padding-bottom: 15px;
-    border-bottom: 2px solid #4cd137;
-}
-
-.inventario-index .table-header h5 {
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-.inventario-index .table-modern {
-    border-collapse: separate;
-    border-spacing: 0;
-    width: 100%;
-    margin-bottom: 0;
-}
-
-.inventario-index .table-modern thead {
-    background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
-    color: #fff;
-}
-
-.inventario-index .table-modern thead th {
-    padding: 16px 12px;
-    font-size: 13px;
-    text-align: center;
-    font-weight: 600;
-    border: none;
-    white-space: nowrap;
-    vertical-align: middle;
-}
-
-.inventario-index .table-modern tbody tr {
-    background: #fff;
-    transition: all 0.2s ease;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.inventario-index .table-modern tbody tr:hover:not(.empty-state) {
-    background: #f8fff9;
-    transform: scale(1.002);
-    box-shadow: 0 2px 8px rgba(76,209,55,0.15);
-}
-
-.inventario-index .table-modern tbody td {
-    padding: 14px 12px;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 0.9rem;
-}
-
-.inventario-index .badge {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.inventario-index .badge.bg-success {
-    background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%) !important;
-}
-
-.inventario-index .badge.bg-info {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
-}
-
-.inventario-index .action-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    align-items: center;
-}
-
-.inventario-index .btn {
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: none;
-}
-
-.inventario-index .btn-warning {
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-}
-
-.inventario-index .btn-warning:hover {
-    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(243,156,18,0.4);
-}
-
-.inventario-index .btn-sm {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-}
-
-/* Estado vacío moderno */
-.inventario-index .table-modern .empty-state {
-    background: linear-gradient(135deg, #e9f7ef 0%, #d4f0e6 100%);
-    border-radius: 12px;
-    text-align: center;
-    padding: 60px 20px;
-    font-size: 1rem;
-    color: #2c3e50;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-.inventario-index .table-modern .empty-state i {
-    font-size: 60px;
-    color: #4cd137;
-    animation: bounce 1.2s infinite;
-}
-
-.inventario-index .table-modern .empty-state h5 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-.inventario-index .table-modern .empty-state p {
-    color: #6c757d;
-    font-size: 0.95rem;
-    margin: 0;
-}
-
-.inventario-index .table-modern .empty-state .btn {
-    margin-top: 10px;
-}
-
-/* Animaciones */
-@keyframes bounce {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-@keyframes fadeIn {
-    from { opacity:0; transform: translateY(10px); }
-    to { opacity:1; transform: translateY(0); }
-}
-
-@media(max-width:768px) {
-    .inventario-index .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .inventario-index .action-buttons {
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .inventario-index .action-buttons .btn {
-        width: 100%;
-    }
-}
-</style>
-@endpush
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
-
-<script>
-document.body.classList.add('inventario-index');
-
-$(document).ready(function() {
-    let table = $('#generalInventoryTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "{{ route('inventoriesGen.inventario.index.ajax') }}",
-            data: function(d) {
-                d.dependency_unit_id = $('#dependency_filter').val();
-            }
-        },
-        columns: [
-            { data: 'id', name: 'id' },
-            { data: 'sede', name: 'sede' },
-            { data: 'centro', name: 'centro' },
-            { data: 'responsible_department', name: 'responsible_department' },
-            { data: 'staff', name: 'staff' },
-            { data: 'tipo', name: 'tipo', orderable: false, searchable: false },
-            { data: 'detalle', name: 'detalle', orderable: false, searchable: false },
-            { data: 'record_date', name: 'record_date' },
-            { data: 'cantidad', name: 'cantidad', orderable: false, searchable: false },
-            { data: 'valor', name: 'valor', orderable: false, searchable: false },
-            { data: 'acciones', name: 'acciones', orderable: false, searchable: false },
-        ],
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
-            emptyTable: `
-                <div class="empty-state">
-                    <i class="fas fa-box-open"></i>
-                    <h5>No hay inventarios registrados</h5>
-                    <p>Comienza creando tu primer inventario y visualiza tus materiales y semovientes aquí.</p>
+                    <div class="stat-growth {{ $growth >= 0 ? 'up' : 'down' }}">
+                        <i class="fas {{ $growth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                        {{ number_format(abs($growth), 1) }} %
+                    </div>
                 </div>
-            `
-        },
-        order: [[0,'desc']],
-        pageLength: 10,
-        responsive: true
-    });
+            </div>
 
-    $('#dependency_filter').change(function() {
-        table.ajax.reload();
-    });
-});
-</script>
-@endpush
+
+            <div class="stat-card blue">
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
+                <div class="stat-content">
+                    <span class="stat-number counter" data-target="{{ $totalMateriales }}">0</span>
+                    <span class="stat-label">Materiales</span>
+                </div>
+            </div>
+
+
+            <div class="stat-card orange">
+                <div class="stat-icon"><i class="fas fa-paw"></i></div>
+                <div class="stat-content">
+                    <span class="stat-number counter" data-target="{{ $totalSemovientes }}">0</span>
+                    <span class="stat-label">Semovientes</span>
+                </div>
+            </div>
+
+
+            <div class="stat-card purple">
+                <div class="stat-icon"><i class="fas fa-book"></i></div>
+                <div class="stat-content">
+                    <span class="stat-number counter" data-target="{{ $totalCatalogo }}">0</span>
+                    <span class="stat-label">Productos catálogo</span>
+                </div>
+            </div>
+
+        </div>
+
+
+        {{-- GRID INVENTARIOS --}}
+
+        <div class="inventarios-grid">
+
+            <div class="inventarios-grid">
+
+                @forelse($inventarios as $inventory)
+                    @php
+                        $materiales = $inventory->materials->count();
+                        $progress = min(100, $materiales * 10);
+                    @endphp
+
+                    <div class="inventory-card">
+
+                        <div class="inventory-header">
+
+                            <span class="inventory-id">
+                                #{{ $inventory->id }}
+                            </span>
+
+                            <span class="inventory-date">
+                                {{ $inventory->record_date ? $inventory->record_date->format('d/m/Y') : 'N/A' }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="inventory-body">
+
+                            <div class="inventory-info">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ $inventory->sede->nom_sede ?? 'N/A' }}
+                            </div>
+
+                            <div class="inventory-info">
+                                <i class="fas fa-building"></i>
+                                {{ $inventory->sede->centro->nom_centro ?? 'N/A' }}
+                            </div>
+
+                            <div class="inventory-info">
+                                <i class="fas fa-user"></i>
+                                {{ $inventory->staff->name ?? 'N/A' }}
+                            </div>
+
+                            <div class="inventory-badge">
+                                <i class="fas fa-box"></i>
+                                {{ $materiales }} materiales
+                            </div>
+
+                            <div class="inventory-progress">
+
+                                <div class="progress-label">
+                                    Nivel inventario
+                                    <span>{{ $progress }}%</span>
+                                </div>
+
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" style="width:{{ $progress }}%">
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                @empty
+
+                    <div class="empty-wrapper">
+
+                        <div class="empty-card">
+
+                            <div class="empty-icon">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+
+                            <h3>No existen inventarios</h3>
+
+                            <p>Los inventarios registrados aparecerán automáticamente aquí.</p>
+
+                        </div>
+
+                    </div>
+                @endforelse
+
+            </div>
+
+        </div>
+
+    @endsection
+
+    @push('styles')
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+        <style>
+            /* DASHBOARD */
+
+            .dashboard-wrapper {
+                padding: 10px 5px;
+            }
+
+            /* KPI GRID */
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 25px;
+                margin-bottom: 35px;
+            }
+
+            /* KPI CARD */
+
+            .stat-card {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 18px;
+                padding: 22px;
+                border-radius: 20px;
+                background: linear-gradient(145deg, #ffffff, #e6e6e6);
+                box-shadow:
+                    8px 8px 16px rgba(0, 0, 0, .08),
+                    -8px -8px 16px rgba(255, 255, 255, .9);
+                transition: .35s;
+                overflow: hidden;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-6px);
+                box-shadow:
+                    12px 12px 22px rgba(0, 0, 0, .12),
+                    -10px -10px 20px rgba(255, 255, 255, 1);
+            }
+
+            .stat-card::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                border-radius: 20px 20px 0 0;
+                background: #e5e7eb;
+            }
+
+            .green::before {
+                background: linear-gradient(90deg, #22c55e, #4ade80);
+            }
+
+            .blue::before {
+                background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            }
+
+            .orange::before {
+                background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            }
+
+            .purple::before {
+                background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+            }
+
+            /* ICON */
+
+            .stat-icon {
+                font-size: 24px;
+                width: 60px;
+                height: 60px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 14px;
+                color: white;
+            }
+
+            /* GRADIENTES */
+
+            .green .stat-icon {
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+            }
+
+            .blue .stat-icon {
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+            }
+
+            .orange .stat-icon {
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+            }
+
+            .purple .stat-icon {
+                background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            }
+
+            /* NUMERO */
+
+            .stat-number {
+                font-size: 30px;
+                font-weight: 800;
+                display: block;
+            }
+
+            .stat-label {
+                font-size: 13px;
+                color: #6b7280;
+            }
+
+            /* CRECIMIENTO */
+
+            .stat-growth {
+                font-size: 12px;
+                margin-top: 3px;
+            }
+
+            .stat-growth.up {
+                color: #16a34a;
+            }
+
+            .stat-growth.down {
+                color: #ef4444;
+            }
+
+
+            /* INVENTARIOS GRID */
+
+            .inventarios-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 22px;
+            }
+
+            /* INVENTORY CARD */
+
+            .inventory-card {
+
+                background: linear-gradient(145deg, #ffffff, #f1f1f1);
+                padding: 22px;
+                border-radius: 18px;
+
+                box-shadow:
+                    7px 7px 16px rgba(0, 0, 0, .08),
+                    -7px -7px 16px rgba(255, 255, 255, .9);
+
+                transition: .35s;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .inventory-card:hover {
+
+                transform: translateY(-8px);
+
+                box-shadow:
+                    12px 12px 25px rgba(0, 0, 0, .12),
+                    -10px -10px 20px rgba(255, 255, 255, 1);
+
+            }
+
+            /* HEADER */
+
+            .inventory-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 14px;
+            }
+
+            /* ID */
+
+            .inventory-id {
+                background: linear-gradient(135deg, #16a34a, #22c55e);
+                color: white;
+                padding: 4px 10px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            /* DATE */
+
+            .inventory-date {
+                font-size: 13px;
+                color: #6b7280;
+            }
+
+            /* BODY */
+
+            .inventory-body {
+                display: flex;
+                flex-direction: column;
+                gap: 9px;
+            }
+
+            /* INFO */
+
+            .inventory-info {
+                font-size: 14px;
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .inventory-info i {
+                color: #22c55e;
+            }
+
+            /* BADGE */
+
+            .inventory-badge {
+                margin-top: 10px;
+                font-weight: 600;
+                color: #16a34a;
+            }
+
+            /* PROGRESS */
+
+            .inventory-progress {
+                margin-top: 10px;
+            }
+
+            .progress-label {
+                display: flex;
+                justify-content: space-between;
+                font-size: 12px;
+                margin-bottom: 4px;
+                color: #6b7280;
+            }
+
+            .progress-bar-bg {
+                height: 8px;
+                background: #e5e7eb;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+            .progress-bar-fill {
+
+                height: 100%;
+                background: linear-gradient(90deg, #22c55e, #4ade80);
+
+                border-radius: 10px;
+
+                transition: width .6s ease;
+            }
+
+            /* EMPTY */
+
+            .empty-wrapper {
+                grid-column: 1/-1;
+                display: flex;
+                justify-content: center;
+                padding: 80px;
+            }
+
+            .empty-card {
+
+                background: linear-gradient(145deg, #ffffff, #f1f1f1);
+
+                padding: 50px;
+
+                border-radius: 22px;
+
+                text-align: center;
+
+                box-shadow:
+                    8px 8px 20px rgba(0, 0, 0, .08),
+                    -8px -8px 20px rgba(255, 255, 255, .9);
+
+                animation: fadeUp .6s ease;
+            }
+
+            .empty-icon {
+                font-size: 70px;
+                color: #22c55e;
+                margin-bottom: 18px;
+                animation: floatIcon 4s ease infinite;
+            }
+
+            /* ANIMACIONES */
+
+            @keyframes floatIcon {
+                0% {
+                    transform: translateY(0)
+                }
+
+                50% {
+                    transform: translateY(-14px)
+                }
+
+                100% {
+                    transform: translateY(0)
+                }
+            }
+
+            @keyframes fadeUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px)
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0)
+                }
+            }
+        </style>
+    @endpush
+
+    @push('scripts')
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+
+                const counters = document.querySelectorAll('.counter');
+
+                counters.forEach(counter => {
+
+                    let target = +counter.dataset.target;
+                    let count = 0;
+
+                    let speed = 20;
+
+                    let update = () => {
+
+                        let increment = Math.ceil(target / 80);
+
+                        count += increment;
+
+                        if (count > target) count = target;
+
+                        counter.innerText = count.toLocaleString();
+
+                        if (count < target) {
+                            requestAnimationFrame(update);
+                        }
+
+                    }
+
+                    update();
+
+                });
+
+            });
+        </script>
+    @endpush
