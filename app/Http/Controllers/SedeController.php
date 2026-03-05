@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Area\Area;
 use App\Models\Sede;
 use App\Models\Centro;
 use Illuminate\Http\Request;
@@ -69,5 +70,30 @@ class SedeController extends Controller
             'success' => true,
             'message' => 'Sede eliminada exitosamente'
         ]);
+    }
+
+    public function ajaxSedesAreas(Centro $centro)
+    {
+        $sedes = $centro->sedes()->with(['areas'])->get();
+        return view('areas.partials.sedes_tree', compact('sedes'));
+    }
+
+    public function ajaxSedesCentro($centro, Request $request)
+    {
+        $sede_id = $request->query('sede_id');
+
+        // Traer las áreas filtrando por sede (si existe)
+        $query = Area::query()
+            ->whereHas('sede', function ($q) use ($centro) {
+                $q->where('centro_id', $centro);
+            });
+
+        if ($sede_id) {
+            $query->where('sede_id', $sede_id);
+        }
+
+        $areas = $query->get(['id', 'name']);
+
+        return response()->json($areas);
     }
 }

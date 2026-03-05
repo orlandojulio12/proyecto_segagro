@@ -2,8 +2,10 @@
 
 namespace App\Models\Infraestructura;
 
+use App\Models\Area\Room;
 use App\Models\Centro;
 use App\Models\Dependencia\Dependencia;
+use App\Models\Dependency\DependencyUnit;
 use App\Models\Sede;
 use App\Models\Traslado\NeedTransfer;
 use App\Models\User;
@@ -48,7 +50,11 @@ class Infraestructura extends Model
 
     public function dependencia()
     {
-        return $this->belongsTo(Dependencia::class);
+        return $this->belongsTo(
+            DependencyUnit::class,
+            'unidad_id',              // FK en need_transfers
+            'dependency_unit_id'      // PK real en dependency_units
+        );
     }
 
     public function funcionario()
@@ -64,6 +70,11 @@ class Infraestructura extends Model
     public function sede()
     {
         return $this->belongsTo(Sede::class);
+    }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class, 'ambiente');
     }
 
     public function needTransfers()

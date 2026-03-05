@@ -2,6 +2,16 @@
 
 @section('page-title', 'Necesidad de Infraestructura')
 
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 @section('dashboard-content')
     <div class="content-card">
         <form action="{{ route('infraestructura.store') }}" method="POST" enctype="multipart/form-data">
@@ -42,18 +52,19 @@
                     </div>
 
                     {{-- COMPONENTE CENTROS Y SEDES --}}
-                    <x-centros-sedes-selector :centros="$centros" />
+                    <x-centros-sedes-selector :centros="$centros" prefix="inicial" />
 
                     <div class="form-group mb-3">
-                        <label>Área de la Necesidad <span class="text-danger">*</span></label>
-                        <select name="area_necesidad" class="form-control" required>
+                         <label>Area <span class="text-danger">*</span></label>
+                        <select name="area_id" id="areaSelect" class="form-select" required>
                             <option value="">Seleccione un área</option>
-                            <option value="Talleres">Talleres</option>
-                            <option value="Laboratorios">Laboratorios</option>
-                            <option value="Aulas">Aulas</option>
-                            <option value="Áreas Comunes">Áreas Comunes</option>
-                            <option value="Oficinas Administrativas">Oficinas Administrativas</option>
-                            <option value="Exteriores">Exteriores</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label>Room / Classroom <span class="text-danger">*</span></label>
+                        <select name="ambiente" id="roomSelect" class="form-select" required>
+                            <option value="">Select room</option>
                         </select>
                     </div>
                 </div>
@@ -63,28 +74,27 @@
                     <h5>Características de la Necesidad</h5>
 
                     <div class="form-group mb-3">
-                        <label>Tipo de Necesidad <span class="text-danger">*</span></label>
-                        <select name="tipo_necesidad" class="form-control" required>
-                            <option value="">Seleccione el tipo</option>
-                            <option value="Eléctrica">Eléctrica</option>
-                            <option value="Hidráulica">Hidráulica</option>
-                            <option value="Refrigeración">Refrigeración</option>
-                            <option value="Infraestructura Civil">Infraestructura Civil</option>
-                            <option value="Mobiliario">Mobiliario</option>
-                            <option value="Equipos">Equipos</option>
+                        <label>Motivo de la Necesidad <span class="text-danger">*</span></label>
+                        <select name="motivo_necesidad" class="form-control" required>
+                            <option value="">Seleccione el motivo</option>
+                            <option value="Falla de equipo">Falla de equipo</option>
+                            <option value="Actualización de infraestructura">Actualización de infraestructura</option>
+                            <option value="Cumplimiento normativo">Cumplimiento normativo</option>
+                            <option value="Solicitud de usuario">Solicitud de usuario</option>
+                            <option value="Mantenimiento preventivo programado">Mantenimiento preventivo programado</option>
+                            <option value="Emergencia / urgencia">Emergencia / urgencia</option>
                         </select>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Motivo de la Necesidad <span class="text-danger">*</span></label>
-                        <select name="motivo_necesidad" class="form-control" required>
-                            <option value="">Seleccione el motivo</option>
-                            <option value="Mantenimiento Preventivo">Mantenimiento Preventivo</option>
-                            <option value="Mantenimiento Correctivo">Mantenimiento Correctivo</option>
-                            <option value="Instalación Nueva">Instalación Nueva</option>
-                            <option value="Reparación">Reparación</option>
-                            <option value="Reemplazo">Reemplazo</option>
-                            <option value="Mejora">Mejora</option>
+                        <label>Tipo de Necesidad <span class="text-danger">*</span></label>
+                        <select name="tipo_necesidad" class="form-control" required>
+                            <option value="">Seleccione el tipo</option>
+                            <option value="Reparación de instalaciones">Reparación de instalaciones</option>
+                            <option value="Instalación de nuevo equipamiento">Instalación de nuevo equipamiento</option>
+                            <option value="Mantenimiento preventivo">Mantenimiento preventivo</option>
+                            <option value="Reemplazo de componentes">Reemplazo de componentes</option>
+                            <option value="Mejora de infraestructura">Mejora de infraestructura</option>
                         </select>
                     </div>
 
@@ -114,7 +124,10 @@
 
                     <div class="form-group mb-3">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="requiere_traslado" id="requiereTraslado">
+                            <input type="hidden" name="requiere_traslado" value="0">
+
+                            <input class="form-check-input" type="checkbox" name="requiere_traslado" value="1"
+                                id="requiereTraslado">
                             <label class="form-check-label" for="requiereTraslado">
                                 ¿Requiere traslado de equipos o personal?
                             </label>
@@ -123,9 +136,7 @@
 
                     <div id="trasladoDestinos" style="display: none;">
                         <!-- Usamos el mismo componente de centros y sedes -->
-                        <x-centros-sedes-selector :centros="$centros" :required="false"
-                            centroId="{{ old('centro_final_id') }}" sedeId="{{ old('sede_final_id') }}"
-                            centroNombre="{{ old('centro_final_name') }}" sedeNombre="{{ old('sede_final_name') }}" />
+                        <x-centros-sedes-selector :centros="$centros" prefix="final" :required="false" />
                     </div>
                 </div>
             </div>
@@ -244,42 +255,201 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('imagenInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const preview = document.getElementById('imagenPreview');
+        document.addEventListener('DOMContentLoaded', function() {
 
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" alt="Vista previa">`;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                preview.innerHTML = '';
-            }
-        });
+            // ===== 1. Imagen: Vista previa =====
+            const imagenInput = document.getElementById('imagenInput');
+            const imagenPreview = document.getElementById('imagenPreview');
 
-        // Mapeamos unidades → subunidades
-        const unitsData = @json($units->mapWithKeys(fn($u) => [$u->dependency_unit_id => $u->subunits]));
+            imagenInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagenPreview.innerHTML = `<img src="${e.target.result}" alt="Vista previa">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagenPreview.innerHTML = '';
+                }
+            });
 
-        document.getElementById('unidadSelect').addEventListener('change', function() {
-            const unitId = this.value;
-            const subSelect = document.getElementById('subunidadSelect');
-            subSelect.innerHTML = '<option value="">Seleccione una subunidad</option>';
+            // ===== 2. Unidades → Subunidades =====
+            const unitsData = @json($units->mapWithKeys(fn($u) => [$u->dependency_unit_id => $u->subunits]));
+            const unidadSelect = document.getElementById('unidadSelect');
+            const subunidadSelect = document.getElementById('subunidadSelect');
 
-            if (unitId && unitsData[unitId]) {
-                unitsData[unitId].forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.subunit_id;
-                    opt.textContent = s.name;
-                    subSelect.appendChild(opt);
-                });
-            }
-        });
+            unidadSelect.addEventListener('change', function() {
+                const unitId = this.value;
+                subunidadSelect.innerHTML = '<option value="">Seleccione una subunidad</option>';
+                if (unitId && unitsData[unitId]) {
+                    unitsData[unitId].forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.subunit_id;
+                        opt.textContent = s.name;
+                        subunidadSelect.appendChild(opt);
+                    });
+                }
+            });
 
-        document.getElementById('requiereTraslado').addEventListener('change', function() {
+            // ===== 3. Mostrar/Ocultar Traslado =====
+            const requiereTraslado = document.getElementById('requiereTraslado');
             const trasladoDiv = document.getElementById('trasladoDestinos');
-            trasladoDiv.style.display = this.checked ? 'block' : 'none';
+
+            requiereTraslado.addEventListener('change', function() {
+                trasladoDiv.style.display = this.checked ? 'block' : 'none';
+            });
+
+            // ===== 4. Selección de Centro → Sede → Área =====
+            const centroInput = document.getElementById('inicial_centro_id');
+            const sedeInput = document.getElementById('inicial_sede_id');
+            const areaSelect = document.getElementById('areaSelect');
+
+            function resetAreaSelect() {
+                areaSelect.innerHTML = '<option value="">Seleccione un área</option>';
+            }
+
+            // Se dispara al cambiar la sede (input hidden)
+            sedeInput.addEventListener('input', function() {
+                const centroId = centroInput.value;
+                const sedeId = this.value;
+
+                resetAreaSelect();
+
+                if (!centroId || !sedeId) return; // 🔹 evita fetch innecesario
+
+                fetch(`/centros/${centroId}/sedes-centro?sede_id=${sedeId}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Error en la respuesta del servidor');
+                        return res.json();
+                    })
+                    .then(data => {
+                        areaSelect.innerHTML = '<option value="">Seleccione un área</option>';
+                        if (!data || data.length === 0) {
+                            areaSelect.innerHTML = '<option value="">No hay áreas disponibles</option>';
+                            return;
+                        }
+                        data.forEach(area => {
+                            const opt = document.createElement('option');
+                            opt.value = area.id;
+                            opt.textContent = area.name;
+                            areaSelect.appendChild(opt);
+                        });
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        areaSelect.innerHTML = '<option value="">Error cargando áreas</option>';
+                    });
+            });
+
+            // ===== 5. Selección de Área → Rooms =====
+            const roomSelect = document.getElementById('roomSelect');
+            areaSelect.addEventListener('change', function() {
+                const areaId = this.value;
+                roomSelect.innerHTML = '<option value="">Cargando...</option>';
+
+                if (!areaId) {
+                    roomSelect.innerHTML = '<option value="">Seleccione un room</option>';
+                    return;
+                }
+
+                fetch(`/areas/${areaId}/rooms`)
+                    .then(res => res.json())
+                    .then(data => {
+                        roomSelect.innerHTML = '<option value="">Seleccione un room</option>';
+                        if (!data || data.length === 0) {
+                            roomSelect.innerHTML = '<option value="">No hay rooms disponibles</option>';
+                            return;
+                        }
+                        data.forEach(room => {
+                            const opt = document.createElement('option');
+                            opt.value = room.id;
+                            opt.textContent =
+                                `${room.name} `;
+                            roomSelect.appendChild(opt);
+                        });
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        roomSelect.innerHTML = '<option value="">Error cargando rooms</option>';
+                    });
+            });
+
+            // ===== 6. Funciones modales y selección Centros/Sedes =====
+            function getPrefixFromId(id) {
+                return id.split('_')[0];
+            }
+
+            window.openModal = id => {
+                document.getElementById(id).classList.add('show');
+                document.body.classList.add('modal-open');
+            };
+            window.closeModal = id => {
+                document.getElementById(id).classList.remove('show');
+                document.body.classList.remove('modal-open');
+            };
+            window.openModalSede = prefix => {
+                const centroId = document.getElementById(prefix + '_centro_id').value;
+                if (!centroId) {
+                    alert('Primero debe seleccionar un centro');
+                    return;
+                }
+                openModal(prefix + '_sedeModal');
+            };
+
+            // Render inicial y filtros de centros/sedes
+            document.querySelectorAll('.seleccionar-centro').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const prefix = this.dataset.prefix;
+                    const centroIdInput = document.getElementById(prefix + '_centro_id');
+                    const centroSeleccionado = document.getElementById(prefix +
+                        '_centroSeleccionado');
+                    const sedeInput = document.getElementById(prefix + '_sede_id');
+                    const sedeSeleccionada = document.getElementById(prefix + '_sedeSeleccionada');
+
+                    centroIdInput.value = this.dataset.id;
+                    centroSeleccionado.value = this.dataset.nombre;
+
+                    sedeInput.value = '';
+                    sedeSeleccionada.value = '';
+                    sedeSeleccionada.placeholder = 'Cargando sedes...';
+                    sedeSeleccionada.disabled = true;
+
+                    closeModal(prefix + '_centroModal');
+
+                    // Traer sedes
+                    fetch(`/centros/${this.dataset.id}/sedes`).then(r => r.json()).then(sedes => {
+                        const listaSedes = document.getElementById(prefix + '_listaSedes');
+                        listaSedes.innerHTML = '';
+                        sedes.forEach(sede => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML =
+                                `<td>${sede.nom_sede}</td>
+                        <td><button type="button" class="btn btn-sm btn-success seleccionar-sede" data-id="${sede.id}" data-nombre="${sede.nom_sede}" data-prefix="${prefix}">Seleccionar</button></td>`;
+                            listaSedes.appendChild(tr);
+                        });
+                        sedeSeleccionada.placeholder = 'Seleccione una sede...';
+                        sedeSeleccionada.disabled = false;
+                    });
+                });
+            });
+
+            // Delegación para seleccionar sede
+            document.body.addEventListener('click', e => {
+                if (e.target && e.target.classList.contains('seleccionar-sede')) {
+                    const prefix = e.target.dataset.prefix;
+                    const sedeInput = document.getElementById(prefix + '_sede_id');
+                    sedeInput.value = e.target.dataset.id;
+                    document.getElementById(prefix + '_sedeSeleccionada').value = e.target.dataset.nombre;
+                    closeModal(prefix + '_sedeModal');
+
+                    // 🔹 Disparar carga de áreas
+                    sedeInput.dispatchEvent(new Event('input'));
+                }
+            });
+
         });
     </script>
 @endpush

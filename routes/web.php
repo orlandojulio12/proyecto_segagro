@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Area\AreaController;
+use App\Http\Controllers\Area\RoomController;
 use App\Http\Controllers\Budget\BudgetController;
 use App\Http\Controllers\CentroController;
 use App\Http\Controllers\FerreteriaController;
@@ -160,28 +162,14 @@ Route::middleware('auth')->group(function () {
             ->name('pqr.toggleState');
     });
 
-    Route::prefix('budget')->group(function () {
-        // List
-        Route::get('/list', [BudgetController::class, 'index'])
-            ->name('budget.index');
-        // Create
-        Route::get('/create', [BudgetController::class, 'create'])
-            ->name('budget.create');
-        Route::post('/store', [BudgetController::class, 'store'])
-            ->name('budget.store');
-        // Show
-        Route::get('/{budget}/show', [BudgetController::class, 'show'])
-            ->name('budget.show');
-        // Edit
-        Route::get('/{budget}/edit', [BudgetController::class, 'edit'])
-            ->name('budget.edit');
-        Route::put('/{budget}/update', [BudgetController::class, 'update'])
-            ->name('budget.update');
-        // Delete
-        Route::delete('/{budget}/delete', [BudgetController::class, 'destroy'])
-            ->name('budget.destroy');
-        Route::get('/{budget}/adjustments', [BudgetController::class, 'adjustments'])
-            ->name('budget.adjustments');
+    Route::prefix('budget')->name('budget.')->group(function () {
+        Route::get('/', [BudgetController::class, 'index'])->name('index');
+        Route::get('/create', [BudgetController::class, 'create'])->name('create');
+        Route::post('/', [BudgetController::class, 'store'])->name('store');
+        Route::get('/{budget}', [BudgetController::class, 'show'])->name('show');
+        Route::get('/{budget}/edit', [BudgetController::class, 'edit'])->name('edit');
+        Route::put('/{budget}', [BudgetController::class, 'update'])->name('update');
+        Route::delete('/{budget}', [BudgetController::class, 'destroy'])->name('destroy');
     });
 
     Route::prefix('dependencies')->name('dependencies.')->group(function () {
@@ -200,10 +188,31 @@ Route::middleware('auth')->group(function () {
             ->name('subunit.destroy');
     });
 
-    // Route::resource('calendario', CalendarioController::class);
-    // Route::resource('infraestructura', InfraestructuraController::class);
-    // Route::resource('planes', PlanController::class);
-    // Route::resource('traslados', TrasladoController::class);
+     Route::get('/centros/{centro}/sedes-areas', [SedeController::class, 'ajaxSedesAreas']);
+     Route::get('/centros/{centro}/sedes-centro', [SedeController::class, 'ajaxSedesCentro']);
+
+    Route::prefix('areas')->name('areas.')->group(function () {
+        Route::get('/', [AreaController::class, 'index'])->name('index');
+        Route::get('/create', [AreaController::class, 'create'])->name('create');
+        Route::post('/store', [AreaController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [AreaController::class, 'edit'])->name('edit');
+        Route::put('/{id}/update', [AreaController::class, 'update'])->name('update');
+
+        Route::get('/sedes/{sede}/areas', [AreaController::class, 'getBySede'])
+            ->name('areas.bySede');
+        // AJAX
+        Route::get('/{areaId}/rooms', [RoomController::class, 'getRoomsByArea'])
+            ->name('rooms.byArea');
+    });
+
+    Route::prefix('rooms')->name('rooms.')->group(function () {
+        Route::get('/', [RoomController::class, 'index'])->name('index');
+        Route::get('/create', [RoomController::class, 'create'])->name('create');
+        Route::post('/store', [RoomController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [RoomController::class, 'edit'])->name('edit');
+        Route::get('/filter', [RoomController::class, 'filter'])->name('filter');
+        Route::put('/{id}/update', [RoomController::class, 'update'])->name('update');
+    });
 
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');

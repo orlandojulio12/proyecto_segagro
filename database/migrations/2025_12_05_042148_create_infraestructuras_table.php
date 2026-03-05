@@ -10,16 +10,17 @@ class CreateInfraestructurasTable extends Migration
     {
         Schema::create('infraestructuras', function (Blueprint $table) {
             $table->id();
-
-            // Información general
-            $table->foreignId('dependencia_id')->nullable()->constrained('dependencias'); // opcional, puedes mantenerlo
             // Información general
             $table->foreignId('unidad_id')->constrained('dependency_units', 'dependency_unit_id');
             $table->foreignId('subunidad_id')->constrained('dependency_subunits', 'subunit_id');
             $table->foreignId('user_id')->constrained('users'); // funcionario
             $table->foreignId('centro_id')->constrained('centros');
             $table->foreignId('sede_id')->constrained('sedes');
-            $table->string('ambiente')->nullable();
+
+            $table->foreignId('ambiente')
+                ->nullable()
+                ->constrained('rooms')
+                ->nullOnDelete();
 
             // Información calendario
             $table->date('fecha_inicio')->nullable();
@@ -51,6 +52,8 @@ class CreateInfraestructurasTable extends Migration
             $table->string('fuente_financiacion')->nullable();
             $table->decimal('presupuesto_solicitado', 12, 2)->nullable();
             $table->decimal('presupuesto_aceptado', 12, 2)->nullable();
+
+            $table->enum('estado', ['Pendiente', 'En Proceso', 'Completada', 'Cancelada'])->default('Pendiente');
 
             $table->timestamps();
         });
