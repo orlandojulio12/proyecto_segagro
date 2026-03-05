@@ -13,7 +13,11 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained(); // funcionario que crea
 
             // Dependencia responsable
-            $table->foreignId('dependencia_id')->nullable();
+            $table->unsignedBigInteger('unidad_id');
+            $table->foreign('unidad_id')->references('dependency_unit_id')->on('dependency_units');
+
+            $table->unsignedBigInteger('subunidad_id');
+            $table->foreign('subunidad_id')->references('subunit_id')->on('dependency_subunits');
 
             // Centros y sedes iniciales y finales
             $table->foreignId('centro_inicial_id')->nullable()->constrained('centros');
@@ -39,6 +43,9 @@ return new class extends Migration {
             // Opciones
             $table->boolean('requiere_personal')->default(false);
             $table->boolean('requiere_materiales')->default(false);
+
+            $table->enum('status', ['pendiente', 'completada', 'cancelada'])
+                ->default('pendiente');
 
             $table->timestamps();
         });

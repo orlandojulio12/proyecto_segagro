@@ -11,11 +11,14 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a href="{{ route('dashboard') }}"title="Dashboard"
+
+                {{-- DASHBOARD --}}
+                <a href="{{ route('dashboard') }}" title="Dashboard"
                     class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fas fa-home"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
+
                 <a href="{{ route('users.index') }}" title="Usuarios"
                     class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
                     <i class="fas fa-user"></i>
@@ -27,84 +30,88 @@
                     <i class="fas fa-building"></i>
                     <span class="nav-text">Centros</span>
                 </a>
-                <a href="{{ route('sedes.index') }}"title="Sedes"
+
+                <a href="{{ route('sedes.index') }}" title="Sedes"
                     class="nav-item {{ request()->routeIs('sedes.*') ? 'active' : '' }}">
                     <i class="fas fa-building"></i>
                     <span class="nav-text">Sedes</span>
                 </a>
-                <a href="javascript:void(0)" title="Inventario"
-                    class="nav-item has-submenu {{ request()->routeIs('inventories.*') || request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') || request()->routeIs('semoviente.*') ? 'open' : '' }}">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span class="nav-text">Inventario</span>
-                    {{-- <span class="submenu-arrow">▼</span> --}}
-                </a>
 
-                <ul class="submenu">
-                    <li>
-                        <a href="{{ route('inventoriesGen.index') }}"
-                            class="{{ request()->routeIs('inventoriesGen.*') ? 'active' : '' }}">
-                            Inventario General
-                        </a>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0)"
-                            class="has-submenu {{ request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') ? 'open' : '' }}">
-                            Ferretería
-                            <span class="submenu-arrow">▼</span>
-                        </a>
-                        <ul class="submenu">
-                            <li>
-                                <a href="{{ route('ferreteria.index') }}"
-                                    class="{{ request()->routeIs('ferreteria.*') ? 'active' : '' }}">
-                                    Ferretería
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('salida_ferreteria.index') }}"
-                                    class="{{ request()->routeIs('salida_ferreteria.*') ? 'active' : '' }}">
-                                    Salida de Ferretería
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {{-- <li>
-                        <a href="{{ route('semoviente.index') }}"
-                            class="{{ request()->routeIs('semoviente.*') ? 'active' : '' }}">
-                            Semoviente
-                        </a>
-                    </li> --}}
-                    <li>
-                        <a href="{{ route('catalogo.index') }}"
-                            class="{{ request()->routeIs('catalogo.*') ? 'active' : '' }}">
-                            Catálogo
-                        </a>
-                    </li>
-                </ul>
-                <a href="#" title="Calendario"
-                    class="nav-item {{ request()->routeIs('calendario.*') ? 'active' : '' }}">
-                    <i class="fas fa-calendar"></i>
-                    <span class="nav-text">Calendario</span>
-                </a>
+                {{-- INVENTARIO --}}
+                <div class="nav-group">
+                    <a href="javascript:void(0)" title="Inventario"
+                        class="nav-item has-submenu {{ request()->routeIs('inventoriesGen.*') || request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') ? 'open' : '' }}">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="nav-text">Inventario</span>
+                    </a>
+
+                    <ul class="submenu">
+                        <li>
+                            <a href="{{ route('inventoriesGen.index') }}"
+                                class="{{ request()->routeIs('inventoriesGen.*') ? 'active' : '' }}">
+                                Inventario General
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('ferreteria.index') }}"
+                                class="{{ request()->routeIs('ferreteria.*') ? 'active' : '' }}">
+                                Ferretería
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('salida_ferreteria.index') }}"
+                                class="{{ request()->routeIs('salida_ferreteria.*') ? 'active' : '' }}">
+                                Salida de Ferretería
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('catalogo.index') }}"
+                                class="{{ request()->routeIs('catalogo.*') ? 'active' : '' }}">
+                                Catálogo
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                {{-- CALENDARIO --}}
+                {{-- <a href="#" title="Calendario"
+                class="nav-item {{ request()->routeIs('calendario.*') ? 'active' : '' }}">
+                <i class="fas fa-calendar"></i>
+                <span class="nav-text">Calendario</span>
+            </a> --}}
+
+                {{-- INFRAESTRUCTURA --}}
                 <a href="{{ route('infraestructura.index') }}" title="Infraestructura"
                     class="nav-item {{ request()->routeIs('infraestructura.*') ? 'active' : '' }}">
                     <i class="fas fa-warehouse"></i>
                     <span class="nav-text">Infraestructura</span>
                 </a>
+
+                {{-- PRESUPUESTO (YA FUNCIONA) --}}
                 <a href="{{ route('budget.index') }}" title="Presupuesto"
                     class="nav-item {{ request()->routeIs('budget.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     <span class="nav-text">Presupuesto</span>
                 </a>
-                <a href="{{ route('pqr.index') }}" title="Quejas"
-                    class="nav-item {{ request()->routeIs('pqr.index') ? 'active' : '' }}">
+
+                {{-- PQR --}}
+                <a href="{{ route('pqr.index') }}" title="Quejas / PQR"
+                    class="nav-item {{ request()->routeIs('pqr.*') ? 'active' : '' }}">
                     <i class="fas fa-comment-dots"></i>
                     <span class="nav-text">Quejas / PQR</span>
                 </a>
+
+                {{-- CONTRATOS --}}
                 <a href="{{ route('contracts.index') }}" title="Contrataciones"
                     class="nav-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
                     <span class="nav-text">Contrataciones</span>
                 </a>
+
+                {{-- TRASLADOS --}}
                 <a href="{{ route('traslados.index') }}" title="Traslados"
                     class="nav-item {{ request()->routeIs('traslados.*') ? 'active' : '' }}">
                     <i class="fas fa-truck"></i>
@@ -112,42 +119,54 @@
                 </a>
 
                 {{-- CONFIGURACIÓN --}}
-                <a href="javascript:void(0)" title="Configuración"
-                    class="nav-item has-submenu {{ request()->routeIs('dependencies.*') ? 'open' : '' }}">
-                    <i class="fas fa-cogs"></i>
-                    <span class="nav-text">Configuración</span>
-                    {{-- <span class="submenu-arrow">▼</span> --}}
-                </a>
+                <div class="nav-group">
+                    <a href="javascript:void(0)" title="Configuración"
+                        class="nav-item has-submenu {{ request()->routeIs('dependencies.*') ? 'open' : '' }}">
+                        <i class="fas fa-cogs"></i>
+                        <span class="nav-text">Configuración</span>
+                    </a>
 
-                <ul class="submenu">
-                    <li>
-                        <a href="{{ route('dependencies.index') }}"
-                            class="{{ request()->routeIs('dependencies.*') ? 'active' : '' }}">
-                            <i class="fas fa-sitemap"></i>
-                            Dependencias
-                        </a>
-                    </li>
-                </ul>
+                    <ul class="submenu">
+                        <li>
+                            <a href="{{ route('dependencies.index') }}"
+                                class="{{ request()->routeIs('dependencies.*') ? 'active' : '' }}">
+                                <i class="fas fa-sitemap"></i>
+                                Dependencias
+                            </a>
+                        </li>
 
-                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                        <li>
+                            <a href="{{ route('areas.index') }}"
+                                class="{{ request()->routeIs('areas.*') ? 'active' : '' }}">
+                                <i class="fas fa-layer-group"></i>
+                                Areas
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('rooms.index') }}"
+                                class="{{ request()->routeIs('rooms.*') ? 'active' : '' }}">
+                                <i class="fas fa-chalkboard"></i>
+                                Salones
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                {{-- LOGOUT --}}
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="nav-item"
-                        style="border: none; background: none; width: 100%; text-align: left;">
+                    <button type="submit" class="nav-item" style="border:none;background:none;width:100%;text-align:left;">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="nav-text">Sign Out</span>
                     </button>
                 </form>
+
             </nav>
 
             <div class="sidebar-footer">
-                <div style="font-weight: bold; margin-bottom: 5px;">SEGAGRO</div>
-                <div style="font-size: 12px; opacity: 0.8;">GESTIONA ACCESO AL ADMINISTRADOR</div>
-                <div style="margin-top: 15px;">
-                    <button
-                        style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
-                        CONTACTO
-                    </button>
-                </div>
+                <div style="font-weight: bold;">SEGAGRO</div>
+                <div style="font-size:12px;opacity:.8;">GESTIONA ACCESO AL ADMINISTRADOR</div>
             </div>
         </div>
 
@@ -157,20 +176,6 @@
                     <button id="toggleSidebar" class="sidebar-toggle">
                         <i class="fas fa-bars"></i>
                     </button>
-
-                    <div class="search-box">
-                        <input type="text" placeholder="Buscador...">
-                        <i class="fas fa-search"></i>
-                    </div>
-
-                    <div class="user-info">
-                        <div class="user-avatar">{{ substr(Auth::user()->name, 0, 1) }}</div>
-                        <div>
-                            <div style="font-weight: bold;">{{ Auth::user()->name }}</div>
-                            <div style="font-size: 12px; color: #666;">Admin</div>
-                        </div>
-                        <i class="fas fa-chevron-down" style="margin-left: 10px; color: #666;"></i>
-                    </div>
                 </div>
             </header>
 
@@ -195,6 +200,16 @@
             document.querySelectorAll('.has-submenu').forEach(trigger => {
 
                 trigger.addEventListener('click', e => {
+
+                    // ✅ Permitir navegación normal
+                    if (
+                        trigger.tagName === 'A' &&
+                        trigger.getAttribute('href') &&
+                        trigger.getAttribute('href') !== 'javascript:void(0)'
+                    ) {
+                        return;
+                    }
+
                     e.preventDefault();
 
                     const submenu = trigger.nextElementSibling;
@@ -202,7 +217,6 @@
 
                     const isOpen = submenu.style.display === 'block';
 
-                    // 🔒 Cerrar submenús hermanos (mismo nivel)
                     const container = trigger.parentElement;
                     container.querySelectorAll(':scope > .has-submenu').forEach(item => {
                         const sm = item.nextElementSibling;
@@ -212,7 +226,6 @@
                         }
                     });
 
-                    // 🔁 Toggle actual
                     if (!isOpen) {
                         submenu.style.display = 'block';
                         trigger.classList.add('open');
@@ -221,7 +234,6 @@
                         trigger.classList.remove('open');
                     }
                 });
-
             });
 
             const dashboard = document.querySelector('.dashboard');

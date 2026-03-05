@@ -4,50 +4,51 @@
     'centroId' => null,
     'sedeId' => null,
     'centroNombre' => '',
-    'sedeNombre' => ''
+    'sedeNombre' => '',
+    'prefix' => 'inicial'  {{-- prefijo para diferenciar campos --}}
 ])
 
 <div class="centros-sedes-component">
     <!-- Campo Centro -->
     <div class="form-group mb-3">
         <label>Centro de Formación @if($required)<span class="text-danger">*</span>@endif</label>
-        <input type="hidden" name="centro_id" id="centro_id" value="{{ $centroId }}">
+        <input type="hidden" name="{{ $prefix }}_centro_id" id="{{ $prefix }}_centro_id" value="{{ $centroId }}">
         <div class="search-box">
-            <input type="text" id="centroSeleccionado" 
+            <input type="text" id="{{ $prefix }}_centroSeleccionado"
                    value="{{ $centroNombre }}"
-                   placeholder="Seleccione un centro..." 
+                   placeholder="Seleccione un centro..."
                    readonly
-                   onclick="openModal('centroModal')" 
+                   onclick="openModal('{{ $prefix }}_centroModal')"
                    @if($required) required @endif />
-            <span class="search-icon" onclick="openModal('centroModal')">🔍</span>
+            <span class="search-icon" onclick="openModal('{{ $prefix }}_centroModal')">🔍</span>
         </div>
     </div>
 
     <!-- Campo Sede -->
     <div class="form-group mb-3">
         <label>Sede de Formación @if($required)<span class="text-danger">*</span>@endif</label>
-        <input type="hidden" name="sede_id" id="sede_id" value="{{ $sedeId }}">
+        <input type="hidden" name="{{ $prefix }}_sede_id" id="{{ $prefix }}_sede_id" value="{{ $sedeId }}">
         <div class="search-box">
-            <input type="text" id="sedeSeleccionada" 
+            <input type="text" id="{{ $prefix }}_sedeSeleccionada"
                    value="{{ $sedeNombre }}"
                    placeholder="Primero seleccione un centro..."
-                   readonly 
-                   onclick="openModalSede()" 
+                   readonly
+                   onclick="openModalSede('{{ $prefix }}')"
                    disabled />
-            <span class="search-icon" onclick="openModalSede()">🔍</span>
+            <span class="search-icon" onclick="openModalSede('{{ $prefix }}')">🔍</span>
         </div>
     </div>
 
     <!-- Modal Centros -->
-    <div id="centroModal" class="custom-modal">
+    <div id="{{ $prefix }}_centroModal" class="custom-modal">
         <div class="custom-modal-content">
             <div class="custom-modal-header">
                 <h5>Seleccionar Centro de Formación</h5>
-                <button type="button" class="close-btn" onclick="closeModal('centroModal')">&times;</button>
+                <button type="button" class="close-btn" onclick="closeModal('{{ $prefix }}_centroModal')">&times;</button>
             </div>
             <div class="custom-modal-body">
                 <div class="search-box">
-                    <input type="text" id="filtroCentro" placeholder="Buscar centro de formación..." />
+                    <input type="text" id="{{ $prefix }}_filtroCentro" placeholder="Buscar centro de formación..." />
                     <span class="search-icon">🔍</span>
                 </div>
                 <br>
@@ -58,14 +59,15 @@
                             <th>Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="listaCentros">
+                    <tbody id="{{ $prefix }}_listaCentros">
                         @foreach($centros as $centro)
                             <tr>
                                 <td>{{ $centro->nom_centro }}</td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-success seleccionar-centro"
-                                        data-id="{{ $centro->id }}" 
-                                        data-nombre="{{ $centro->nom_centro }}">
+                                        data-id="{{ $centro->id }}"
+                                        data-nombre="{{ $centro->nom_centro }}"
+                                        data-prefix="{{ $prefix }}">
                                         Seleccionar
                                     </button>
                                 </td>
@@ -73,21 +75,21 @@
                         @endforeach
                     </tbody>
                 </table>
-                <div id="paginationCentros" class="pagination"></div>
+                <div id="{{ $prefix }}_paginationCentros" class="pagination"></div>
             </div>
         </div>
     </div>
 
     <!-- Modal Sedes -->
-    <div id="sedeModal" class="custom-modal">
+    <div id="{{ $prefix }}_sedeModal" class="custom-modal">
         <div class="custom-modal-content">
             <div class="custom-modal-header">
                 <h5>Seleccionar Sede de Formación</h5>
-                <button type="button" class="close-btn" onclick="closeModal('sedeModal')">&times;</button>
+                <button type="button" class="close-btn" onclick="closeModal('{{ $prefix }}_sedeModal')">&times;</button>
             </div>
             <div class="custom-modal-body">
                 <div class="search-box">
-                    <input type="text" id="filtroSede" placeholder="Buscar sede de formación..." />
+                    <input type="text" id="{{ $prefix }}_filtroSede" placeholder="Buscar sede de formación..." />
                     <span class="search-icon">🔍</span>
                 </div>
                 <br>
@@ -98,11 +100,11 @@
                             <th>Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="listaSedes">
+                    <tbody id="{{ $prefix }}_listaSedes">
                         <!-- Se llenará dinámicamente -->
                     </tbody>
                 </table>
-                <div id="paginationSedes" class="pagination"></div>
+                <div id="{{ $prefix }}_paginationSedes" class="pagination"></div>
             </div>
         </div>
     </div>
@@ -171,13 +173,10 @@ body.modal-open {
 @push('scripts')
 <script>
 (function() {
-    let currentPageCentros = 1, currentPageSedes = 1;
-
     function getRowsPerPage(totalRows) {
-        // Ajusta el máximo de filas por página
-        if(totalRows <= 5) return totalRows;   // si hay <=5 filas, mostrar todas en una página
-        if(totalRows <= 10) return 5;         // entre 6-10 filas, 5 por página
-        return 10;                             // más de 10 filas, máximo 10 por página
+        if(totalRows <= 5) return totalRows;
+        if(totalRows <= 10) return 5;
+        return 10;
     }
 
     function renderTable(idRows, idPagination, currentPage) {
@@ -195,100 +194,107 @@ body.modal-open {
             const btn = document.createElement('button');
             btn.innerText = i;
             btn.classList.toggle('active', i===currentPage);
-            btn.onclick = () => { 
-                if(idRows==='listaCentros'){ currentPageCentros=i; renderTable('listaCentros','paginationCentros',currentPageCentros);}
-                else { currentPageSedes=i; renderTable('listaSedes','paginationSedes',currentPageSedes);}
-            };
+            btn.onclick = () => renderTable(idRows, idPagination, i);
             pagination.appendChild(btn);
         }
     }
 
-window.openModal = id => {
-    const modal = document.getElementById(id);
-    modal.classList.add('show');         // muestra el modal
-    document.body.classList.add('modal-open'); // bloquea scroll en el body
-};
+    window.openModal = id => {
+        document.getElementById(id).classList.add('show');
+        document.body.classList.add('modal-open');
+    };
 
-window.closeModal = id => {
-    const modal = document.getElementById(id);
-    modal.classList.remove('show');      // oculta el modal
-    document.body.classList.remove('modal-open'); // permite scroll de nuevo
-};
+    window.closeModal = id => {
+        document.getElementById(id).classList.remove('show');
+        document.body.classList.remove('modal-open');
+    };
 
-    window.openModalSede = () => {
-        const centroId = document.getElementById('centro_id').value;
+    window.openModalSede = prefix => {
+        const centroId = document.getElementById(prefix + '_centro_id').value;
         if(!centroId){ alert('Primero debe seleccionar un centro'); return; }
-        document.getElementById('sedeModal').classList.add('show');
-        renderTable('listaSedes','paginationSedes',currentPageSedes);
+        openModal(prefix + '_sedeModal');
+        renderTable(prefix + '_listaSedes', prefix + '_paginationSedes', 1);
     };
 
     document.addEventListener('DOMContentLoaded', () => {
 
         // Filtros
-        document.getElementById('filtroCentro').addEventListener('keyup', function(){
-            const filtro=this.value.toLowerCase();
-            document.querySelectorAll('#listaCentros tr').forEach(row=>{
-                row.style.display = row.innerText.toLowerCase().includes(filtro)?'':'none';
+        document.querySelectorAll('[id$="_filtroCentro"]').forEach(input=>{
+            input.addEventListener('keyup', function(){
+                const prefix = this.id.split('_')[0];
+                const filtro=this.value.toLowerCase();
+                document.querySelectorAll(`#${prefix}_listaCentros tr`).forEach(row=>{
+                    row.style.display = row.innerText.toLowerCase().includes(filtro)?'':'none';
+                });
+                renderTable(`${prefix}_listaCentros`, `${prefix}_paginationCentros`, 1);
             });
-            currentPageCentros = 1;
-            renderTable('listaCentros','paginationCentros',currentPageCentros);
         });
 
-        document.getElementById('filtroSede').addEventListener('keyup', function(){
-            const filtro=this.value.toLowerCase();
-            document.querySelectorAll('#listaSedes tr').forEach(row=>{
-                row.style.display = row.innerText.toLowerCase().includes(filtro)?'':'none';
+        document.querySelectorAll('[id$="_filtroSede"]').forEach(input=>{
+            input.addEventListener('keyup', function(){
+                const prefix = this.id.split('_')[0];
+                const filtro=this.value.toLowerCase();
+                document.querySelectorAll(`#${prefix}_listaSedes tr`).forEach(row=>{
+                    row.style.display = row.innerText.toLowerCase().includes(filtro)?'':'none';
+                });
+                renderTable(`${prefix}_listaSedes`, `${prefix}_paginationSedes`, 1);
             });
-            currentPageSedes = 1;
-            renderTable('listaSedes','paginationSedes',currentPageSedes);
         });
 
         // Seleccionar centro
         document.querySelectorAll('.seleccionar-centro').forEach(btn=>{
             btn.addEventListener('click', function(e){
                 e.preventDefault(); e.stopPropagation();
-                document.getElementById('centro_id').value = this.dataset.id;
-                document.getElementById('centroSeleccionado').value = this.dataset.nombre;
+                const prefix = this.dataset.prefix;
+                const centroIdInput = document.getElementById(prefix + '_centro_id');
+                const centroSeleccionado = document.getElementById(prefix + '_centroSeleccionado');
+                const sedeIdInput = document.getElementById(prefix + '_sede_id');
+                const sedeSeleccionada = document.getElementById(prefix + '_sedeSeleccionada');
+
+                centroIdInput.value = this.dataset.id;
+                centroSeleccionado.value = this.dataset.nombre;
 
                 // Limpiar sede
-                document.getElementById('sede_id').value='';
-                document.getElementById('sedeSeleccionada').value='';
-                document.getElementById('sedeSeleccionada').placeholder='Cargando sedes...';
-                document.getElementById('sedeSeleccionada').disabled=true;
+                sedeIdInput.value='';
+                sedeSeleccionada.value='';
+                sedeSeleccionada.placeholder='Cargando sedes...';
+                sedeSeleccionada.disabled=true;
 
-                closeModal('centroModal');
+                closeModal(prefix + '_centroModal');
 
                 // Traer sedes
                 fetch(`/centros/${this.dataset.id}/sedes`).then(r=>r.json()).then(sedes=>{
-                    const listaSedes=document.getElementById('listaSedes');
+                    const listaSedes=document.getElementById(prefix + '_listaSedes');
                     listaSedes.innerHTML='';
                     sedes.forEach(sede=>{
                         const tr=document.createElement('tr');
                         tr.innerHTML=`<td>${sede.nom_sede}</td>
-                        <td><button type="button" class="btn btn-sm btn-success seleccionar-sede" data-id="${sede.id}" data-nombre="${sede.nom_sede}">Seleccionar</button></td>`;
+                        <td><button type="button" class="btn btn-sm btn-success seleccionar-sede" data-id="${sede.id}" data-nombre="${sede.nom_sede}" data-prefix="${prefix}">Seleccionar</button></td>`;
                         listaSedes.appendChild(tr);
                     });
-                    document.getElementById('sedeSeleccionada').placeholder='Seleccione una sede...';
-                    document.getElementById('sedeSeleccionada').disabled=false;
-                    currentPageSedes = 1;
-                    renderTable('listaSedes','paginationSedes',currentPageSedes);
+                    sedeSeleccionada.placeholder='Seleccione una sede...';
+                    sedeSeleccionada.disabled=false;
+                    renderTable(prefix + '_listaSedes', prefix + '_paginationSedes', 1);
                 });
             });
         });
 
         // Delegación de eventos para sedes
-        document.getElementById('listaSedes').addEventListener('click', e=>{
+        document.body.addEventListener('click', e=>{
             if(e.target && e.target.classList.contains('seleccionar-sede')){
-                e.preventDefault(); e.stopPropagation();
-                document.getElementById('sede_id').value=e.target.dataset.id;
-                document.getElementById('sedeSeleccionada').value=e.target.dataset.nombre;
-                closeModal('sedeModal');
+                const prefix = e.target.dataset.prefix;
+                document.getElementById(prefix + '_sede_id').value=e.target.dataset.id;
+                document.getElementById(prefix + '_sedeSeleccionada').value=e.target.dataset.nombre;
+                closeModal(prefix + '_sedeModal');
             }
         });
 
-        renderTable('listaCentros','paginationCentros',currentPageCentros);
+        // Render inicial de centros
+        document.querySelectorAll('[id$="_listaCentros"]').forEach(tbody=>{
+            const prefix = tbody.id.split('_')[0];
+            renderTable(prefix + '_listaCentros', prefix + '_paginationCentros', 1);
+        });
     });
-
 })();
 </script>
 @endpush

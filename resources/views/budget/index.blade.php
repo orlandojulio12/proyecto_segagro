@@ -11,7 +11,7 @@
         <a href="{{ route('budget.create') }}" class="btn btn-success shadow-sm">
             <i class="fas fa-plus me-2"></i>Nuevo Presupuesto
         </a>
-        
+
     </div>
     <br>
 
@@ -44,7 +44,7 @@
                         <div class="ms-3 flex-grow-1">
                             <div class="stat-number">
                                 ${{ number_format($budgets->sum('total_budget') - $budgets->sum('spent_budget'), 0, ',', '.') }}
-                            </div>                            
+                            </div>
                             <div class="stat-label">Presupuesto Total</div>
                         </div>
                     </div>
@@ -113,7 +113,7 @@
                         <th><i class="fas fa-percentage me-2"></i>% Ejecución</th>
                         <th><i class="fas fa-user-tie me-2"></i>Responsable</th>
                         <th><i class="fas fa-sitemap me-2"></i>Dependencias</th>
-                        <th><i class="fas fa-cogs me-2"></i>Acciones</th>                        
+                        <th><i class="fas fa-cogs me-2"></i>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -319,10 +319,6 @@
             align-items: center;
         }
 
-        $statusClass =$percentage >=90 ? 'bg-danger' : // 🔴 Muy ejecutado
-        ($percentage >=70 ? 'bg-warning' : // 🟡 Medio
-            'bg-success'); // 🟢 Bien
-
         .budgets-index .badge {
             padding: 6px 10px;
             font-size: 0.85rem;
@@ -524,7 +520,7 @@
             if (!confirm(`¿Estás seguro de eliminar el presupuesto de ${name}?\n\nEsta acción no se puede deshacer.`))
                 return;
 
-            fetch(`/budget/${id}/delete`, {
+            fetch(`/budget/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',

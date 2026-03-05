@@ -14,7 +14,8 @@ class NeedTransfer extends Model
 {
     protected $fillable = [
         'user_id',
-        'dependencia_id',
+        'unidad_id',
+        'subunidad_id',
         'centro_inicial_id',
         'sede_inicial_id',
         'centro_final_id',
@@ -27,7 +28,8 @@ class NeedTransfer extends Model
         'presupuesto_solicitado',
         'presupuesto_aceptado',
         'requiere_personal',
-        'requiere_materiales'
+        'requiere_materiales',
+        'status', // <-- agregado
     ];
 
     // Relaciones
@@ -86,5 +88,20 @@ class NeedTransfer extends Model
             'need_transfer_id',
             'infraestructura_id'
         )->withTimestamps();
+    }
+
+    public function scopePendiente($query)
+    {
+        return $query->where('status', 'pendiente');
+    }
+
+    public function scopeCompletada($query)
+    {
+        return $query->where('status', 'completada');
+    }
+
+    public function scopeCancelada($query)
+    {
+        return $query->where('status', 'cancelada');
     }
 }
