@@ -64,90 +64,85 @@
 
         <div class="inventarios-grid">
 
-            <div class="inventarios-grid">
+            @forelse($inventarios as $inventory)
+                @php
+                    $materiales = $inventory->materials->count();
+                    $progress = min(100, $materiales * 10);
+                @endphp
 
-                @forelse($inventarios as $inventory)
-                    @php
-                        $materiales = $inventory->materials->count();
-                        $progress = min(100, $materiales * 10);
-                    @endphp
+                <div class="inventory-card">
 
-                    <div class="inventory-card">
+                    <div class="inventory-header">
 
-                        <div class="inventory-header">
+                        <span class="inventory-id">
+                            #{{ $inventory->id }}
+                        </span>
 
-                            <span class="inventory-id">
-                                #{{ $inventory->id }}
-                            </span>
+                        <span class="inventory-date">
+                            {{ $inventory->record_date ? $inventory->record_date->format('d/m/Y') : 'N/A' }}
+                        </span>
 
-                            <span class="inventory-date">
-                                {{ $inventory->record_date ? $inventory->record_date->format('d/m/Y') : 'N/A' }}
-                            </span>
+                    </div>
 
+
+                    <div class="inventory-body">
+
+                        <div class="inventory-info">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ $inventory->sede->nom_sede ?? 'N/A' }}
                         </div>
 
+                        <div class="inventory-info">
+                            <i class="fas fa-building"></i>
+                            {{ $inventory->sede->centro->nom_centro ?? 'N/A' }}
+                        </div>
 
-                        <div class="inventory-body">
+                        <div class="inventory-info">
+                            <i class="fas fa-user"></i>
+                            {{ $inventory->staff->name ?? 'N/A' }}
+                        </div>
 
-                            <div class="inventory-info">
-                                <i class="fas fa-map-marker-alt"></i>
-                                {{ $inventory->sede->nom_sede ?? 'N/A' }}
+                        <div class="inventory-badge">
+                            <i class="fas fa-box"></i>
+                            {{ $materiales }} materiales
+                        </div>
+
+                        <div class="inventory-progress">
+
+                            <div class="progress-label">
+                                Nivel inventario
+                                <span>{{ $progress }}%</span>
                             </div>
 
-                            <div class="inventory-info">
-                                <i class="fas fa-building"></i>
-                                {{ $inventory->sede->centro->nom_centro ?? 'N/A' }}
-                            </div>
-
-                            <div class="inventory-info">
-                                <i class="fas fa-user"></i>
-                                {{ $inventory->staff->name ?? 'N/A' }}
-                            </div>
-
-                            <div class="inventory-badge">
-                                <i class="fas fa-box"></i>
-                                {{ $materiales }} materiales
-                            </div>
-
-                            <div class="inventory-progress">
-
-                                <div class="progress-label">
-                                    Nivel inventario
-                                    <span>{{ $progress }}%</span>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width:{{ $progress }}%">
                                 </div>
-
-                                <div class="progress-bar-bg">
-                                    <div class="progress-bar-fill" style="width:{{ $progress }}%">
-                                    </div>
-                                </div>
-
                             </div>
 
                         </div>
 
                     </div>
 
-                @empty
+                </div>
 
-                    <div class="empty-wrapper">
+            @empty
 
-                        <div class="empty-card">
+                <div class="empty-wrapper">
 
-                            <div class="empty-icon">
-                                <i class="fas fa-warehouse"></i>
-                            </div>
+                    <div class="empty-card">
 
-                            <h3>No existen inventarios</h3>
-
-                            <p>Los inventarios registrados aparecerán automáticamente aquí.</p>
-
+                        <div class="empty-icon">
+                            <i class="fas fa-warehouse"></i>
                         </div>
 
+                        <h3>No existen inventarios</h3>
+
+                        <p>Los inventarios registrados aparecerán automáticamente aquí.</p>
+
                     </div>
-                @endforelse
 
-            </div>
-
+                </div>
+            @endforelse
         </div>
 
     @endsection
@@ -204,6 +199,11 @@
                 height: 4px;
                 border-radius: 20px 20px 0 0;
                 background: #e5e7eb;
+            }
+
+            .stat-card:hover::before {
+                height: 6px;
+                transition: .3s;
             }
 
             .green::before {

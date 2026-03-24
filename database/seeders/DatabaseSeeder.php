@@ -10,6 +10,7 @@ use Database\Seeders\HiringModalitiesSeeder;
 use Database\Seeders\SedesSeeder;
 use Illuminate\Database\Seeder;
 use Database\Seeders\ContractTypesSeeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,14 +19,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => bcrypt('123456'), // 👈 contraseña personalizada
-        ]);
-
         // Llamar al seeder de sedes
         $this->call([
             CentrosSeeder::class,
@@ -36,6 +29,15 @@ class DatabaseSeeder extends Seeder
             CatalogProductSeeder::class,
             DependencyUnitsSeeder::class,
             DependencySubunitsSeeder::class,
+            RolesAndPermissionsSeeder::class
         ]);
+
+         $user = User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('123456'),
+        ]);
+
+        $user->assignRole('SuperAdministrador');
     }
 }

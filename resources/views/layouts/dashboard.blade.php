@@ -19,62 +19,67 @@
                     <span class="nav-text">Dashboard</span>
                 </a>
 
-                <a href="{{ route('users.index') }}" title="Usuarios"
-                    class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                    <i class="fas fa-user"></i>
-                    <span class="nav-text">Usuarios</span>
-                </a>
+                @role('SuperAdministrador')
+                    <a href="{{ route('users.index') }}" title="Usuarios"
+                        class="nav-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                        <i class="fas fa-user"></i>
+                        <span class="nav-text">Usuarios</span>
+                    </a>
+                @endrole
 
-                <a href="{{ route('centros.index') }}" title="Centros"
-                    class="nav-item {{ request()->routeIs('centros.*') ? 'active' : '' }}">
-                    <i class="fas fa-building"></i>
-                    <span class="nav-text">Centros</span>
-                </a>
-
-                <a href="{{ route('sedes.index') }}" title="Sedes"
-                    class="nav-item {{ request()->routeIs('sedes.*') ? 'active' : '' }}">
-                    <i class="fas fa-building"></i>
-                    <span class="nav-text">Sedes</span>
-                </a>
-
-                {{-- INVENTARIO --}}
-                <div class="nav-group">
-                    <a href="javascript:void(0)" title="Inventario"
-                        class="nav-item has-submenu {{ request()->routeIs('inventoriesGen.*') || request()->routeIs('ferreteria.*') || request()->routeIs('salida_ferreteria.*') ? 'open' : '' }}">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span class="nav-text">Inventario</span>
+                @can('infraestructura.view')
+                    <a href="{{ route('centros.index') }}"
+                        class="nav-item {{ request()->routeIs('centros.*') ? 'active' : '' }}">
+                        <i class="fas fa-building"></i>
+                        <span class="nav-text">Centros</span>
                     </a>
 
-                    <ul class="submenu">
-                        <li>
-                            <a href="{{ route('inventoriesGen.index') }}"
-                                class="{{ request()->routeIs('inventoriesGen.*') ? 'active' : '' }}">
-                                Inventario General
-                            </a>
-                        </li>
+                    <a href="{{ route('sedes.index') }}" class="nav-item {{ request()->routeIs('sedes.*') ? 'active' : '' }}">
+                        <i class="fas fa-building"></i>
+                        <span class="nav-text">Sedes</span>
+                    </a>
+                @endcan
 
-                        <li>
-                            <a href="{{ route('ferreteria.index') }}"
-                                class="{{ request()->routeIs('ferreteria.*') ? 'active' : '' }}">
-                                Ferretería
-                            </a>
-                        </li>
+                {{-- INVENTARIO --}}
+                @can('inventario.view')
+                    <div class="nav-group">
+                        <a href="javascript:void(0)"
+                            class="nav-item has-submenu {{ request()->routeIs('inventoriesGen.*') || request()->routeIs('ferreteria.*') ? 'open' : '' }}">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span class="nav-text">Inventario</span>
+                        </a>
 
-                        <li>
-                            <a href="{{ route('salida_ferreteria.index') }}"
-                                class="{{ request()->routeIs('salida_ferreteria.*') ? 'active' : '' }}">
-                                Salida de Ferretería
-                            </a>
-                        </li>
+                        <ul class="submenu">
+                            <li>
+                                <a href="{{ route('inventoriesGen.index') }}"
+                                    class="{{ request()->routeIs('inventoriesGen.*') ? 'active' : '' }}">
+                                    Inventario General
+                                </a>
+                            </li>
 
-                        <li>
-                            <a href="{{ route('catalogo.index') }}"
-                                class="{{ request()->routeIs('catalogo.*') ? 'active' : '' }}">
-                                Catálogo
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                            <li>
+                                <a href="{{ route('ferreteria.index') }}"
+                                    class="{{ request()->routeIs('ferreteria.*') ? 'active' : '' }}">
+                                    Ferretería
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ route('salida_ferreteria.index') }}"
+                                    class="{{ request()->routeIs('salida_ferreteria.*') ? 'active' : '' }}">
+                                    Salida de Ferretería
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ route('catalogo.index') }}"
+                                    class="{{ request()->routeIs('catalogo.*') ? 'active' : '' }}">
+                                    Catálogo
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                @endcan
 
                 {{-- CALENDARIO --}}
                 {{-- <a href="#" title="Calendario"
@@ -84,74 +89,64 @@
             </a> --}}
 
                 {{-- INFRAESTRUCTURA --}}
-                <a href="{{ route('infraestructura.index') }}" title="Infraestructura"
-                    class="nav-item {{ request()->routeIs('infraestructura.*') ? 'active' : '' }}">
-                    <i class="fas fa-warehouse"></i>
-                    <span class="nav-text">Infraestructura</span>
-                </a>
+                @can('infraestructura.view')
+                    <a href="{{ route('infraestructura.index') }}"
+                        class="nav-item {{ request()->routeIs('infraestructura.*') ? 'active' : '' }}">
+                        <i class="fas fa-warehouse"></i>
+                        <span class="nav-text">Infraestructura</span>
+                    </a>
+                @endcan
 
                 {{-- PRESUPUESTO (YA FUNCIONA) --}}
-                <a href="{{ route('budget.index') }}" title="Presupuesto"
-                    class="nav-item {{ request()->routeIs('budget.*') ? 'active' : '' }}">
-                    <i class="fas fa-chart-line"></i>
-                    <span class="nav-text">Presupuesto</span>
-                </a>
+                @can('presupuesto.view')
+                    <a href="{{ route('budget.index') }}"
+                        class="nav-item {{ request()->routeIs('budget.*') ? 'active' : '' }}">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="nav-text">Presupuesto</span>
+                    </a>
+                @endcan
 
                 {{-- PQR --}}
-                <a href="{{ route('pqr.index') }}" title="Quejas / PQR"
-                    class="nav-item {{ request()->routeIs('pqr.*') ? 'active' : '' }}">
-                    <i class="fas fa-comment-dots"></i>
-                    <span class="nav-text">Quejas / PQR</span>
-                </a>
+                @can('pqr.view')
+                    <a href="{{ route('pqr.index') }}" class="nav-item {{ request()->routeIs('pqr.*') ? 'active' : '' }}">
+                        <i class="fas fa-comment-dots"></i>
+                        <span class="nav-text">Quejas / PQR</span>
+                    </a>
+                @endcan
 
                 {{-- CONTRATOS --}}
-                <a href="{{ route('contracts.index') }}" title="Contrataciones"
-                    class="nav-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span class="nav-text">Contrataciones</span>
-                </a>
+                @can('contratos.view')
+                    <a href="{{ route('contracts.index') }}"
+                        class="nav-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="nav-text">Contrataciones</span>
+                    </a>
+                @endcan
 
                 {{-- TRASLADOS --}}
-                <a href="{{ route('traslados.index') }}" title="Traslados"
-                    class="nav-item {{ request()->routeIs('traslados.*') ? 'active' : '' }}">
-                    <i class="fas fa-truck"></i>
-                    <span class="nav-text">Traslados</span>
-                </a>
+                @can('traslados.view')
+                    <a href="{{ route('traslados.index') }}"
+                        class="nav-item {{ request()->routeIs('traslados.*') ? 'active' : '' }}">
+                        <i class="fas fa-truck"></i>
+                        <span class="nav-text">Traslados</span>
+                    </a>
+                @endcan
 
                 {{-- CONFIGURACIÓN --}}
-                <div class="nav-group">
-                    <a href="javascript:void(0)" title="Configuración"
-                        class="nav-item has-submenu {{ request()->routeIs('dependencies.*') ? 'open' : '' }}">
-                        <i class="fas fa-cogs"></i>
-                        <span class="nav-text">Configuración</span>
-                    </a>
+                @can('infraestructura.view')
+                    <div class="nav-group">
+                        <a href="javascript:void(0)" class="nav-item has-submenu">
+                            <i class="fas fa-cogs"></i>
+                            <span class="nav-text">Configuración</span>
+                        </a>
 
-                    <ul class="submenu">
-                        <li>
-                            <a href="{{ route('dependencies.index') }}"
-                                class="{{ request()->routeIs('dependencies.*') ? 'active' : '' }}">
-                                <i class="fas fa-sitemap"></i>
-                                Dependencias
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="{{ route('areas.index') }}"
-                                class="{{ request()->routeIs('areas.*') ? 'active' : '' }}">
-                                <i class="fas fa-layer-group"></i>
-                                Areas
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="{{ route('rooms.index') }}"
-                                class="{{ request()->routeIs('rooms.*') ? 'active' : '' }}">
-                                <i class="fas fa-chalkboard"></i>
-                                Salones
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                        <ul class="submenu">
+                            <li><a href="{{ route('dependencies.index') }}">Dependencias</a></li>
+                            <li><a href="{{ route('areas.index') }}">Áreas</a></li>
+                            <li><a href="{{ route('rooms.index') }}">Salones</a></li>
+                        </ul>
+                    </div>
+                @endcan
 
                 {{-- LOGOUT --}}
                 <form method="POST" action="{{ route('logout') }}">
