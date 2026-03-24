@@ -276,15 +276,39 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::prefix('dependencies')->name('dependencies.')->middleware('permission:infraestructura.view')->group(function () {
         Route::get('/', [DependencyController::class, 'index'])->name('index');
+        Route::get('/create', [DependencyController::class, 'create'])->name('create');
+        Route::post('/', [DependencyController::class, 'store'])->name('store');
+        Route::get('/{dependency}', [DependencyController::class, 'show'])->name('show');
+        Route::get('/{dependency}/edit', [DependencyController::class, 'edit'])->name('edit');
+        Route::put('/{dependency}', [DependencyController::class, 'update'])->name('update');
+        Route::delete('/{dependency}', [DependencyController::class, 'destroy'])->name('destroy');
+        Route::post('/subunits/reorder', [DependencyController::class, 'reorder']); 
+        // Subdependencias 
+        Route::post('/{dependency}/subunit', [DependencyController::class, 'storeSubunit']) ->name('subunit.store'); 
+        Route::delete('/subunit/{subunit}', [DependencyController::class, 'destroySubunit']) ->name('subunit.destroy');
     });
 
     Route::prefix('areas')->name('areas.')->middleware('permission:infraestructura.view')->group(function () {
         Route::get('/', [AreaController::class, 'index'])->name('index');
+        Route::get('/create', [AreaController::class, 'create'])->name('create');
+        Route::post('/store', [AreaController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [AreaController::class, 'edit'])->name('edit');
+        Route::put('/{id}/update', [AreaController::class, 'update'])->name('update');
     });
 
     Route::prefix('rooms')->name('rooms.')->middleware('permission:infraestructura.view')->group(function () {
         Route::get('/', [RoomController::class, 'index'])->name('index');
+        Route::get('/create', [RoomController::class, 'create'])->name('create');
+        Route::post('/store', [RoomController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [RoomController::class, 'edit'])->name('edit');
+        Route::get('/filter', [RoomController::class, 'filter'])->name('filter');
+        Route::put('/{id}/update', [RoomController::class, 'update'])->name('update');
     });
+
+    Route::get('/sedes/{sede}/areas', [AreaController::class, 'getBySede'])->name('areas.bySede'); // AJAX Route::get('/{areaId}/rooms', [RoomController::class, 'getRoomsByArea']) ->name('rooms.byArea'); });
+
+    Route::get('/centros/{centro}/sedes-areas', [SedeController::class, 'ajaxSedesAreas']);
+    Route::get('/centros/{centro}/sedes-centro', [SedeController::class, 'ajaxSedesCentro']);
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
