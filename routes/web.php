@@ -106,7 +106,7 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware('permission:inventario.view')->group(function () {
             Route::get('/catalogo', [CatalogProductController::class, 'index'])->name('catalogo.index');
             Route::get('/catalogo/data', [CatalogProductController::class, 'data'])->name('catalogo.data');
-            Route::get('/catalogo/filters', [CatalogProductController::class, 'filters']) ->name('catalogo.filters');
+            Route::get('/catalogo/filters', [CatalogProductController::class, 'filters'])->name('catalogo.filters');
         });
     });
 
@@ -136,6 +136,9 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware('permission:inventario.delete')->group(function () {
             Route::delete('/{inventory}', [FerreteriaController::class, 'destroy'])->name('destroy');
         });
+        // ✅ PLANTILLA DEBE IR ANTES DE LAS RUTAS DINÁMICAS
+        Route::get('/plantilla/descargar', [FerreteriaController::class, 'downloadTemplate'])->name('template.download'); // ✅ IMPORT TAMBIÉN ES ESTÁTICA 
+        Route::post('/import-materials', [FerreteriaController::class, 'importMaterials'])->name('import.materials');
     });
 
     /*
@@ -283,10 +286,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{dependency}/edit', [DependencyController::class, 'edit'])->name('edit');
         Route::put('/{dependency}', [DependencyController::class, 'update'])->name('update');
         Route::delete('/{dependency}', [DependencyController::class, 'destroy'])->name('destroy');
-        Route::post('/subunits/reorder', [DependencyController::class, 'reorder']); 
+        Route::post('/subunits/reorder', [DependencyController::class, 'reorder']);
         // Subdependencias 
-        Route::post('/{dependency}/subunit', [DependencyController::class, 'storeSubunit']) ->name('subunit.store'); 
-        Route::delete('/subunit/{subunit}', [DependencyController::class, 'destroySubunit']) ->name('subunit.destroy');
+        Route::post('/{dependency}/subunit', [DependencyController::class, 'storeSubunit'])->name('subunit.store');
+        Route::delete('/subunit/{subunit}', [DependencyController::class, 'destroySubunit'])->name('subunit.destroy');
     });
 
     Route::prefix('areas')->name('areas.')->middleware('permission:infraestructura.view')->group(function () {
