@@ -38,11 +38,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Instalar dependencias Laravel (sin dev)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Instalar paquetes adicionales
-RUN composer require spatie/laravel-permission:^6.0 \
-    owen-it/laravel-auditing:^13.0 \
-    --no-interaction --no-scripts
-
 # Copiar código del proyecto
 COPY . .
 
