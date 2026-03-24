@@ -106,6 +106,7 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware('permission:inventario.view')->group(function () {
             Route::get('/catalogo', [CatalogProductController::class, 'index'])->name('catalogo.index');
             Route::get('/catalogo/data', [CatalogProductController::class, 'data'])->name('catalogo.data');
+            Route::get('/catalogo/filters', [CatalogProductController::class, 'filters']) ->name('catalogo.filters');
         });
     });
 
