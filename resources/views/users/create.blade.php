@@ -28,6 +28,18 @@
                     </div>
 
                     <div class="form-group mb-3">
+                        <label for="role">Rol *</label>
+                        <div class="select-wrapper">
+                            <select name="role" id="role" class="form-control" required>
+                                <option value="">Seleccione un rol</option>
+                                @foreach ($roles as $rol)
+                                    <option value="{{ $rol->name }}">{{ $rol->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
                         <label for="password">Contraseña *</label>
                         <input type="password" name="password" id="password" class="form-control" required>
                     </div>
@@ -62,8 +74,8 @@
                         <label for="sede_id">Sede de Formación *</label>
                         <input type="hidden" name="sede_id" id="sede_id">
                         <div class="search-box">
-                            <input type="text" id="sedeSeleccionada" placeholder="Primero seleccione un centro..." readonly
-                                onclick="openModalSede()" disabled />
+                            <input type="text" id="sedeSeleccionada" placeholder="Primero seleccione un centro..."
+                                readonly onclick="openModalSede()" disabled />
                             <span class="search-icon" onclick="openModalSede()">🔍</span>
                         </div>
                     </div>
@@ -165,6 +177,46 @@
             border-bottom: 2px solid #e9ecef;
             padding-bottom: 8px;
             margin-bottom: 20px;
+        }
+
+        /* Normalizar select igual que input */
+        .form-control {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+            appearance: none;
+            /* clave */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        /* Focus igual que input */
+        .form-control:focus {
+            border-color: #43a047;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.1);
+        }
+
+        /* Contenedor para ícono del select */
+        .select-wrapper {
+            position: relative;
+        }
+
+        /* Flecha custom */
+        .select-wrapper::after {
+            content: "▾";
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #888;
+            font-size: 14px;
         }
 
         .btn-modern {
@@ -504,20 +556,24 @@
 
                         document.querySelectorAll('.seleccionar-sede').forEach(btn => {
                             btn.addEventListener('click', function() {
-                                document.getElementById('sede_id').value = this.dataset.id;
-                                document.getElementById('sedeSeleccionada').value = this.dataset.nombre;
+                                document.getElementById('sede_id').value = this.dataset
+                                    .id;
+                                document.getElementById('sedeSeleccionada').value = this
+                                    .dataset.nombre;
                                 closeModal('sedeModal');
                             });
                         });
 
-                        document.getElementById('sedeSeleccionada').placeholder = 'Seleccione una sede...';
+                        document.getElementById('sedeSeleccionada').placeholder =
+                            'Seleccione una sede...';
                         document.getElementById('sedeSeleccionada').disabled = false;
                         currentPageSedes = 1;
                         renderTableSedes();
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        document.getElementById('sedeSeleccionada').placeholder = 'Error al cargar sedes';
+                        document.getElementById('sedeSeleccionada').placeholder =
+                            'Error al cargar sedes';
                     });
             });
         });

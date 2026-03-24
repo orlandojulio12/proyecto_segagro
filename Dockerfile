@@ -38,6 +38,11 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Instalar dependencias Laravel (sin dev)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
+# Instalar paquetes adicionales
+RUN composer require spatie/laravel-permission:^6.0 \
+    owen-it/laravel-auditing:^13.0 \
+    --no-interaction --no-scripts
+
 # Copiar código del proyecto
 COPY . .
 
@@ -88,6 +93,10 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 # Copiar script de entrada
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Publicar configs y migraciones (opcional si ya están en repo)
+RUN php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --force \
+    && php artisan vendor:publish --provider="OwenIt\Auditing\AuditingServiceProvider" --force
 
 # Usar script como entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -8,6 +8,7 @@ use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -21,7 +22,9 @@ class UserController extends Controller
     {
         $centros = Centro::all();
         $sedes = Sede::all();
-        return view('users.create', compact('centros', 'sedes'));
+        $roles = Role::all();
+
+        return view('users.create', compact('centros', 'sedes', 'roles'));
     }
 
     public function store(Request $request)
@@ -33,6 +36,7 @@ class UserController extends Controller
             'address'   => 'nullable|string|max:225',
             'phone'     => 'nullable|string|max:20',
             'sede_id'   => 'required|exists:sedes,id',
+            'role'      => 'required|exists:roles,name', // 👈 VALIDACIÓN
         ]);
 
         $user = User::create([
@@ -46,6 +50,9 @@ class UserController extends Controller
         ]);
 
         $user->sedes()->attach($request->sede_id);
+
+        // 🔥 ASIGNAR ROL
+        $user->assignRole($request->role);
 
         return redirect()->route('users.index')
             ->with('success', 'Usuario creado exitosamente.');
