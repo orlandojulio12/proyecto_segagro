@@ -227,6 +227,8 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::middleware('permission:pqr.delete')->delete('/{pqr}', [PqrController::class, 'destroy'])->name('destroy');
+
+        Route::patch('/{pqr}/toggle-state', [PqrController::class, 'toggleState'])->name('pqr.toggleState')->middleware('permission:pqr.edit');
     });
 
     /*
