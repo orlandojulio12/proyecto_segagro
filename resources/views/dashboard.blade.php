@@ -369,81 +369,135 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        window.calendarEvents = @json($eventosCalendario);
-        window.currentDate = new Date();
+            // Datos del backend
+    window.calendarEvents = @json($eventosCalendario);
+    window.currentDate = new Date();
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderCalendar();
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCalendar();
+        showUpcomingEvents();
+    });
+
+    /* ================= RENDER CALENDAR ================= */
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const title = document.getElementById('calendarTitle');
+        grid.innerHTML = '';
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        title.textContent = currentDate.toLocaleDateString('es-ES', {
+            month: 'long',
+            year: 'numeric'
         });
 
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const title = document.getElementById('calendarTitle');
-            grid.innerHTML = '';
+        const firstDay = new Date(year, month, 1).getDay() || 7;
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
 
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            title.textContent = currentDate.toLocaleDateString('es-ES', {
-                month: 'long',
-                year: 'numeric'
-            });
+        for (let i = 1; i < firstDay; i++) {
+            grid.innerHTML += `<div></div>`;
+        }
 
-            const firstDay = new Date(year, month, 1).getDay() || 7;
-            const lastDate = new Date(year, month + 1, 0).getDate();
-            const today = new Date();
+        for (let day = 1; day <= lastDate; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const events = window.calendarEvents.filter(e => e.date === dateStr);
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
-            for (let i = 1; i < firstDay; i++) {
-                grid.innerHTML += `<div></div>`;
+            let tooltip = '';
+            if (events.length) {
+                tooltip = 'title="' + events.map(e => `${e.title}${e.type==='tutela'? ' ('+e.hora_inicio+'-'+e.hora_fin+')':''}`).join('\n') + '"';
             }
 
-            for (let day = 1; day <= lastDate; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const events = calendarEvents.filter(e => e.date === dateStr);
-                const isToday =
-                    day === today.getDate() &&
-                    month === today.getMonth() &&
-                    year === today.getFullYear();
-
-                grid.innerHTML += `
+            grid.innerHTML += `
                 <div class="calendar-day ${isToday ? 'today' : ''} ${events.length ? 'has-event' : ''}"
-                     onclick="showDayEvents('${dateStr}')">
+                     onclick="showDayEvents('${dateStr}')"
+                     ${tooltip}>
                     ${day}
                 </div>
             `;
-            }
+        }
+    }
+
+    /* ================= SHOW EVENTS OF SELECTED DAY ================= */
+    function showDayEvents(date) {
+        const container = document.getElementById('dayEvents');
+        container.innerHTML = '';
+
+        const events = window.calendarEvents.filter(e => e.date === date);
+
+        if (!events.length) {
+            container.innerHTML = `<p class="text-muted">No hay eventos este día</p>`;
+            return;
         }
 
-        function showDayEvents(date) {
-            const container = document.getElementById('dayEvents');
-            const events = calendarEvents.filter(e => e.date === date);
-
-            if (!events.length) {
-                container.innerHTML = `<p class="text-muted">No hay eventos este día</p>`;
-                return;
-            }
-
-            container.innerHTML = events.map(e => `
-            <div class="event-item" style="border-left:4px solid ${e.color}">
-                <span class="event-date">${date}</span>
+        events.forEach(e => {
+            const div = document.createElement('div');
+            div.className = 'event-item';
+            div.style.borderLeft = `4px solid ${e.color}`;
+            div.innerHTML = `
+                <span class="event-date">${date}${e.type==='tutela'? ' '+e.hora_inicio+'-'+e.hora_fin : ''}</span>
                 <span class="event-title">
                     ${e.title}
                     ${e.type === 'pqr' && e.expired
                         ? '<span class="badge bg-danger ms-2">Vencido</span>'
                         : ''}
                 </span>
-            </div>
-        `).join('');
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    /* ================= SHOW NEXT 5 DAYS EVENTS ================= */
+    function showUpcomingEvents() {
+        const container = document.getElementById('dayEvents');
+        container.innerHTML = '';
+
+        const today = new Date();
+        const next5Days = Array.from({length:5},(_,i)=>{
+            const d = new Date(today);
+            d.setDate(d.getDate()+i);
+            return d.toISOString().split('T')[0];
+        });
+
+        let upcomingEvents = window.calendarEvents.filter(e => next5Days.includes(e.date));
+        if (!upcomingEvents.length) {
+            container.innerHTML = `<p class="text-muted">No hay eventos próximos en los próximos 5 días</p>`;
+            return;
         }
 
-        function prevMonth() {
-            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-            renderCalendar();
-        }
+        // Ordenar por fecha
+        upcomingEvents.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-        function nextMonth() {
-            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-            renderCalendar();
-        }
+        upcomingEvents.forEach(e => {
+            const div = document.createElement('div');
+            div.className = 'event-item';
+            div.style.borderLeft = `4px solid ${e.color}`;
+            div.innerHTML = `
+                <span class="event-date">${e.date}${e.type==='tutela'? ' '+e.hora_inicio+'-'+e.hora_fin : ''}</span>
+                <span class="event-title">
+                    ${e.title}
+                    ${e.type === 'pqr' && e.expired
+                        ? '<span class="badge bg-danger ms-2">Vencido</span>'
+                        : ''}
+                </span>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    /* ================= NAVIGATION ================= */
+    function prevMonth() {
+        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+        renderCalendar();
+        showUpcomingEvents();
+    }
+
+    function nextMonth() {
+        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+        renderCalendar();
+        showUpcomingEvents();
+    }
     </script>
 
     <script>
