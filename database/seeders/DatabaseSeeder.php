@@ -26,10 +26,13 @@ class DatabaseSeeder extends Seeder
             DependencisSeeder::class,
             HiringModalitiesSeeder::class,
             ContractTypesSeeder::class,
-            CatalogProductSeeder::class,
+            /* CatalogProductSeeder::class, */
             DependencyUnitsSeeder::class,
             DependencySubunitsSeeder::class,
-            RolesAndPermissionsSeeder::class
+            RolesAndPermissionsSeeder::class,
+            DependenciaPqrSeeder::class,
+            ConceptoPqrSeeder::class,
+            TutelaSeeder::class,
         ]);
 
          $user = User::create([

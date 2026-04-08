@@ -46,25 +46,42 @@
                         <small class="text-muted">Fecha en que se registra la PQR</small>
                     </div>
 
+                    <div class="form-group mb-3" id="tiempoTutelaContainer" style="display:none;">
+                        <label class="form-label text-success fw-semibold">Tiempo de respuesta *</label>
+                        <select name="horas_tutela" id="horasTutela" class="form-select modern-input">
+                            <option value="">Seleccionar tiempo</option>
+                            <option value="24">24 horas</option>
+                            <option value="48">48 horas</option>
+                            <option value="72">72 horas</option>
+                        </select>
+                    </div>
+
                     <!-- Unidad -->
                     <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Unidad *</label>
-                        <select name="unit_id" id="unitSelect" class="form-select modern-input" required>
-                            <option value="">Seleccionar unidad</option>
-                            @foreach ($units as $unit)
-                                <option value="{{ $unit->dependency_unit_id }}">
-                                    {{ $unit->short_name }}
+                        <label class="form-label text-success fw-semibold">Dependencia *</label>
+                        <select name="dependencia_id" id="dependenciaSelect" class="form-select modern-input" required>
+                            <option value="">Seleccionar dependencia</option>
+                            @foreach ($dependencias as $dep)
+                                <option value="{{ $dep->id_dependencia }}">
+                                    {{ $dep->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
-                    <!-- Subunidad -->
                     <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Subunidad *</label>
-                        <select name="dependency" id="subunitSelect" class="form-select modern-input" required>
-                            <option value="">Selecciona primero una unidad</option>
+                        <label class="form-label text-success fw-semibold">Concepto *</label>
+                        <select name="concepto_id" id="conceptoSelect" class="form-select modern-input" required>
+                            <option value="">Selecciona primero una dependencia</option>
                         </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label text-success fw-semibold">¿Es tutela?</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="isTutela" name="is_tutela" value="1">
+                            <label class="form-check-label">Sí, es una tutela</label>
+                        </div>
                     </div>
 
                     <div class="form-group mb-3">
@@ -83,7 +100,7 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Descripción *</label>
-                        <textarea name="description" class="form-control modern-input" rows="8" required
+                        <textarea name="description" class="form-control modern-input"  minlength="10" rows="8" required
                             placeholder="Describe detalladamente la petición, queja o reclamo...">{{ old('description') }}</textarea>
                         <small class="text-muted">Sé lo más específico posible para facilitar la gestión.</small>
                     </div>
@@ -100,10 +117,12 @@
         <!-- Información de tiempo -->
         <div class="content-card mb-4">
             <h5 class="section-title"><i class="fas fa-clock"></i> Información de Tiempo</h5>
-            <div class="alert alert-info shadow-sm">
+            <div id="alertTiempo" class="alert alert-info shadow-sm">
                 <i class="fas fa-info-circle"></i>
-                <strong>Tiempo de respuesta:</strong> Todas las PQR tienen un plazo de <strong>12 días</strong> para ser
-                resueltas desde su fecha de registro.
+                <strong>Tiempo de respuesta:</strong>
+                <span id="textoTiempo">
+                    Todas las PQR tienen un plazo de <strong>12 días</strong>.
+                </span>
             </div>
 
             <div id="diasInfo" class="mt-3" style="display: none;">
@@ -222,34 +241,78 @@
 
 @push('scripts')
     <script>
-        const units = @json($units);
+        const isTutelaInput = document.querySelector('[name="is_tutela"]');
+        const textoTiempo = document.getElementById('textoTiempo');
 
-        const unitSelect = document.getElementById('unitSelect');
-        const subunitSelect = document.getElementById('subunitSelect');
+        function actualizarTiempo() {
+            if (isTutelaInput && isTutelaInput.checked) {
+                textoTiempo.innerHTML =
+                    'Las <strong>tutelas</strong> tienen un plazo de <strong>72 horas (3 días)</strong>.';
+            } else {
+                textoTiempo.innerHTML =
+                    'Las <strong>PQR</strong> tienen un plazo de <strong>12 días</strong>.';
+            }
+        }
 
-        unitSelect.addEventListener('change', function() {
-            const unitId = this.value;
+        if (isTutelaInput) {
+            isTutelaInput.addEventListener('change', actualizarTiempo);
+            actualizarTiempo(); // inicial
+        }
 
-            // Limpiar subunidades
-            subunitSelect.innerHTML = `<option value="">Cargando subunidades...</option>`;
 
-            const selectedUnit = units.find(u => u.dependency_unit_id == unitId);
+        const dependencias = @json($dependencias);
 
-            if (!selectedUnit) {
-                subunitSelect.innerHTML = `<option value="">Seleccione una unidad primero</option>`;
+        const dependenciaSelect = document.getElementById('dependenciaSelect');
+        const conceptoSelect = document.getElementById('conceptoSelect');
+        const isTutela = document.getElementById('isTutela');
+        const tiempoContainer = document.getElementById('tiempoTutelaContainer');
+        const horasTutela = document.getElementById('horasTutela');
+
+        // Cambiar conceptos según dependencia
+        dependenciaSelect.addEventListener('change', function() {
+            const depId = this.value;
+
+            const dep = dependencias.find(d => d.id_dependencia == depId);
+
+            if (!dep) {
+                conceptoSelect.innerHTML = `<option value="">Seleccione una dependencia</option>`;
                 return;
             }
 
-            let options = `<option value="">Seleccionar subunidad</option>`;
+            let options = `<option value="">Seleccionar concepto</option>`;
 
-            selectedUnit.subunits.forEach(s => {
-                options += `<option value="${s.subunit_id}">
-                            ${s.subunit_code} - ${s.name}
-                        </option>`;
+            dep.conceptos.forEach(c => {
+                options += `<option value="${c.id_concepto}">${c.name}</option>`;
             });
 
-            subunitSelect.innerHTML = options;
+            conceptoSelect.innerHTML = options;
         });
+
+
+        // Manejo de tutela
+        isTutela.addEventListener('change', function() {
+
+            if (this.checked) {
+                tiempoContainer.style.display = 'block';
+
+                // Auto seleccionar Subdirección
+                const subdireccion = dependencias.find(d => d.name === 'Subdirección');
+
+                if (subdireccion) {
+                    dependenciaSelect.value = subdireccion.id_dependencia;
+                    dependenciaSelect.dispatchEvent(new Event('change'));
+                }
+
+            } else {
+                tiempoContainer.style.display = 'none';
+                horasTutela.value = '';
+            }
+
+            calcularDias();
+        });
+
+
+        // Cálculo de tiempos
         document.addEventListener('DOMContentLoaded', function() {
             const dateInput = document.querySelector('input[name="date"]');
             const diasInfo = document.getElementById('diasInfo');
@@ -266,34 +329,43 @@
 
                 diasInfo.style.display = 'block';
 
-                // Calcular fecha límite (12 días después)
                 const fechaInicio = new Date(fecha);
-                const fechaLimite = new Date(fechaInicio);
-                fechaLimite.setDate(fechaLimite.getDate() + 12);
+                let fechaLimite = new Date(fechaInicio);
 
-                // Formatear fecha límite
+                if (isTutela.checked && horasTutela.value) {
+                    // Tutela → horas
+                    const horas = parseInt(horasTutela.value);
+                    fechaLimite.setHours(fechaLimite.getHours() + horas);
+
+                    diasRestantesSpan.textContent = `${horas} horas`;
+                    diasRestantesSpan.className = 'badge bg-danger';
+
+                    estadoColorSpan.textContent = 'Tutela';
+                    estadoColorSpan.className = 'badge bg-danger';
+
+                } else {
+                    // Normal → 12 días
+                    fechaLimite.setDate(fechaLimite.getDate() + 12);
+
+                    diasRestantesSpan.textContent = '12 días';
+                    diasRestantesSpan.className = 'badge bg-success';
+
+                    estadoColorSpan.textContent = 'Nuevo';
+                    estadoColorSpan.className = 'badge bg-success';
+                }
+
                 const opciones = {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                 };
                 fechaLimiteSpan.textContent = fechaLimite.toLocaleDateString('es-ES', opciones);
-
-                // Días restantes (siempre 12 para nueva PQR)
-                diasRestantesSpan.textContent = '12 días';
-                diasRestantesSpan.className = 'badge bg-success';
-
-                // Estado
-                estadoColorSpan.textContent = 'Nuevo';
-                estadoColorSpan.className = 'badge bg-success';
             }
 
             dateInput.addEventListener('change', calcularDias);
+            horasTutela.addEventListener('change', calcularDias);
 
-            // Calcular al cargar si hay fecha
-            if (dateInput.value) {
-                calcularDias();
-            }
+            if (dateInput.value) calcularDias();
         });
     </script>
 @endpush

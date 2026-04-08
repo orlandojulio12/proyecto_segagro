@@ -7,6 +7,8 @@ use App\Http\Requests\PqrRequest;
 use App\Models\Complaint\pqr;
 use App\Models\Dependency\DependencySubunit;
 use App\Models\Dependency\DependencyUnit;
+use App\Models\Pqr\ConceptoPqr;
+use App\Models\Pqr\DependenciaPqr;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -16,47 +18,102 @@ class PqrController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pqr::query();
+        $query = Pqr::with(['concepto.dependencia', 'user']);
 
-        // Filtro por dependencia
+        // =========================
+        // 🔥 FILTRO POR DEPENDENCIA
+        // =========================
         if ($request->filled('dependency')) {
-            $query->where('dependency', $request->dependency);
-        }
-
-        // Obtener todas las PQR
-        $allPqr = $query->get();
-
-        // Filtrar por estado de días si se envía
-        if ($request->filled('status')) {
-            $allPqr = $allPqr->filter(function ($item) use ($request) {
-                return match ($request->status) {
-                    'verde' => $item->days_remaining >= 6,
-                    'amarillo' => $item->days_remaining >= 2 && $item->days_remaining < 6,
-                    'rojo' => $item->days_remaining >= 1 && $item->days_remaining < 2,
-                    'vencido' => $item->days_remaining === 0,
-                    default => true
-                };
+            $query->whereHas('concepto', function ($q) use ($request) {
+                $q->where('dependencia_id', $request->dependency);
             });
         }
 
-        // Ordenamiento por estado (pendientes primero)
-        $allPqr = $allPqr->sortBy(fn($item) => $item->state);
+        // =========================
+        // 🔥 FILTRO POR ESTADO (ANTES DEL GET)
+        // =========================
+        if ($request->filled('status')) {
 
-        // Ordenamiento adicional según modal de orden
-        $orderColor = $request->get('order_color');
-        if ($orderColor == 1) {
-            // Orden por color/días restantes (urgente primero)
-            $allPqr = $allPqr->sortBy(fn($item) => $item->days_remaining);
-        } else {
-            // Orden por fecha descendente por defecto
-            $allPqr = $allPqr->sortByDesc('date');
+            $status = $request->status;
+
+            $query->where(function ($q) use ($status) {
+
+                if ($status === 'verde') {
+                    $q->whereRaw("
+                    CASE 
+                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) <= 24
+                        ELSE DATEDIFF(NOW(), date) <= 6
+                    END
+                ");
+                }
+
+                if ($status === 'amarillo') {
+                    $q->whereRaw("
+                    CASE 
+                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 24 AND 72
+                        ELSE DATEDIFF(NOW(), date) BETWEEN 6 AND 12
+                    END
+                ");
+                }
+
+                if ($status === 'rojo') {
+                    $q->whereRaw("
+                    CASE 
+                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 48 AND 72
+                        ELSE DATEDIFF(NOW(), date) BETWEEN 10 AND 12
+                    END
+                ");
+                }
+
+                if ($status === 'vencido') {
+                    $q->whereRaw("
+                    CASE 
+                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) > 72
+                        ELSE DATEDIFF(NOW(), date) > 12
+                    END
+                ");
+                }
+            });
         }
 
-        // Obtener lista de dependencias únicas
-        $dependencies = DependencySubunit::select('subunit_id', 'name', 'subunit_code')->get();
+        // =========================
+        // 🔥 GET FINAL (AQUÍ SÍ)
+        // =========================
+        $pqr = $query->get();
 
+        // =========================
+        // 🔥 ORDEN BASE
+        // =========================
+        $pqr = $pqr->sortBy(fn($item) => $item->state);
+
+        // =========================
+        // 🔥 ORDEN DINÁMICO
+        // =========================
+        $orderColor = $request->get('order_color');
+
+        if ($orderColor == 1) {
+            $pqr = $pqr->sortBy(fn($item) => $item->days_remaining);
+        } else {
+            $pqr = $pqr->sortByDesc('date');
+        }
+
+        // =========================
+        // 🔥 DEPENDENCIAS
+        // =========================
+        $dependencies = \App\Models\Pqr\DependenciaPqr::select('id_dependencia', 'name')->get();
+
+        // =========================
+        // 🔥 RESPUESTA AJAX (CLAVE 🔥)
+        // =========================
+        if ($request->ajax()) {
+            return view('Complaint.partials.cards', compact('pqr'))->render();
+        }
+
+        // =========================
+        // 🔥 VIEW NORMAL
+        // =========================
         return view('Complaint.index', [
-            'pqr' => $allPqr,
+            'pqr' => $pqr,
             'dependencies' => $dependencies,
             'selectedDependency' => $request->dependency,
             'selectedStatus' => $request->status,
@@ -66,9 +123,9 @@ class PqrController extends Controller
 
     public function create()
     {
-        $units = DependencyUnit::with('subunits')->get();
+        $dependencias = DependenciaPqr::with('conceptos')->get();
 
-        return view('Complaint.create', compact('units'));
+        return view('Complaint.create', compact('dependencias'));
     }
 
     public function store(PqrRequest $request)
@@ -76,19 +133,51 @@ class PqrController extends Controller
         try {
 
             $data = $request->validated();
-            $data['dependency'] = $request->dependency; // subunit_id seleccionado
-            $data['user_id'] = Auth::id();
+            $data['user_id'] = auth()->id();
 
-            if ($request->hasFile('pdf')) {
-                $data['pdf_path'] = $request->file('pdf')->store('pqrs', 'public');
+            // 🔥 Manejo de tutela
+            if ($request->is_tutela) {
+
+                $data['is_tutela'] = true;
+
+                $subdireccion = DependenciaPqr::where('name', 'Subdirección')->first();
+
+                $concepto = ConceptoPqr::where('id_concepto', $request->concepto_id)
+                    ->where('dependencia_id', $subdireccion->id_dependencia)
+                    ->first();
+
+                if (!$concepto) {
+                    throw new \Exception('Concepto inválido para tutela');
+                }
+
+                $data['concepto_id'] = $concepto->id_concepto;
+            } else {
+                $data['is_tutela'] = false;
             }
 
-            Pqr::create($data);
+            // 🔥 PDF (CORRECTO Y SEGURO)
+            if ($request->hasFile('pdf')) {
+
+                $file = $request->file('pdf');
+
+                if (!$file->isValid()) {
+                    throw new \Exception('El archivo PDF es inválido');
+                }
+
+                $path = $file->store('pqrs', 'public');
+
+                $data['pdf_path'] = $path;
+            }
+
+            Pqr::create(array_merge($data, [
+                'date' => now(), // <- hora y fecha exacta
+            ]));
 
             return redirect()
                 ->route('pqr.index')
                 ->with('success', 'PQR registrada exitosamente');
         } catch (\Exception $e) {
+
             return back()
                 ->withInput()
                 ->with('error', 'Error al registrar la PQR: ' . $e->getMessage());
@@ -133,12 +222,11 @@ class PqrController extends Controller
     {
         $pqr = Pqr::findOrFail($id);
 
-        // Traer las unidades y subunidades
-        $units = DependencyUnit::with('subunits')->get();
+        // Traer dependencias con sus conceptos (igual que en create)
+        $dependencias = DependenciaPqr::with('conceptos')->get();
 
-        return view('Complaint.edit', compact('pqr', 'units'));
+        return view('Complaint.edit', compact('pqr', 'dependencias'));
     }
-
 
     public function update(PqrRequest $request, $id)
     {
@@ -191,12 +279,29 @@ class PqrController extends Controller
     public function toggleState(Pqr $pqr)
     {
         try {
-            $pqr->state = !$pqr->state;
+
+            // 🔥 Si está activo → finalizar
+            if ($pqr->state == 0) {
+                $pqr->state = 1; // FINALIZADO
+            } else {
+                $pqr->state = 0; // REACTIVAR (opcional)
+            }
+
             $pqr->save();
 
-            return back()->with('success', 'Estado de la PQR actualizado correctamente.');
+            return response()->json([
+                'success' => true,
+                'state' => $pqr->state,
+                'message' => $pqr->state
+                    ? 'PQR finalizada correctamente'
+                    : 'PQR reactivada'
+            ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar'
+            ], 500);
         }
     }
 }

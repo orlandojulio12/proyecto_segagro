@@ -14,14 +14,19 @@ return new class extends Migration
         Schema::create('pqrs', function (Blueprint $table) {
             $table->id();
             $table->string('title');                     // Título
-            $table->date('date');                        // Fecha
+            $table->date('dateTime');                        // Fecha
             $table->text('description');                 // Descripción
             $table->string('responsible');               // Responsable
-            $table->string('dependency');                // Dependencia
+            $table->unsignedBigInteger('concepto_id'); // Relación con concepto_pqr
             $table->string('pdf_path')->nullable();      // Adjuntar PDF
             $table->unsignedBigInteger('user_id');
             $table->boolean('state')->default(false);    // false = pendiente, true = completada
             $table->timestamps();
+
+            $table->foreign('concepto_id')
+                ->references('id_concepto')
+                ->on('concepto_pqr')
+                ->onDelete('cascade');
 
             $table->foreign('user_id')
                 ->references('id')
