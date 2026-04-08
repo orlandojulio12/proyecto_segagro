@@ -43,25 +43,19 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Fecha *</label>
-                        <input type="date" name="date" class="form-control modern-input"
-                            value="{{ old('date', $pqr->date instanceof \Carbon\Carbon ? $pqr->date->format('Y-m-d') : $pqr->date) }}"
-                            required>
-                        <small class="text-muted">Fecha en que se registró la PQR</small>
+                        <label class="form-label text-success fw-semibold">Fecha y hora *</label>
+                        <input type="datetime-local" name="date" class="form-control modern-input"
+                            value="{{ old('date', \Carbon\Carbon::parse($pqr->date)->format('Y-m-d\TH:i')) }}" required>
+                        <small class="text-muted">Fecha y hora de la PQR</small>
                     </div>
 
                     <div class="form-group mb-3" id="tiempoTutelaContainer"
                         style="{{ $pqr->is_tutela ? 'display:block;' : 'display:none;' }}">
-                        <label class="form-label text-success fw-semibold">Tiempo de respuesta *</label>
-                        <select name="horas_tutela" id="horasTutela" class="form-select modern-input">
-                            <option value="">Seleccionar tiempo</option>
-                            <option value="24" {{ old('horas_tutela', $pqr->horas_tutela) == 24 ? 'selected' : '' }}>24
-                                horas</option>
-                            <option value="48" {{ old('horas_tutela', $pqr->horas_tutela) == 48 ? 'selected' : '' }}>48
-                                horas</option>
-                            <option value="72" {{ old('horas_tutela', $pqr->horas_tutela) == 72 ? 'selected' : '' }}>72
-                                horas</option>
-                        </select>
+                        <label class="form-label text-success fw-semibold">Tiempo de respuesta (horas) *</label>
+                        <input type="number" name="horas_tutela" id="horasTutela" class="form-control modern-input"
+                            value="{{ old('horas_tutela', $pqr->horas_tutela) }}" placeholder="Ingresa el tiempo en horas"
+                            min="1" step="1">
+                        <small class="text-muted">Ingresa el tiempo de respuesta en horas para la tutela.</small>
                     </div>
 
                     <!-- Dependencia -->
@@ -313,7 +307,7 @@
                     'Las <strong>tutelas</strong> tienen un plazo de <strong>72 horas (3 días)</strong>.';
                 tiempoContainer.style.display = 'block';
             } else {
-                textoTiempo.innerHTML = 'Las <strong>PQR</strong> tienen un plazo de <strong>12 días</strong>.';
+                textoTiempo.innerHTML = 'Las <strong>PQR</strong> tienen un plazo de <strong>10 días</strong>.';
                 tiempoContainer.style.display = 'none';
                 horasTutela.value = '';
             }
@@ -366,8 +360,9 @@
                     estadoColorSpan.textContent = 'Tutela';
                     estadoColorSpan.className = 'badge bg-danger';
                 } else {
-                    fechaLimite.setDate(fechaLimite.getDate() + 12);
-                    diasRestantesSpan.textContent = '12 días';
+                    const PQR_DIAS = 10; // puedes definirlo arriba
+                    fechaLimite.setDate(fechaLimite.getDate() + PQR_DIAS);
+                    diasRestantesSpan.textContent = `${PQR_DIAS} días`;
                     diasRestantesSpan.className = 'badge bg-success';
                     estadoColorSpan.textContent = 'Nuevo';
                     estadoColorSpan.className = 'badge bg-success';

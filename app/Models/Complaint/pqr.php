@@ -48,11 +48,6 @@ class Pqr extends Model
         return $this->concepto ? $this->concepto->dependencia() : null;
     }
 
-    /* public function subunit()
-    {
-        return $this->belongsTo(DependencySubunit::class, 'dependency', 'subunit_id');
-    } */
-
     // Accesores para días y estado
     public function getDaysPassedAttribute()
     {
@@ -70,7 +65,7 @@ class Pqr extends Model
             return max(0, $maxHoras - $horasTranscurridas);
         }
 
-        return max(0, 12 - $this->days_passed);
+        return max(0, 10 - $this->days_passed);
     }
 
     public function getColorStatusAttribute()
@@ -126,7 +121,7 @@ class Pqr extends Model
             return Carbon::parse($this->date)->addHours($horas);
         }
 
-        return Carbon::parse($this->date)->addDays(12);
+        return Carbon::parse($this->date)->addDays(10);
     }
 
     // Scopes
