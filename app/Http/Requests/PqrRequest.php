@@ -6,75 +6,60 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class PqrRequest extends FormRequest
 {
-    /**
-     * Autorización
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Reglas de validación
-     */
     public function rules(): array
     {
         return [
             'title' => 'required|string|max:255',
-            'date' => 'required|date_format:Y-m-d H:i',
+
+            // Fecha con hora, minuto y segundo
+            'date' => 'required|date_format:Y-m-d\TH:i',
+
             'description' => 'required|string|min:10',
             'responsible' => 'required|string|max:255',
             'concepto_id' => 'required|exists:concepto_pqr,id_concepto',
 
-            // 🔥 Tutela
+            // Tutela: cualquier valor numérico entero
             'is_tutela' => 'nullable|boolean',
-            'horas_tutela' => 'nullable|integer|in:24,48,72|required_if:is_tutela,1',
+            'horas_tutela' => 'nullable|integer|min:1|required_if:is_tutela,1',
 
-            // 📄 PDF
+            // PDF
             'pdf' => 'nullable|file|mimes:pdf|max:5120',
         ];
     }
 
-    /**
-     * Mensajes personalizados
-     */
     public function messages(): array
     {
         return [
-            // Title
             'title.required' => 'El título es obligatorio',
             'title.max' => 'El título no puede exceder los 255 caracteres',
 
-            // Date
             'date.required' => 'La fecha es obligatoria',
-            'date.date' => 'La fecha debe ser válida',
+            /* 'date.date_format' => 'La fecha debe tener el formato: año-mes-día hora:minuto:segundo (Y-m-d H:i:s)', */
 
-            // Description
             'description.required' => 'La descripción es obligatoria',
             'description.min' => 'La descripción debe tener al menos 10 caracteres',
 
-            // Responsable
             'responsible.required' => 'El responsable es obligatorio',
             'responsible.max' => 'El nombre del responsable no puede exceder los 255 caracteres',
 
-            // Concepto
             'concepto_id.required' => 'Debes seleccionar un concepto',
             'concepto_id.exists' => 'El concepto seleccionado no es válido',
 
-            // Tutela
-            'horas_tutela.required_if' => 'Debes seleccionar el tiempo de respuesta para la tutela',
-            'horas_tutela.in' => 'El tiempo de tutela debe ser 24, 48 o 72 horas',
+            'horas_tutela.required_if' => 'Debes indicar el tiempo de respuesta para la tutela',
+            'horas_tutela.integer' => 'El tiempo de tutela debe ser un número entero',
+            'horas_tutela.min' => 'El tiempo de tutela debe ser al menos 1 hora',
 
-            // PDF
             'pdf.file' => 'El archivo debe ser un documento válido',
             'pdf.mimes' => 'El archivo debe ser un PDF',
             'pdf.max' => 'El archivo no puede exceder los 5MB',
         ];
     }
 
-    /**
-     * Nombres amigables
-     */
     public function attributes(): array
     {
         return [
@@ -88,9 +73,6 @@ class PqrRequest extends FormRequest
         ];
     }
 
-    /**
-     * Preparación de datos antes de la validación
-     */
     protected function prepareForValidation()
     {
         $this->merge([

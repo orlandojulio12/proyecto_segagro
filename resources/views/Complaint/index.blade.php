@@ -790,6 +790,8 @@
         </div>
     </div>
 
+    <br>
+
     <!-- GRID DONDE SE PINTAN LOS RESULTADOS -->
     <div id="pqrGrid" class="grid-4">
         @include('Complaint.partials.cards', ['pqr' => $pqr])

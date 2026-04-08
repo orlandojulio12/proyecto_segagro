@@ -40,20 +40,18 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label text-success fw-semibold">Fecha *</label>
-                        <input type="date" name="date" class="form-control modern-input"
-                            value="{{ old('date', date('Y-m-d')) }}" required>
-                        <small class="text-muted">Fecha en que se registra la PQR</small>
+                        <label class="form-label text-success fw-semibold">Fecha y hora *</label>
+                        <input type="datetime-local" name="date" class="form-control modern-input"
+                            value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                        <small class="text-muted">Selecciona fecha y hora. Los segundos se agregan automáticamente (Y-m-d
+                            H:i:s)</small>
                     </div>
 
                     <div class="form-group mb-3" id="tiempoTutelaContainer" style="display:none;">
-                        <label class="form-label text-success fw-semibold">Tiempo de respuesta *</label>
-                        <select name="horas_tutela" id="horasTutela" class="form-select modern-input">
-                            <option value="">Seleccionar tiempo</option>
-                            <option value="24">24 horas</option>
-                            <option value="48">48 horas</option>
-                            <option value="72">72 horas</option>
-                        </select>
+                        <label class="form-label text-success fw-semibold">Tiempo de respuesta (horas) *</label>
+                        <input type="number" name="horas_tutela" id="horasTutela" class="form-control modern-input"
+                            placeholder="Ingresa el tiempo en horas" min="1" max="168" step="1">
+                        <small class="text-muted">Ingresa el tiempo de respuesta en horas para la tutela.</small>
                     </div>
 
                     <!-- Unidad -->
@@ -100,7 +98,7 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label text-success fw-semibold">Descripción *</label>
-                        <textarea name="description" class="form-control modern-input"  minlength="10" rows="8" required
+                        <textarea name="description" class="form-control modern-input" minlength="10" rows="8" required
                             placeholder="Describe detalladamente la petición, queja o reclamo...">{{ old('description') }}</textarea>
                         <small class="text-muted">Sé lo más específico posible para facilitar la gestión.</small>
                     </div>
@@ -121,7 +119,7 @@
                 <i class="fas fa-info-circle"></i>
                 <strong>Tiempo de respuesta:</strong>
                 <span id="textoTiempo">
-                    Todas las PQR tienen un plazo de <strong>12 días</strong>.
+                    Todas las PQR tienen un plazo de <strong>10 días</strong>.
                 </span>
             </div>
 
@@ -329,7 +327,7 @@
 
                 diasInfo.style.display = 'block';
 
-                const fechaInicio = new Date(fecha);
+                const fechaInicio = new Date(dateInput.value);
                 let fechaLimite = new Date(fechaInicio);
 
                 if (isTutela.checked && horasTutela.value) {
@@ -344,10 +342,11 @@
                     estadoColorSpan.className = 'badge bg-danger';
 
                 } else {
-                    // Normal → 12 días
-                    fechaLimite.setDate(fechaLimite.getDate() + 12);
+                    // Normal → 10 días
+                    const maxDias = 10;
+                    fechaLimite.setDate(fechaLimite.getDate() + maxDias);
 
-                    diasRestantesSpan.textContent = '12 días';
+                    diasRestantesSpan.textContent = `${maxDias} días`;
                     diasRestantesSpan.className = 'badge bg-success';
 
                     estadoColorSpan.textContent = 'Nuevo';

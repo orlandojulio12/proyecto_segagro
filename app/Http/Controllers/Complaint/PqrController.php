@@ -155,7 +155,7 @@ class PqrController extends Controller
                 $data['is_tutela'] = false;
             }
 
-            // 🔥 PDF (CORRECTO Y SEGURO)
+            // 🔥 PDF
             if ($request->hasFile('pdf')) {
 
                 $file = $request->file('pdf');
@@ -169,9 +169,16 @@ class PqrController extends Controller
                 $data['pdf_path'] = $path;
             }
 
-            Pqr::create(array_merge($data, [
-                'date' => now(), // <- hora y fecha exacta
-            ]));
+            // Convierte "2026-04-08T23:45" -> "2026-04-08 23:45:00"
+            if ($request->filled('date')) {
+                $data['date'] = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $request->date)
+                    ->format('Y-m-d H:i:s');
+            } else {
+                $data['date'] = now()->format('Y-m-d H:i:s');
+            }
+
+            // 🔥 Guardar
+            Pqr::create($data);
 
             return redirect()
                 ->route('pqr.index')
