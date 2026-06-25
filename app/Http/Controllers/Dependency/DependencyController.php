@@ -56,18 +56,33 @@ class DependencyController extends Controller
 
     public function edit(DependencyUnit $dependency)
     {
+        $dependency->load('subunits');
         return view('dependencies.edit', compact('dependency'));
     }
 
     public function update(Request $request, DependencyUnit $dependency)
     {
         $request->validate([
-            'short_name' => 'required|string|max:50',
-            'full_name'  => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'short_name'              => 'required|string|max:50',
+            'full_name'               => 'required|string|max:255',
+            'description'             => 'nullable|string',
+            'subunits.*.subunit_code' => 'required|string|max:50',
+            'subunits.*.name'         => 'required|string|max:255',
+            'subunits.*.description'  => 'nullable|string',
         ]);
 
-        $dependency->update($request->all());
+        $dependency->update([
+            'short_name'  => $request->short_name,
+            'full_name'   => $request->full_name,
+            'description' => $request->description,
+        ]);
+
+        $dependency->subunits()->delete();
+        if ($request->has('subunits')) {
+            foreach ($request->subunits as $subunit) {
+                $dependency->subunits()->create($subunit);
+            }
+        }
 
         return redirect()
             ->route('dependencies.index')

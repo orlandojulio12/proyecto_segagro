@@ -9,8 +9,8 @@
         <h2 class="fw-bold">Gestión de Sedes</h2>
         <p class="text-muted">Administra las sedes de los centros</p>
     </div>
-    <button class="btn btn-success shadow-sm" onclick="openCreateModal()">
-        <i class="fas fa-plus me-2"></i>Agregar Sede
+    <button class="sg-btn sg-btn-primary" onclick="openCreateModal()" type="button">
+        <i class="fas fa-plus"></i> Agregar Sede
     </button>
 </div>
 
@@ -78,73 +78,60 @@
     </div>
 </div>
 
-<!-- Modal Crear/Editar -->
-<div class="modal fade" id="sedeModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Agregar Sede</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+{{-- ══ DRAWER CREAR/EDITAR SEDE ══ --}}
+<div class="sg-drawer-overlay" id="sedeDrawerOverlay"></div>
+<div class="sg-drawer" id="sedeDrawer">
+    <div class="sg-drawer-header">
+        <h5><i class="fas fa-map-marker-alt drawer-icon"></i> <span id="sedeDrawerTitle">Agregar Sede</span></h5>
+        <button type="button" class="sg-drawer-close" onclick="closeDrawer('sedeDrawer')">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="sg-drawer-body">
+        <form id="sedeForm">
+            @csrf
+            <div class="mb-3">
+                <label class="fw-bold">Nombre Sede *</label>
+                <input type="text" name="nom_sede" class="form-control" required>
             </div>
-            <form id="sedeForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Nombre Sede *</label>
-                                <input type="text" name="nom_sede" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Centro *</label>
-                                <select name="centro_id" class="form-control" required>
-                                    <option value="">Seleccionar Centro</option>
-                                    @foreach($centros as $centro)
-                                    <option value="{{ $centro->id }}">{{ $centro->nom_centro }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Matrícula Inmobiliaria</label>
-                                <input type="text" name="matricula_inmobiliario" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Localidad</label>
-                                <input type="text" name="localidad" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Barrio</label>
-                                <input type="text" name="barrio_sede" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Dirección</label>
-                                <input type="text" name="direc_sede" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Descripción</label>
-                                <textarea name="descripcion" class="form-control" rows="3"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success shadow-sm">Guardar</button>
-                </div>
-            </form>
-        </div>
+            <div class="mb-3">
+                <label class="fw-bold">Centro *</label>
+                <select name="centro_id" class="form-control" required>
+                    <option value="">Seleccionar Centro</option>
+                    @foreach($centros as $centro)
+                    <option value="{{ $centro->id }}">{{ $centro->nom_centro }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Matrícula Inmobiliaria</label>
+                <input type="text" name="matricula_inmobiliario" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Localidad</label>
+                <input type="text" name="localidad" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Barrio</label>
+                <input type="text" name="barrio_sede" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Dirección</label>
+                <input type="text" name="direc_sede" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Descripción</label>
+                <textarea name="descripcion" class="form-control" rows="3"></textarea>
+            </div>
+        </form>
+    </div>
+    <div class="sg-drawer-footer">
+        <button type="button" class="sg-btn sg-btn-secondary" onclick="closeDrawer('sedeDrawer')">
+            <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="sg-btn sg-btn-primary" onclick="document.getElementById('sedeForm').dispatchEvent(new Event('submit', {cancelable:true}))">
+            <i class="fas fa-save"></i> Guardar
+        </button>
     </div>
 </div>
 @endsection
@@ -412,16 +399,16 @@
     function openCreateModal() {
         isEdit = false;
         editId = null;
-        $('#modalTitle').text('Agregar Sede');
+        document.getElementById('sedeDrawerTitle').textContent = 'Agregar Sede';
         $('#sedeForm')[0].reset();
-        $('#sedeModal').modal('show');
+        openDrawer('sedeDrawer');
     }
 
     function editSede(id) {
         isEdit = true;
         editId = id;
-        $('#modalTitle').text('Editar Sede');
-        
+        document.getElementById('sedeDrawerTitle').textContent = 'Editar Sede';
+
         fetch(`/sedes/${id}`, {
             headers: { 'Accept': 'application/json' }
         })
@@ -434,7 +421,7 @@
             $('[name="barrio_sede"]').val(data.barrio_sede);
             $('[name="direc_sede"]').val(data.direc_sede);
             $('[name="descripcion"]').val(data.descripcion);
-            $('#sedeModal').modal('show');
+            openDrawer('sedeDrawer');
         })
         .catch(error => {
             console.error('Error:', error);
@@ -504,7 +491,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                $('#sedeModal').modal('hide');
+                closeDrawer('sedeDrawer');
                 const alert = document.createElement('div');
                 alert.className = 'alert alert-success alert-dismissible fade show shadow-sm';
                 alert.innerHTML = `

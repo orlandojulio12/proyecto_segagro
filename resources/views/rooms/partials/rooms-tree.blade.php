@@ -26,7 +26,17 @@
                         </div>
                     </div>
                     <div class="sub-actions">
-                        <a href="{{ route('rooms.edit', $room) }}" class="action-icon edit sm"><i class="fas fa-pen"></i></a>
+                        <button type="button" class="action-icon edit sm"
+                            data-room-id="{{ $room->id }}"
+                            data-room-name="{{ $room->name }}"
+                            data-room-code="{{ $room->code ?? '' }}"
+                            data-room-capacity="{{ $room->capacity ?? '' }}"
+                            data-room-type="{{ $room->type ?? 'classroom' }}"
+                            data-room-area="{{ $room->area_id }}"
+                            data-room-active="{{ $room->active ? '1' : '0' }}"
+                            onclick="openRoomEditDrawer(this)">
+                            <i class="fas fa-pen"></i>
+                        </button>
                     </div>
                 </div>
             @empty

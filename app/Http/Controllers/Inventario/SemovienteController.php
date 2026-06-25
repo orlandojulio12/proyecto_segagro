@@ -112,6 +112,9 @@ class SemovienteController extends Controller
         $validated['inventory_sede_id'] = $inventorySede->id;
 
         if ($request->hasFile('image')) {
+            if ($semoviente->image && \Storage::disk('public')->exists($semoviente->image)) {
+                \Storage::disk('public')->delete($semoviente->image);
+            }
             $validated['image'] = $request->file('image')->store('semovientes', 'public');
         }
 
@@ -120,9 +123,12 @@ class SemovienteController extends Controller
         return redirect()->route('semoviente.index')->with('success', 'Semoviente actualizado correctamente');
     }
 
-
     public function destroy(Semoviente $semoviente)
     {
+        if ($semoviente->image && \Storage::disk('public')->exists($semoviente->image)) {
+            \Storage::disk('public')->delete($semoviente->image);
+        }
+
         $semoviente->delete();
         return redirect()->route('semoviente.index')->with('success', 'Semoviente eliminado correctamente');
     }

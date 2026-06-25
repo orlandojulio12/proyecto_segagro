@@ -5,13 +5,16 @@ namespace App\Models\Traslado;
 use App\Models\Centro;
 use App\Models\Infraestructura\Infraestructura;
 use App\Models\InventoryMaterial;
-use App\Models\InventorySede;
+use App\Models\Dependency\DependencyUnit;
 use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class NeedTransfer extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'user_id',
         'unidad_id',
@@ -38,9 +41,9 @@ class NeedTransfer extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function dependencia()
+    public function unidad()
     {
-        return $this->belongsTo(InventorySede::class, 'dependencia_id');
+        return $this->belongsTo(DependencyUnit::class, 'unidad_id', 'dependency_unit_id');
     }
 
     public function centroInicial()

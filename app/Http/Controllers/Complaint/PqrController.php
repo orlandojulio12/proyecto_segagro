@@ -5,11 +5,8 @@ namespace App\Http\Controllers\Complaint;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PqrRequest;
 use App\Models\Complaint\pqr;
-use App\Models\Dependency\DependencySubunit;
-use App\Models\Dependency\DependencyUnit;
 use App\Models\Pqr\ConceptoPqr;
 use App\Models\Pqr\DependenciaPqr;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -18,129 +15,89 @@ class PqrController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pqr::with(['concepto.dependencia', 'user']);
+        $query = Pqr::query()->with(['concepto.dependencia', 'user']);
 
-        // =========================
-        // 🔥 FILTRO POR DEPENDENCIA
-        // =========================
         if ($request->filled('dependency')) {
             $query->whereHas('concepto', function ($q) use ($request) {
                 $q->where('dependencia_id', $request->dependency);
             });
         }
 
-        // =========================
-        // 🔥 FILTRO POR ESTADO (ANTES DEL GET)
-        // =========================
         if ($request->filled('status')) {
-
             $status = $request->status;
 
             $query->where(function ($q) use ($status) {
-
                 if ($status === 'verde') {
                     $q->whereRaw("
-                    CASE 
-                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) <= 24
-                        ELSE DATEDIFF(NOW(), date) <= 6
-                    END
-                ");
+                        (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) < 24)
+                        OR (is_tutela = 0 AND DATEDIFF(NOW(), date) <= 4)
+                    ");
                 }
-
                 if ($status === 'amarillo') {
                     $q->whereRaw("
-                    CASE 
-                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 24 AND 72
-                        ELSE DATEDIFF(NOW(), date) BETWEEN 6 AND 12
-                    END
-                ");
+                        (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 24 AND 48)
+                        OR (is_tutela = 0 AND DATEDIFF(NOW(), date) BETWEEN 5 AND 8)
+                    ");
                 }
-
                 if ($status === 'rojo') {
                     $q->whereRaw("
-                    CASE 
-                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 48 AND 72
-                        ELSE DATEDIFF(NOW(), date) BETWEEN 10 AND 12
-                    END
-                ");
+                        (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 48 AND 72)
+                        OR (is_tutela = 0 AND DATEDIFF(NOW(), date) = 9)
+                    ");
                 }
-
                 if ($status === 'vencido') {
                     $q->whereRaw("
-                    CASE 
-                        WHEN is_tutela = 1 THEN TIMESTAMPDIFF(HOUR, date, NOW()) > 72
-                        ELSE DATEDIFF(NOW(), date) > 12
-                    END
-                ");
+                        (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) >= 72)
+                        OR (is_tutela = 0 AND DATEDIFF(NOW(), date) >= 10)
+                    ");
                 }
             });
         }
 
-        // =========================
-        // 🔥 GET FINAL (AQUÍ SÍ)
-        // =========================
-        $pqr = $query->get();
-
-        // =========================
-        // 🔥 ORDEN BASE
-        // =========================
-        $pqr = $pqr->sortBy(fn($item) => $item->state);
-
-        // =========================
-        // 🔥 ORDEN DINÁMICO
-        // =========================
         $orderColor = $request->get('order_color');
 
         if ($orderColor == 1) {
-            $pqr = $pqr->sortBy(fn($item) => $item->days_remaining);
+            $query->orderByRaw("
+                CASE
+                    WHEN is_tutela = 1
+                        THEN (COALESCE(horas_tutela, 72) - TIMESTAMPDIFF(HOUR, date, NOW()))
+                    ELSE (10 - DATEDIFF(NOW(), date))
+                END ASC
+            ");
         } else {
-            $pqr = $pqr->sortByDesc('date');
+            $query->orderByDesc('date');
         }
 
-        // =========================
-        // 🔥 DEPENDENCIAS
-        // =========================
-        $dependencies = \App\Models\Pqr\DependenciaPqr::select('id_dependencia', 'name')->get();
+        $perPage = $request->filled('table') ? 10 : 8;
+        $pqr = $query->paginate($perPage)->withQueryString();
+        $dependencies = DependenciaPqr::select('id_dependencia', 'name')->get();
 
-        // =========================
-        // 🔥 RESPUESTA AJAX (CLAVE 🔥)
-        // =========================
         if ($request->ajax()) {
+            if ($request->filled('table')) {
+                return view('Complaint.partials.table', compact('pqr'))->render();
+            }
             return view('Complaint.partials.cards', compact('pqr'))->render();
         }
 
-        // =========================
-        // 🔥 VIEW NORMAL
-        // =========================
-        return view('Complaint.index', [
-            'pqr' => $pqr,
-            'dependencies' => $dependencies,
-            'selectedDependency' => $request->dependency,
-            'selectedStatus' => $request->status,
-            'orderColor' => $orderColor
-        ]);
+        return view('Complaint.index', compact('pqr', 'dependencies', 'orderColor'));
     }
 
     public function create()
     {
         $dependencias = DependenciaPqr::with('conceptos')->get();
-
         return view('Complaint.create', compact('dependencias'));
     }
 
     public function store(PqrRequest $request)
     {
         try {
-
             $data = $request->validated();
             $data['user_id'] = auth()->id();
 
-            // 🔥 Manejo de tutela
             if ($request->is_tutela) {
-
                 $data['is_tutela'] = true;
 
-                $subdireccion = DependenciaPqr::where('name', 'Subdirección')->first();
+                $subdireccion = DependenciaPqr::where('name', 'Subdirección')->firstOrFail();
 
                 $concepto = ConceptoPqr::where('id_concepto', $request->concepto_id)
                     ->where('dependencia_id', $subdireccion->id_dependencia)
@@ -155,53 +112,34 @@ class PqrController extends Controller
                 $data['is_tutela'] = false;
             }
 
-            // 🔥 PDF
             if ($request->hasFile('pdf')) {
-
                 $file = $request->file('pdf');
-
                 if (!$file->isValid()) {
                     throw new \Exception('El archivo PDF es inválido');
                 }
-
-                $path = $file->store('pqrs', 'public');
-
-                $data['pdf_path'] = $path;
+                $data['pdf_path'] = $file->store('pqrs', 'public');
             }
 
-            // Convierte "2026-04-08T23:45" -> "2026-04-08 23:45:00"
-            if ($request->filled('date')) {
-                $data['date'] = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $request->date)
-                    ->format('Y-m-d H:i:s');
-            } else {
-                $data['date'] = now()->format('Y-m-d H:i:s');
-            }
+            $data['date'] = $request->filled('date')
+                ? Carbon::createFromFormat('Y-m-d\TH:i', $request->date)->format('Y-m-d H:i:s')
+                : now()->format('Y-m-d H:i:s');
 
-            // 🔥 Guardar
             Pqr::create($data);
 
-            return redirect()
-                ->route('pqr.index')
-                ->with('success', 'PQR registrada exitosamente');
+            return redirect()->route('pqr.index')->with('success', 'PQR registrada exitosamente');
         } catch (\Exception $e) {
-
-            return back()
-                ->withInput()
-                ->with('error', 'Error al registrar la PQR: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al registrar la PQR: ' . $e->getMessage());
         }
     }
 
     public function validarDias(Request $request)
     {
-        $request->validate([
-            'fecha' => 'required|date'
-        ]);
+        $request->validate(['fecha' => 'required|date']);
 
         $fecha = Carbon::parse($request->fecha);
         $diasTranscurridos = $fecha->diffInDays(Carbon::now());
-        $diasRestantes = max(0, 12 - $diasTranscurridos);
+        $diasRestantes = max(0, 10 - $diasTranscurridos);
 
-        // Determinar color según días restantes
         $color = match (true) {
             $diasRestantes >= 6 => 'green',
             $diasRestantes >= 2 => 'yellow',
@@ -221,17 +159,14 @@ class PqrController extends Controller
             'dias_restantes' => $diasRestantes,
             'color' => $color,
             'estado' => $estado,
-            'fecha_limite' => $fecha->addDays(12)->format('Y-m-d')
+            'fecha_limite' => $fecha->addDays(10)->format('Y-m-d'),
         ]);
     }
 
     public function edit($id)
     {
         $pqr = Pqr::findOrFail($id);
-
-        // Traer dependencias con sus conceptos (igual que en create)
         $dependencias = DependenciaPqr::with('conceptos')->get();
-
         return view('Complaint.edit', compact('pqr', 'dependencias'));
     }
 
@@ -241,10 +176,8 @@ class PqrController extends Controller
             $pqr = Pqr::findOrFail($id);
             $data = $request->validated();
 
-            // Si hay un nuevo archivo PDF
             if ($request->hasFile('pdf')) {
-                // Eliminar el archivo anterior si existe
-                if ($pqr->pdf_path) {
+                if ($pqr->pdf_path && \Storage::disk('public')->exists($pqr->pdf_path)) {
                     \Storage::disk('public')->delete($pqr->pdf_path);
                 }
                 $data['pdf_path'] = $request->file('pdf')->store('pqrs', 'public');
@@ -252,13 +185,9 @@ class PqrController extends Controller
 
             $pqr->update($data);
 
-            return redirect()
-                ->route('pqr.index')
-                ->with('success', 'PQR actualizada exitosamente');
+            return redirect()->route('pqr.index')->with('success', 'PQR actualizada exitosamente');
         } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Error al actualizar la PQR: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al actualizar la PQR: ' . $e->getMessage());
         }
     }
 
@@ -267,48 +196,31 @@ class PqrController extends Controller
         try {
             $pqr = Pqr::findOrFail($id);
 
-            // Eliminar el archivo PDF si existe
-            if ($pqr->pdf_path) {
+            if ($pqr->pdf_path && \Storage::disk('public')->exists($pqr->pdf_path)) {
                 \Storage::disk('public')->delete($pqr->pdf_path);
             }
 
             $pqr->delete();
 
-            return redirect()
-                ->route('pqr.index')
-                ->with('success', 'PQR eliminada exitosamente');
+            return redirect()->route('pqr.index')->with('success', 'PQR eliminada exitosamente');
         } catch (\Exception $e) {
-            return back()
-                ->with('error', 'Error al eliminar la PQR: ' . $e->getMessage());
+            return back()->with('error', 'Error al eliminar la PQR: ' . $e->getMessage());
         }
     }
 
     public function toggleState(Pqr $pqr)
     {
         try {
-
-            // 🔥 Si está activo → finalizar
-            if ($pqr->state == 0) {
-                $pqr->state = 1; // FINALIZADO
-            } else {
-                $pqr->state = 0; // REACTIVAR (opcional)
-            }
-
+            $pqr->state = !$pqr->state;
             $pqr->save();
 
             return response()->json([
                 'success' => true,
                 'state' => $pqr->state,
-                'message' => $pqr->state
-                    ? 'PQR finalizada correctamente'
-                    : 'PQR reactivada'
+                'message' => $pqr->state ? 'PQR finalizada correctamente' : 'PQR reactivada',
             ]);
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al actualizar'
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error al actualizar'], 500);
         }
     }
 }

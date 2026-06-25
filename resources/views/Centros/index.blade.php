@@ -9,8 +9,8 @@
         <h2 class="fw-bold">Gestión de Centros</h2>
         <p class="text-muted">Administra los centros de formación</p>
     </div>
-    <button class="btn btn-success shadow-sm" onclick="openCreateModal()">
-        <i class="fas fa-plus me-2"></i>Agregar Centro
+    <button class="sg-btn sg-btn-primary" onclick="openCreateModal()" type="button">
+        <i class="fas fa-plus"></i> Agregar Centro
     </button>
 </div>
 
@@ -78,68 +78,55 @@
     </div>
 </div>
 
-<!-- Modal Crear/Editar -->
-<div class="modal fade" id="centroModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Agregar Centro</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+{{-- ══ DRAWER CREAR/EDITAR CENTRO ══ --}}
+<div class="sg-drawer-overlay" id="centroDrawerOverlay"></div>
+<div class="sg-drawer" id="centroDrawer">
+    <div class="sg-drawer-header">
+        <h5><i class="fas fa-building drawer-icon"></i> <span id="centroDrawerTitle">Agregar Centro</span></h5>
+        <button type="button" class="sg-drawer-close" onclick="closeDrawer('centroDrawer')">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="sg-drawer-body">
+        <form id="centroForm">
+            @csrf
+            <div class="mb-3">
+                <label class="fw-bold">Nombre Centro *</label>
+                <input type="text" name="nom_centro" class="form-control" required>
             </div>
-            <form id="centroForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Nombre Centro *</label>
-                                <input type="text" name="nom_centro" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Municipio *</label>
-                                <input type="text" name="id_municipio" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Barrio</label>
-                                <input type="text" name="barrio_centro" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Dirección</label>
-                                <input type="text" name="direc_centro" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Extensión</label>
-                                <input type="text" name="extension" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Regional</label>
-                                <input type="text" name="id_regional" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="form-group mb-3">
-                                <label class="fw-bold">Departamento</label>
-                                <input type="text" name="departamento" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success shadow-sm">Guardar</button>
-                </div>
-            </form>
-        </div>
+            <div class="mb-3">
+                <label class="fw-bold">Municipio *</label>
+                <input type="text" name="id_municipio" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Barrio</label>
+                <input type="text" name="barrio_centro" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Dirección</label>
+                <input type="text" name="direc_centro" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Extensión</label>
+                <input type="text" name="extension" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Regional</label>
+                <input type="text" name="id_regional" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold">Departamento</label>
+                <input type="text" name="departamento" class="form-control">
+            </div>
+        </form>
+    </div>
+    <div class="sg-drawer-footer">
+        <button type="button" class="sg-btn sg-btn-secondary" onclick="closeDrawer('centroDrawer')">
+            <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="sg-btn sg-btn-primary" onclick="document.getElementById('centroForm').dispatchEvent(new Event('submit', {cancelable:true}))">
+            <i class="fas fa-save"></i> Guardar
+        </button>
     </div>
 </div>
 @endsection
@@ -407,16 +394,16 @@
     function openCreateModal() {
         isEdit = false;
         editId = null;
-        $('#modalTitle').text('Agregar Centro');
+        document.getElementById('centroDrawerTitle').textContent = 'Agregar Centro';
         $('#centroForm')[0].reset();
-        $('#centroModal').modal('show');
+        openDrawer('centroDrawer');
     }
 
     function editCentro(id) {
         isEdit = true;
         editId = id;
-        $('#modalTitle').text('Editar Centro');
-        
+        document.getElementById('centroDrawerTitle').textContent = 'Editar Centro';
+
         fetch(`/centros/${id}`, {
             headers: { 'Accept': 'application/json' }
         })
@@ -429,7 +416,7 @@
             $('[name="extension"]').val(data.extension);
             $('[name="id_regional"]').val(data.id_regional);
             $('[name="departamento"]').val(data.departamento);
-            $('#centroModal').modal('show');
+            openDrawer('centroDrawer');
         })
         .catch(error => {
             console.error('Error:', error);
@@ -499,7 +486,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                $('#centroModal').modal('hide');
+                closeDrawer('centroDrawer');
                 const alert = document.createElement('div');
                 alert.className = 'alert alert-success alert-dismissible fade show shadow-sm';
                 alert.innerHTML = `

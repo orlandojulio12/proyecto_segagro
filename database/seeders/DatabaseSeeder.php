@@ -25,17 +25,16 @@ class DatabaseSeeder extends Seeder
             SedesSeeder::class,
             DependencisSeeder::class,
             HiringModalitiesSeeder::class,
-            ContractTypesSeeder::class,
-            /* CatalogProductSeeder::class, */
+            ContractTypesSeeder::class, 
             DependencyUnitsSeeder::class,
             DependencySubunitsSeeder::class,
             RolesAndPermissionsSeeder::class,
             DependenciaPqrSeeder::class,
             ConceptoPqrSeeder::class,
             TutelaSeeder::class,
+            CatalogProductSeeder::class,
         ]);
-
-         $user = User::create([
+        $user = User::create([
             'name' => 'Super Admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('123456'),

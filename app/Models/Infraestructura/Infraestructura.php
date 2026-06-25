@@ -10,9 +10,12 @@ use App\Models\Sede;
 use App\Models\Traslado\NeedTransfer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Infraestructura extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'dependencia_id',
         'unidad_id',

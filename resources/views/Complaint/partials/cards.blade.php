@@ -1,193 +1,201 @@
-@if ($pqr->count() > 0)
-    @foreach ($pqr as $item)
-        @php
-            $isTutela = $item->is_tutela;
+<div id="pqrGrid">
+    @if ($pqr->count() > 0)
+        @foreach ($pqr as $item)
+            @php
+                $isTutela = $item->is_tutela;
 
-            // Máximo dinámico
-            $max = $isTutela ? $item->horas_tutela ?? 72 : 12;
+                // Máximo dinámico
+                $max = $isTutela ? $item->horas_tutela ?? 72 : 12;
 
-            // Calculamos progreso en %
-            $remaining = $item->days_remaining;
-            $progress = $max > 0 ? 100 - ($remaining / $max) * 100 : 100;
+                // Calculamos progreso en %
+                $remaining = $item->days_remaining;
+                $progress = $max > 0 ? 100 - ($remaining / $max) * 100 : 100;
 
-            // Unidad para mostrar
-            $unit = $isTutela ? 'horas' : 'días';
-        @endphp
+                // Unidad para mostrar
+                $unit = $isTutela ? 'horas' : 'días';
+            @endphp
 
-        <div class="card custom-card">
+            <div class="card custom-card">
 
-            {{-- HEADER --}}
-            <div class="card-header-top">
-                <div class="card-type-badge {{ $isTutela ? 'tutela' : 'pqr' }}">
-                    {{ $isTutela ? 'Tutela' : 'PQR' }}
+                {{-- HEADER --}}
+                <div class="card-header-top">
+                    <div class="card-type-badge {{ $isTutela ? 'tutela' : 'pqr' }}">
+                        {{ $isTutela ? 'Tutela' : 'PQR' }}
+                    </div>
+
+                    <div class="card-date">
+                        {{ \Carbon\Carbon::parse($item->date)->format('d M Y') }}
+                    </div>
                 </div>
 
-                <div class="card-date">
-                    {{ \Carbon\Carbon::parse($item->date)->format('d M Y') }}
-                </div>
-            </div>
+                {{-- BODY --}}
+                <div class="card-body">
 
-            {{-- BODY --}}
-            <div class="card-body">
+                    <div class="card-tags">
+                        <span class="tag tag--frequency">
+                            {{ optional($item->concepto)->name ?? 'Sin concepto' }}
+                        </span>
 
-                <div class="card-tags">
-                    <span class="tag tag--frequency">
-                        {{ optional($item->concepto)->name ?? 'Sin concepto' }}
-                    </span>
+                        <span class="tag tag--type">
+                            {{ optional(optional($item->concepto)->dependencia)->name ?? 'Sin dependencia' }}
+                        </span>
+                    </div>
 
-                    <span class="tag tag--type">
-                        {{ optional(optional($item->concepto)->dependencia)->name ?? 'Sin dependencia' }}
-                    </span>
-                </div>
+                    <div class="title">
+                        {{ $item->title }}
+                    </div>
 
-                <div class="title">
-                    {{ $item->title }}
-                </div>
+                    <div class="excerpt">
+                        {!! nl2br(e(Str::limit($item->description, 140))) !!}
+                    </div>
 
-                <div class="excerpt">
-                    {!! nl2br(e(Str::limit($item->description, 140))) !!}
                 </div>
 
-            </div>
+                {{-- SLA (AHORA PROTAGONISTA) --}}
+                <div class="sla-section">
+                    <div class="sla-info">
 
-            {{-- SLA (AHORA PROTAGONISTA) --}}
-            <div class="sla-section">
-                <div class="sla-info">
-
-                    <div class="sla-text">
-                        @if ($item->state)
-                            {{-- <-- asumiendo state = 1 es finalizada --}}
-                            <span class="sla-completed">Finalizada</span>
-                        @else
-                            @if ($item->is_expired)
-                                <span class="sla-expired">Vencido</span>
+                        <div class="sla-text">
+                            @if ($item->state)
+                                {{-- <-- asumiendo state = 1 es finalizada --}}
+                                <span class="sla-completed">Finalizada</span>
                             @else
-                                <span class="sla-remaining">{{ $item->time_formatted }}</span>
-                                <span class="sla-label">restantes</span>
+                                @if ($item->is_expired)
+                                    <span class="sla-expired">Vencido</span>
+                                @else
+                                    <span class="sla-remaining">{{ $item->time_formatted }}</span>
+                                    <span class="sla-label">restantes</span>
+                                @endif
+                                <small>
+                                    {{ $isTutela ? "Tiempo límite: {$item->horas_tutela} horas" : 'Tiempo límite: 12 días' }}
+                                </small>
                             @endif
-                            <small>
-                                {{ $isTutela ? "Tiempo límite: {$item->horas_tutela} horas" : 'Tiempo límite: 12 días' }}
-                            </small>
-                        @endif
+                        </div>
+
+                        <div class="status-badge" data-status="{{ $item->state_text }}">
+                            {{ $item->state_text }}
+                        </div>
+
                     </div>
 
-                    <div class="status-badge" data-status="{{ $item->state_text }}">
-                        {{ $item->state_text }}
-                    </div>
-
+                    @if (!$item->state)
+                        <div class="sla-bar">
+                            <div class="sla-fill" data-elapsed="{{ $max - $remaining }}"
+                                data-total="{{ $max }}" data-unit="{{ $unit }}"
+                                style="width: {{ max(0, min(100, $progress)) }}%;
+            background: {{ $item->color_status }}">
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
-                @if (!$item->state)
-                    <div class="sla-bar">
-                        <div class="sla-fill" data-elapsed="{{ $max - $remaining }}" data-total="{{ $max }}"
-                            data-unit="{{ $unit }}"
-                            style="width: {{ max(0, min(100, $progress)) }}%;
-            background: {{ $item->color_status }}">
+                {{-- FOOTER --}}
+                <div class="card-footer custom-footer">
+
+                    <div class="footer-left">
+                        <div class="avatar">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($item->responsible) }}">
+                        </div>
+
+                        <div class="responsible">
+                            {{ $item->responsible }}
                         </div>
                     </div>
-                @endif
-            </div>
 
-            {{-- FOOTER --}}
-            <div class="card-footer custom-footer">
+                    <div class="card-actions">
+                        <a href="{{ route('pqr.edit', $item->id) }}" class="btn-action">
+                            <i class="fas fa-edit"></i>
+                        </a>
 
-                <div class="footer-left">
-                    <div class="avatar">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($item->responsible) }}">
+                        <button onclick="confirmDelete({{ $item->id }})" class="btn-action danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+
+                        <button class="btn-action warning btn-edit" data-id="{{ $item->id }}"
+                            data-state="{{ $item->state }}">
+                            <i class="fas {{ $item->state ? 'fa-rotate-left' : 'fa-check' }}"></i>
+                        </button>
                     </div>
 
-                    <div class="responsible">
-                        {{ $item->responsible }}
+                </div>
+            </div>
+        @endforeach
+        {{-- <div id="pqrPagination">
+            {{ $pqr->links() }}
+        </div> --}}
+        {{-- <p>Total páginas: {{ method_exists($pqr, 'lastPage') ? $pqr->lastPage() : 'NO PAGINATOR' }}</p>
+    <p>Página actual: {{ method_exists($pqr, 'currentPage') ? $pqr->currentPage() : 'NO PAGINATOR' }}</p> --}}
+    @else
+        <div class="empty-state-wrapper">
+            <div class="empty-state-card">
+                <div class="empty-state-icon">
+                    <div class="icon-circle">
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
                 </div>
 
-                <div class="card-actions">
-                    <a href="{{ route('pqr.edit', $item->id) }}" class="btn-action">
-                        <i class="fas fa-edit"></i>
-                    </a>
+                <h3 class="empty-state-title">No hay PQR registradas</h3>
 
-                    <button onclick="confirmDelete({{ $item->id }})" class="btn-action danger">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                <p class="empty-state-description">
+                    @if (request('dependency') || request('status'))
+                        No se encontraron PQR que coincidan con los filtros seleccionados.
+                        <br>Intenta ajustar tus criterios de búsqueda.
+                    @else
+                        Aún no has registrado ninguna Petición, Queja o Reclamo.
+                        <br>Comienza creando tu primera PQR.
+                    @endif
+                </p>
 
-                    <button class="btn-action warning btn-edit" data-id="{{ $item->id }}"
-                        data-state="{{ $item->state }}">
-                        <i class="fas {{ $item->state ? 'fa-rotate-left' : 'fa-check' }}"></i>
-                    </button>
+                <div class="empty-state-actions">
+                    @if (request('dependency') || request('status'))
+                        <button onclick="clearFilters()" class="btn-empty-primary">
+                            <i class="fas fa-redo-alt"></i>
+                            Limpiar filtros
+                        </button>
+                    @else
+                        <a href="{{ route('pqr.create') }}" class="btn-empty-primary">
+                            <i class="fas fa-plus-circle"></i>
+                            Crear primera PQR
+                        </a>
+                    @endif
+
+
                 </div>
 
-            </div>
-        </div>
-    @endforeach
-@else
-    <div class="empty-state-wrapper">
-        <div class="empty-state-card">
-            <div class="empty-state-icon">
-                <div class="icon-circle">
-                    <i class="fas fa-clipboard-list"></i>
+                <!-- Ilustración decorativa -->
+                <div class="empty-state-illustration">
+                    <svg width="200" height="160" viewBox="0 0 200 160" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <!-- Documento principal -->
+                        <rect x="40" y="30" width="120" height="100" rx="8" fill="#f0fdf4" stroke="#4cd137"
+                            stroke-width="2" />
+
+                        <!-- Líneas de texto -->
+                        <line x1="60" y1="50" x2="140" y2="50" stroke="#86efac"
+                            stroke-width="3" stroke-linecap="round" />
+                        <line x1="60" y1="65" x2="120" y2="65" stroke="#86efac"
+                            stroke-width="3" stroke-linecap="round" />
+                        <line x1="60" y1="80" x2="130" y2="80" stroke="#86efac"
+                            stroke-width="3" stroke-linecap="round" />
+
+                        <!-- Ícono de búsqueda -->
+                        <circle cx="100" cy="105" r="12" fill="white" stroke="#4cd137" stroke-width="2" />
+                        <line x1="109" y1="114" x2="118" y2="123" stroke="#4cd137"
+                            stroke-width="2" stroke-linecap="round" />
+
+                        <!-- Partículas decorativas -->
+                        <circle cx="30" cy="40" r="3" fill="#86efac" opacity="0.6" />
+                        <circle cx="170" cy="50" r="4" fill="#4ade80" opacity="0.5" />
+                        <circle cx="180" cy="100" r="3" fill="#86efac" opacity="0.6" />
+                        <circle cx="25" cy="100" r="4" fill="#4ade80" opacity="0.5" />
+                    </svg>
                 </div>
             </div>
-
-            <h3 class="empty-state-title">No hay PQR registradas</h3>
-
-            <p class="empty-state-description">
-                @if (request('dependency') || request('status'))
-                    No se encontraron PQR que coincidan con los filtros seleccionados.
-                    <br>Intenta ajustar tus criterios de búsqueda.
-                @else
-                    Aún no has registrado ninguna Petición, Queja o Reclamo.
-                    <br>Comienza creando tu primera PQR.
-                @endif
-            </p>
-
-            <div class="empty-state-actions">
-                @if (request('dependency') || request('status'))
-                    <button onclick="clearFilters()" class="btn-empty-primary">
-                        <i class="fas fa-redo-alt"></i>
-                        Limpiar filtros
-                    </button>
-                @else
-                    <a href="{{ route('pqr.create') }}" class="btn-empty-primary">
-                        <i class="fas fa-plus-circle"></i>
-                        Crear primera PQR
-                    </a>
-                @endif
-
-
-            </div>
-
-            <!-- Ilustración decorativa -->
-            <div class="empty-state-illustration">
-                <svg width="200" height="160" viewBox="0 0 200 160" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <!-- Documento principal -->
-                    <rect x="40" y="30" width="120" height="100" rx="8" fill="#f0fdf4" stroke="#4cd137"
-                        stroke-width="2" />
-
-                    <!-- Líneas de texto -->
-                    <line x1="60" y1="50" x2="140" y2="50" stroke="#86efac" stroke-width="3"
-                        stroke-linecap="round" />
-                    <line x1="60" y1="65" x2="120" y2="65" stroke="#86efac" stroke-width="3"
-                        stroke-linecap="round" />
-                    <line x1="60" y1="80" x2="130" y2="80" stroke="#86efac" stroke-width="3"
-                        stroke-linecap="round" />
-
-                    <!-- Ícono de búsqueda -->
-                    <circle cx="100" cy="105" r="12" fill="white" stroke="#4cd137" stroke-width="2" />
-                    <line x1="109" y1="114" x2="118" y2="123" stroke="#4cd137" stroke-width="2"
-                        stroke-linecap="round" />
-
-                    <!-- Partículas decorativas -->
-                    <circle cx="30" cy="40" r="3" fill="#86efac" opacity="0.6" />
-                    <circle cx="170" cy="50" r="4" fill="#4ade80" opacity="0.5" />
-                    <circle cx="180" cy="100" r="3" fill="#86efac" opacity="0.6" />
-                    <circle cx="25" cy="100" r="4" fill="#4ade80" opacity="0.5" />
-                </svg>
-            </div>
         </div>
-    </div>
-@endif
+    @endif
+</div>
 
+{{-- Estilos en public/css/segagro.css --}}
 <style>
     /* Botones de acción en las tarjetas */
     .card-actions {
@@ -518,254 +526,3 @@
         }
     }
 </style>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-
-        let deleteId = null;
-
-        // =========================
-        // MODALES
-        // =========================
-        window.openFilterModal = () => {
-            document.getElementById('filterModal').style.display = 'flex';
-        };
-
-        window.closeFilterModal = () => {
-            document.getElementById('filterModal').style.display = 'none';
-        };
-
-        window.openOrderModal = () => {
-            document.getElementById('orderModal').style.display = 'flex';
-        };
-
-        window.closeOrderModal = () => {
-            document.getElementById('orderModal').style.display = 'none';
-        };
-
-        // =========================
-        // 🔥 CORE: REFRESH GRID
-        // =========================
-        window.refreshGrid = () => {
-
-            const dependency = document.getElementById('filterDependency').value;
-            const status = document.getElementById('filterStatus').value;
-            const order_color = document.getElementById('orderColor').value;
-
-            fetch(`{{ route('pqr.index') }}?` + new URLSearchParams({
-                    dependency,
-                    status,
-                    order_color
-                }), {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('pqrGrid').innerHTML = html;
-                });
-        };
-
-        // =========================
-        // FILTROS
-        // =========================
-        window.applyFilters = () => {
-            closeFilterModal();
-            closeOrderModal();
-            refreshGrid();
-        };
-
-        window.clearFilters = () => {
-            document.getElementById('filterDependency').value = '';
-            document.getElementById('filterStatus').value = '';
-            document.getElementById('orderColor').value = '';
-            refreshGrid();
-        };
-
-        // =========================
-        // DELETE AJAX 🔥
-        // =========================
-        window.confirmDelete = (id) => {
-            deleteId = id;
-            document.getElementById('confirmModal').classList.add('show');
-        };
-
-        document.getElementById('cancelDelete').addEventListener('click', () => {
-            document.getElementById('confirmModal').classList.remove('show');
-            deleteId = null;
-        });
-
-        document.getElementById('acceptDelete').addEventListener('click', () => {
-            if (!deleteId) return;
-
-            fetch(`/pqr/${deleteId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(() => {
-
-                    const modal = document.getElementById('confirmModal');
-                    modal.classList.remove('show');
-
-                    deleteId = null;
-
-                    notify("PQR eliminada correctamente");
-
-                    // 🔥 pequeño delay para UX
-                    setTimeout(() => {
-                        refreshGrid();
-                    }, 150);
-
-                })
-                .catch(() => alert('Error al eliminar'));
-        });
-
-        // =========================
-        // TOGGLE ESTADO AJAX 🔥
-        // =========================
-        window.toggleState = (id) => {
-            fetch(`/pqr/${id}/toggle-state`, {
-                    method: 'PATCH',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(() => {
-                    notify("Estado actualizado");
-                    refreshGrid(); // 🔥 sin reload
-                })
-                .catch(() => alert('Error al cambiar estado'));
-        };
-
-        // =========================
-        // TOAST PRO
-        // =========================
-        window.notify = (msg) => {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerText = msg;
-
-            document.body.appendChild(toast);
-
-            setTimeout(() => toast.classList.add('show'), 50);
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
-
-        // =========================
-        // TOOLTIP SLA
-        // =========================
-        const tooltip = document.getElementById('slaTooltip');
-
-        document.addEventListener('mousemove', (e) => {
-
-            const bar = e.target.closest('.sla-fill');
-
-            if (!bar) {
-                tooltip.classList.remove('show');
-                return;
-            }
-
-            const elapsed = parseFloat(bar.dataset.elapsed);
-            const total = parseFloat(bar.dataset.total);
-            const unit = bar.dataset.unit;
-
-            const percent = Math.round((elapsed / total) * 100);
-
-            tooltip.innerHTML = `
-            <div style="font-weight:600">
-                ${elapsed.toFixed(1)} ${unit}
-            </div>
-            <div style="font-size:11px; opacity:.7">
-                de ${total} ${unit} (${percent}%)
-            </div>
-        `;
-
-            tooltip.style.left = e.clientX + 'px';
-            tooltip.style.top = e.clientY + 'px';
-
-            tooltip.classList.add('show');
-        });
-
-        // =========================
-        // 🔥 AUTO-REFRESH (TIEMPO REAL SIMPLE)
-        // =========================
-        setInterval(() => {
-
-            const isModalOpen =
-                document.getElementById('confirmModal')?.classList.contains('show') ||
-                document.getElementById('editModal')?.classList.contains('show');
-
-            if (!isModalOpen) {
-                refreshGrid();
-            }
-
-        }, 15000);
-
-        window.openEditModal = (id, state, isTutela) => {
-            document.getElementById('editId').value = id;
-            document.getElementById('editState').value = state ? 1 : 0;
-
-            document.getElementById('editModal').classList.add('show');
-        };
-
-        window.closeEditModal = () => {
-            document.getElementById('editModal').classList.remove('show');
-        };
-
-        window.updatePqr = () => {
-            const id = document.getElementById('editId').value;
-            const state = document.getElementById('editState').value;
-
-            fetch(`/pqr/${id}/toggle-state`, { // <-- ruta correcta
-                    method: 'PATCH', // PATCH ya es el método correcto
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({ // solo enviamos state
-                        state: state
-                    })
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Error al actualizar');
-                    return res.json();
-                })
-                .then(() => {
-                    // Cierra el modal
-                    closeEditModal();
-
-                    // Notificación
-                    notify("PQR actualizada correctamente");
-
-                    // Refresca la grilla
-                    setTimeout(() => {
-                        refreshGrid();
-                    }, 150);
-                })
-                .catch(() => alert('Error al actualizar'));
-        };
-
-        document.addEventListener('click', (e) => {
-
-            const btn = e.target.closest('.btn-edit');
-            if (!btn) return;
-
-            openEditModal(
-                btn.dataset.id,
-                btn.dataset.state,
-            );
-
-        });
-
-    });
-</script>

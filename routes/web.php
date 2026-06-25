@@ -36,6 +36,11 @@ use App\Http\Controllers\Dependency\DependencyController;
 use App\Http\Controllers\Area\AreaController;
 use App\Http\Controllers\Area\RoomController;
 
+// Académico
+use App\Http\Controllers\Ficha\FichaController;
+use App\Http\Controllers\Horario\HorarioController;
+use App\Http\Controllers\Instructor\InstructorController;
+
 /*
 |--------------------------------------------------------------------------
 | PUBLIC
@@ -154,13 +159,37 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/create', [SalidaFerreteriaController::class, 'create'])->name('create');
             Route::post('/', [SalidaFerreteriaController::class, 'store'])->name('store');
         });
+
+        Route::middleware('permission:inventario.view')->get('/{salidaFerreteria}', [SalidaFerreteriaController::class, 'show'])->name('show');
+
+        Route::middleware('permission:inventario.edit')->group(function () {
+            Route::get('/{salidaFerreteria}/edit', [SalidaFerreteriaController::class, 'edit'])->name('edit');
+            Route::put('/{salidaFerreteria}', [SalidaFerreteriaController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('permission:inventario.delete')->delete('/{salidaFerreteria}', [SalidaFerreteriaController::class, 'destroy'])->name('destroy');
     });
 
     /*
     | SEMOVIENTE
     */
-    Route::prefix('semoviente')->name('semoviente.')->middleware('permission:semoviente.view')->group(function () {
-        Route::get('/', [SemovienteController::class, 'index'])->name('index');
+    Route::prefix('semoviente')->name('semoviente.')->group(function () {
+        Route::middleware('permission:semoviente.view')->get('/', [SemovienteController::class, 'index'])->name('index');
+
+        // Literal routes MUST come before wildcard {semoviente}
+        Route::middleware('permission:semoviente.create')->group(function () {
+            Route::get('/crear', [SemovienteController::class, 'create'])->name('create');
+            Route::post('/', [SemovienteController::class, 'store'])->name('store');
+        });
+
+        Route::middleware('permission:semoviente.view')->get('/{semoviente}', [SemovienteController::class, 'show'])->name('show');
+
+        Route::middleware('permission:semoviente.edit')->group(function () {
+            Route::get('/{semoviente}/editar', [SemovienteController::class, 'edit'])->name('edit');
+            Route::put('/{semoviente}', [SemovienteController::class, 'update'])->name('update');
+        });
+        Route::middleware('permission:semoviente.delete')
+            ->delete('/{semoviente}', [SemovienteController::class, 'destroy'])->name('destroy');
     });
 
     /*
@@ -172,10 +201,13 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('permission:infraestructura.view')->get('/', [InfraestructuraController::class, 'index'])->name('index');
 
+        // Literal routes MUST come before wildcard {infraestructura}
         Route::middleware('permission:infraestructura.create')->group(function () {
             Route::get('/create', [InfraestructuraController::class, 'create'])->name('create');
             Route::post('/store', [InfraestructuraController::class, 'store'])->name('store');
         });
+
+        Route::middleware('permission:infraestructura.view')->get('/{infraestructura}', [InfraestructuraController::class, 'show'])->name('show');
 
         Route::middleware('permission:infraestructura.edit')->group(function () {
             Route::get('/{infraestructura}/edit', [InfraestructuraController::class, 'edit'])->name('edit');
@@ -228,7 +260,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('permission:pqr.delete')->delete('/{pqr}', [PqrController::class, 'destroy'])->name('destroy');
 
-        Route::patch('/{pqr}/toggle-state', [PqrController::class, 'toggleState'])->name('pqr.toggleState')->middleware('permission:pqr.edit');
+        Route::patch('/{pqr}/toggle-state', [PqrController::class, 'toggleState'])->name('toggleState')->middleware('permission:pqr.edit');
     });
 
     /*
@@ -239,6 +271,9 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('traslados')->name('traslados.')->group(function () {
 
         Route::middleware('permission:traslados.view')->get('/', [NeedTransferController::class, 'index'])->name('index');
+
+        // AJAX: buscar materiales para el formulario de traslado
+        Route::middleware('permission:traslados.view')->get('/buscar-materiales', [NeedTransferController::class, 'buscarMateriales'])->name('buscar-materiales');
 
         Route::middleware('permission:traslados.create')->group(function () {
             Route::get('/crear', [NeedTransferController::class, 'create'])->name('create');
@@ -315,6 +350,83 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/centros/{centro}/sedes-areas', [SedeController::class, 'ajaxSedesAreas']);
     Route::get('/centros/{centro}/sedes-centro', [SedeController::class, 'ajaxSedesCentro']);
+
+    /*
+    |--------------------------------------------------
+    | INSTRUCTORES
+    |--------------------------------------------------
+    */
+    Route::prefix('instructores')->name('instructores.')->group(function () {
+        Route::get('/',                   [InstructorController::class, 'index'])->name('index');
+        Route::post('/',                  [InstructorController::class, 'store'])->name('store');
+        Route::get('/plantilla',          [InstructorController::class, 'downloadTemplate'])->name('template');
+        Route::post('/importar',          [InstructorController::class, 'importar'])->name('importar');
+        Route::get('/{instructor}',       [InstructorController::class, 'show'])->name('show');
+        Route::put('/{instructor}',       [InstructorController::class, 'update'])->name('update');
+        Route::delete('/{instructor}',    [InstructorController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+    |--------------------------------------------------
+    | FICHAS (Cursos SENA)
+    |--------------------------------------------------
+    */
+    Route::prefix('fichas')->name('fichas.')->group(function () {
+        Route::get('/', [FichaController::class, 'index'])->name('index');
+        Route::post('/', [FichaController::class, 'store'])->name('store');
+        Route::get('/{ficha}', [FichaController::class, 'show'])->name('show');
+        Route::put('/{ficha}', [FichaController::class, 'update'])->name('update');
+        Route::delete('/{ficha}', [FichaController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+    |--------------------------------------------------
+    | HORARIOS
+    |--------------------------------------------------
+    */
+    Route::prefix('horarios')->name('horarios.')->group(function () {
+        Route::get('/',                    [HorarioController::class, 'index'])->name('index');
+        Route::post('/',                   [HorarioController::class, 'store'])->name('store');
+        Route::get('/plantilla',           [HorarioController::class, 'downloadTemplate'])->name('template');
+        Route::post('/importar',           [HorarioController::class, 'importar'])->name('importar');
+        Route::get('/salones',             [HorarioController::class, 'salonesDisponibles'])->name('salones');
+        Route::get('/por-salon',           [HorarioController::class, 'porSalon'])->name('porSalon');
+        Route::get('/areas-by-centro',     [HorarioController::class, 'areasByCentro'])->name('areasByCentro');
+        Route::get('/{horario}',           [HorarioController::class, 'show'])->name('show');
+        Route::put('/{horario}',           [HorarioController::class, 'update'])->name('update');
+        Route::delete('/{horario}',        [HorarioController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+    |--------------------------------------------------
+    | EXPORTS
+    |--------------------------------------------------
+    */
+    Route::prefix('exports')->name('exports.')->middleware('permission:contratos.view')->group(function () {
+        Route::get('/contratos', [\App\Http\Controllers\Exports\ExportController::class, 'contratos'])->name('contratos');
+        Route::get('/pqr', [\App\Http\Controllers\Exports\ExportController::class, 'pqr'])->name('pqr')->withoutMiddleware('permission:contratos.view')->middleware('permission:pqr.view');
+        Route::get('/traslados', [\App\Http\Controllers\Exports\ExportController::class, 'traslados'])->name('traslados')->withoutMiddleware('permission:contratos.view')->middleware('permission:traslados.view');
+    });
+
+    /*
+    |--------------------------------------------------
+    | AUDIT LOG
+    |--------------------------------------------------
+    */
+    Route::get('/audit-log', [\App\Http\Controllers\AuditController::class, 'index'])
+        ->middleware('role:SuperAdministrador')
+        ->name('audit.index');
+
+    /*
+    |--------------------------------------------------
+    | NOTIFICACIONES
+    |--------------------------------------------------
+    */
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::post('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('markAllRead');
+        Route::delete('/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__ . '/auth.php';

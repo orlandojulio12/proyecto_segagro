@@ -2,86 +2,127 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Budget\GeneralBudget;
+use App\Models\Complaint\pqr;
 use App\Models\Contract\Contract;
 use App\Models\Infraestructura\Infraestructura;
 use App\Models\Traslado\NeedTransfer;
-use App\Models\Complaint\pqr;
+use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        /* ================= CARDS ================= */
-        $totalContratos = Contract::count() ?? 0;
-        $totalUsuarios  = User::count() ?? 0;
+        // Conteos generales
+        $totalContratos    = Contract::count();
+        $totalUsuarios     = User::count();
+        $totalInfra        = Infraestructura::count();
+        $totalTraslados    = NeedTransfer::count();
+        $totalNecesidades  = $totalInfra + $totalTraslados;
+        $totalPqr          = Pqr::count();
 
-        $totalInfra     = Infraestructura::count() ?? 0;
-        $totalTraslados = NeedTransfer::count() ?? 0;
-
-        $totalNecesidades = $totalInfra + $totalTraslados;
-        $totalPqr = pqr::count() ?? 0;
-
-        /* ================= PRESUPUESTO ================= */
+        // Presupuesto agregado
         $presupuestoSolicitado =
-            (Infraestructura::sum('presupuesto_solicitado') ?? 0)
-            + (NeedTransfer::sum('presupuesto_solicitado') ?? 0);
+            Infraestructura::sum('presupuesto_solicitado')
+            + NeedTransfer::sum('presupuesto_solicitado');
 
         $presupuestoAceptado =
-            (Infraestructura::sum('presupuesto_aceptado') ?? 0)
-            + (NeedTransfer::sum('presupuesto_aceptado') ?? 0);
+            Infraestructura::sum('presupuesto_aceptado')
+            + NeedTransfer::sum('presupuesto_aceptado');
 
         $balance = $presupuestoAceptado - $presupuestoSolicitado;
 
-        /* ================= EVENTOS ================= */
+        // Datos reales para gráfica de presupuesto por mes (últimos 6 meses)
+        $meses = collect(range(5, 0))->map(fn($i) => Carbon::now()->subMonths($i));
 
-        $infraEventos = Infraestructura::get()->map(fn($i) => [
-            'type'  => 'infra',
-            'title' => 'Infraestructura: ' . str($i->descripcion)->limit(30),
-            'date'  => optional($i->fecha_inicio)->format('Y-m-d'),
-            'color' => '#2563eb',
-        ])->filter(fn($e) => $e['date']);
+        $presupuestoPorMes = $meses->map(fn($mes) => [
+            'label'     => $mes->translatedFormat('M Y'),
+            'solicitado' => Infraestructura::whereYear('created_at', $mes->year)
+                ->whereMonth('created_at', $mes->month)
+                ->sum('presupuesto_solicitado')
+                + NeedTransfer::whereYear('created_at', $mes->year)
+                ->whereMonth('created_at', $mes->month)
+                ->sum('presupuesto_solicitado'),
+            'aceptado'  => Infraestructura::whereYear('created_at', $mes->year)
+                ->whereMonth('created_at', $mes->month)
+                ->sum('presupuesto_aceptado')
+                + NeedTransfer::whereYear('created_at', $mes->year)
+                ->whereMonth('created_at', $mes->month)
+                ->sum('presupuesto_aceptado'),
+        ]);
 
-        $trasladoEventos = NeedTransfer::get()->map(fn($t) => [
-            'type'  => 'traslado',
-            'title' => 'Traslado: ' . str($t->descripcion)->limit(30),
-            'date'  => optional($t->fecha_inicio)->format('Y-m-d'),
-            'color' => '#16a34a',
-        ])->filter(fn($e) => $e['date']);
+        // Datos reales para gráfica de PQR por estado (umbrales: 10 días normales / 72h tutela)
+        $pqrPorEstado = [
+            'en_tiempo'  => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) <= 4")->count()
+                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) < 24")->count(),
+            'por_vencer' => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) BETWEEN 5 AND 8")->count()
+                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 24 AND 48")->count(),
+            'urgente'    => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) = 9")->count()
+                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 48 AND 72")->count(),
+            'vencido'    => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) >= 10")->count()
+                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) >= 72")->count(),
+            'finalizada' => Pqr::where('state', 1)->count(),
+        ];
 
-        // 🔴 PQR / Tutela
-        $pqrEventos = Pqr::get()->map(function ($p) {
-            if ($p->is_tutela && $p->horas_tutela) {
-                $fechaInicio = Carbon::parse($p->date); // fecha inicial de la tutela
-                $fechaLimite = (clone $fechaInicio)->addHours($p->horas_tutela);
+        // Contratos por estado
+        $contratosPorEstado = [
+            'activos'   => Contract::active()->count(),
+            'vencidos'  => Contract::expired()->count(),
+            'pendientes' => Contract::pending()->count(),
+        ];
 
-                $label = 'Tutela: ' . \Str::limit($p->title, 30);
+        // Eventos próximos (solo 60 días) — limitamos en BD, no en PHP
+        $limite = Carbon::now()->addDays(60)->toDateString();
+        $hoy    = Carbon::now()->toDateString();
+
+        $infraEventos = Infraestructura::whereNotNull('fecha_inicio')
+            ->whereBetween('fecha_inicio', [$hoy, $limite])
+            ->select('id', 'descripcion', 'fecha_inicio')
+            ->get()
+            ->map(fn($i) => [
+                'type'  => 'infra',
+                'title' => 'Infraestructura: ' . str($i->descripcion)->limit(30),
+                'date'  => $i->fecha_inicio->format('Y-m-d'),
+                'color' => '#2563eb',
+            ]);
+
+        $trasladoEventos = NeedTransfer::whereNotNull('fecha_inicio')
+            ->whereBetween('fecha_inicio', [$hoy, $limite])
+            ->select('id', 'descripcion', 'fecha_inicio')
+            ->get()
+            ->map(fn($t) => [
+                'type'  => 'traslado',
+                'title' => 'Traslado: ' . str($t->descripcion)->limit(30),
+                'date'  => $t->fecha_inicio->format('Y-m-d'),
+                'color' => '#16a34a',
+            ]);
+
+        $pqrEventos = Pqr::where('state', 0)
+            ->whereNotNull('date')
+            ->select('id', 'title', 'date', 'is_tutela', 'horas_tutela')
+            ->get()
+            ->map(function ($p) use ($limite) {
+                $fechaLimite = $p->is_tutela
+                    ? Carbon::parse($p->date)->addHours($p->horas_tutela ?? 72)
+                    : Carbon::parse($p->date)->addDays(12);
+
+                if ($fechaLimite->toDateString() > $limite) {
+                    return null;
+                }
+
                 $isExpired = now()->gt($fechaLimite);
 
                 return [
-                    'type'       => 'tutela',
-                    'title'      => $label,
-                    'date'       => $fechaLimite->format('Y-m-d'), // se usa la fecha límite para ubicar en el calendario
-                    'hora_inicio' => $fechaInicio->format('H:i'),
-                    'hora_fin'   => $fechaLimite->format('H:i'),
-                    'color'      => $isExpired ? '#dc2626' : '#f97316',
-                    'expired'    => $isExpired,
-                ];
-            } else {
-                $fechaLimite = Carbon::parse($p->date)->addDays(12);
-                $label = 'PQR: ' . \Str::limit($p->title, 30);
-                $isExpired = now()->gt($fechaLimite);
-
-                return [
-                    'type'    => 'pqr',
-                    'title'   => $label,
+                    'type'    => $p->is_tutela ? 'tutela' : 'pqr',
+                    'title'   => ($p->is_tutela ? 'Tutela: ' : 'PQR: ') . str($p->title)->limit(30),
                     'date'    => $fechaLimite->format('Y-m-d'),
                     'color'   => $isExpired ? '#dc2626' : '#f59e0b',
                     'expired' => $isExpired,
                 ];
-            }
-        });
+            })
+            ->filter();
 
         $eventosCalendario = collect()
             ->merge($infraEventos)
@@ -97,7 +138,10 @@ class DashboardController extends Controller
             'presupuestoSolicitado',
             'presupuestoAceptado',
             'balance',
-            'eventosCalendario'
+            'eventosCalendario',
+            'presupuestoPorMes',
+            'pqrPorEstado',
+            'contratosPorEstado',
         ));
     }
 }

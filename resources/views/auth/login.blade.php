@@ -17,13 +17,29 @@
         
         <form class="login-form" method="POST" action="{{ route('login') }}">
             @csrf
+
             @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul>
+                <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-left:4px solid #dc2626;
+                            border-radius:10px;padding:14px 16px;margin-bottom:20px;
+                            display:flex;align-items:flex-start;gap:12px;">
+                    <i class="fas fa-exclamation-circle" style="color:#dc2626;font-size:18px;margin-top:1px;flex-shrink:0;"></i>
+                    <div>
+                        <div style="font-weight:700;color:#b91c1c;font-size:14px;margin-bottom:4px;">
+                            Credenciales incorrectas
+                        </div>
                         @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
+                            <div style="color:#991b1b;font-size:13px;">{{ $error }}</div>
                         @endforeach
-                    </ul>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('status'))
+                <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-left:4px solid #16a34a;
+                            border-radius:10px;padding:14px 16px;margin-bottom:20px;
+                            display:flex;align-items:center;gap:12px;">
+                    <i class="fas fa-check-circle" style="color:#16a34a;font-size:18px;flex-shrink:0;"></i>
+                    <span style="color:#15803d;font-size:14px;">{{ session('status') }}</span>
                 </div>
             @endif
             

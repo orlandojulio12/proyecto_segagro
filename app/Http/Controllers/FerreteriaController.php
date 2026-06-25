@@ -17,6 +17,9 @@ use App\Exports\MaterialesTemplateExport;
 
 class FerreteriaController extends Controller
 {
+    // Filas del template: 10 de instrucciones + 1 de encabezado (fila 11)
+    private const EXCEL_DATA_START_ROW = 11;
+
     public function index()
     {
         $inventories = InventorySede::with(['sede.centro', 'staff', 'materials'])->latest('record_date')->get();
@@ -134,9 +137,8 @@ public function importMaterials(Request $request)
 
         $data = [];
         
-        // IMPORTANTE: Saltar las primeras 11 filas (instrucciones + encabezado)
         foreach ($rows[0] as $index => $row) {
-            if ($index < 11) continue; // Saltar instrucciones
+            if ($index < self::EXCEL_DATA_START_ROW) continue;
             
             // Validar que la fila no esté vacía
             if (empty($row[0]) || empty($row[1])) continue;
@@ -205,14 +207,16 @@ public function importMaterials(Request $request)
         $request->validate([
             'sede_id' => 'required|exists:sedes,id',
             'responsible_department' => 'required|string|max:255',
-            'staff_name' => 'required|exists:users',
+            'staff_name' => 'required|exists:users,id',
             'inventory_description' => 'required|string',
             'image_inventory' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'materials' => 'required|array|min:1',
             'materials.*.material_name' => 'required|string|max:255',
             'materials.*.material_quantity' => 'required|integer|min:1',
             'materials.*.material_type' => 'nullable|string|max:100',
-            'materials.*.material_price' => 'nullable|numeric|min:0'
+            'materials.*.material_price' => 'required|numeric|min:0',
+            'materials.*.iva_percentage' => 'required|in:0,5,12,19',
+            'materials.*.observations' => 'nullable|string|max:500',
         ]);
 
         DB::transaction(function () use ($request, $inventory) {
@@ -239,17 +243,25 @@ public function importMaterials(Request $request)
                 'inventory_description' => $request->inventory_description
             ]);
 
-            // Eliminar materiales existentes
             $inventory->materials()->delete();
 
-            // Crear nuevos materiales
             foreach ($request->materials as $material) {
+                $quantity = $material['material_quantity'];
+                $price = $material['material_price'];
+                $iva = $material['iva_percentage'];
+                $totalWithoutTax = $quantity * $price;
+                $totalWithTax = $totalWithoutTax + ($totalWithoutTax * $iva / 100);
+
                 InventoryMaterial::create([
                     'inventory_id' => $inventory->id,
                     'material_name' => $material['material_name'],
-                    'material_quantity' => $material['material_quantity'],
+                    'material_quantity' => $quantity,
                     'material_type' => $material['material_type'] ?? null,
-                    'material_price' => $material['material_price'] ?? null
+                    'material_price' => $price,
+                    'iva_percentage' => $iva,
+                    'total_without_tax' => $totalWithoutTax,
+                    'total_with_tax' => $totalWithTax,
+                    'observations' => $material['observations'] ?? null,
                 ]);
             }
         });
@@ -260,6 +272,9 @@ public function importMaterials(Request $request)
     public function destroy(InventorySede $inventory)
     {
         DB::transaction(function () use ($inventory) {
+            if ($inventory->image_inventory && \Storage::disk('public')->exists($inventory->image_inventory)) {
+                \Storage::disk('public')->delete($inventory->image_inventory);
+            }
             $inventory->materials()->delete();
             $inventory->delete();
         });

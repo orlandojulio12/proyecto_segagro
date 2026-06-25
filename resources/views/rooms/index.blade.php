@@ -13,10 +13,127 @@
             </div>
         </div>
 
-        <a href="{{ route('rooms.create') }}" class="btn btn-add-dependency">
+        <button onclick="openDrawer('roomDrawer')" class="btn btn-add-dependency" type="button">
             <i class="fas fa-plus"></i>
-            <span>Nuevo Salon</span>
-        </a>
+            <span>Nuevo Salón</span>
+        </button>
+    </div>
+
+    {{-- ══ DRAWER CREAR SALÓN ══ --}}
+    <div class="sg-drawer-overlay" id="roomDrawerOverlay"></div>
+    <div class="sg-drawer" id="roomDrawer">
+        <div class="sg-drawer-header">
+            <h5><i class="fas fa-chalkboard drawer-icon"></i> Nuevo Salón</h5>
+            <button type="button" class="sg-drawer-close" onclick="closeDrawer('roomDrawer')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sg-drawer-body">
+            <form id="roomCreateForm" action="{{ route('rooms.store') }}" method="POST">
+                @csrf
+                {{-- Selector de Centro y Sede --}}
+                <x-centros-sedes-selector :centros="$centros" prefix="sala" />
+
+                {{-- Área filtrada por sede --}}
+                <div class="mb-3">
+                    <label>Área <span class="text-danger">*</span></label>
+                    <select name="area_id" id="salaAreaSelect" class="form-control" required disabled>
+                        <option value="">Seleccione primero una sede…</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Nombre del Salón <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Código</label>
+                    <input type="text" name="code" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Capacidad</label>
+                    <input type="number" name="capacity" class="form-control" min="1">
+                </div>
+                <div class="mb-3">
+                    <label>Tipo de Ambiente</label>
+                    <select name="type" class="form-control">
+                        @foreach(\App\Models\Area\Room::TIPOS as $val => $label)
+                        <option value="{{ $val }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="active" value="1" checked>
+                    <label class="form-check-label">Activo</label>
+                </div>
+            </form>
+        </div>
+        <div class="sg-drawer-footer">
+            <button type="button" class="sg-btn sg-btn-secondary" onclick="closeDrawer('roomDrawer')">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" form="roomCreateForm" class="sg-btn sg-btn-primary">
+                <i class="fas fa-save"></i> Guardar Salón
+            </button>
+        </div>
+    </div>
+
+    {{-- ══ DRAWER EDITAR SALÓN ══ --}}
+    <div class="sg-drawer-overlay" id="roomEditDrawerOverlay"></div>
+    <div class="sg-drawer" id="roomEditDrawer">
+        <div class="sg-drawer-header">
+            <h5><i class="fas fa-pen drawer-icon"></i> Editar Salón</h5>
+            <button type="button" class="sg-drawer-close" onclick="closeDrawer('roomEditDrawer')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sg-drawer-body">
+            <form id="roomEditForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="mb-3">
+                    <label>Área <span class="text-danger">*</span></label>
+                    <select name="area_id" id="editRoomArea" class="form-control" required>
+                        <option value="">Seleccione un área</option>
+                        @foreach($areas as $a)
+                        <option value="{{ $a->id }}">{{ $a->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Nombre del Salón <span class="text-danger">*</span></label>
+                    <input type="text" name="name" id="editRoomName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Código</label>
+                    <input type="text" name="code" id="editRoomCode" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Capacidad</label>
+                    <input type="number" name="capacity" id="editRoomCapacity" class="form-control" min="1">
+                </div>
+                <div class="mb-3">
+                    <label>Tipo de Ambiente</label>
+                    <select name="type" id="editRoomType" class="form-control">
+                        @foreach(\App\Models\Area\Room::TIPOS as $val => $label)
+                        <option value="{{ $val }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="active" id="editRoomActive" value="1">
+                    <label class="form-check-label" for="editRoomActive">Activo</label>
+                </div>
+            </form>
+        </div>
+        <div class="sg-drawer-footer">
+            <button type="button" class="sg-btn sg-btn-secondary" onclick="closeDrawer('roomEditDrawer')">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" form="roomEditForm" class="sg-btn sg-btn-primary">
+                <i class="fas fa-save"></i> Actualizar Salón
+            </button>
+        </div>
     </div>
 
     {{-- ==== FILTROS CENTRO Y SEDE ==== --}}
@@ -359,6 +476,41 @@
 
 @push('scripts')
     <script>
+        function openRoomEditDrawer(btn) {
+            const d = btn.dataset;
+            document.getElementById('roomEditForm').action = '/rooms/' + d.roomId;
+            document.getElementById('editRoomName').value = d.roomName ?? '';
+            document.getElementById('editRoomCode').value = d.roomCode ?? '';
+            document.getElementById('editRoomCapacity').value = d.roomCapacity ?? '';
+            document.getElementById('editRoomActive').checked = d.roomActive === '1';
+            const areaSel = document.getElementById('editRoomArea');
+            for (let opt of areaSel.options) { opt.selected = String(opt.value) === String(d.roomArea); }
+            const typeSel = document.getElementById('editRoomType');
+            for (let opt of typeSel.options) { opt.selected = opt.value === d.roomType; }
+            openDrawer('roomEditDrawer');
+        }
+
+        // ── Área filter for room drawer ──
+        const allAreas = @json($areas->map(fn($a) => ['id' => $a->id, 'name' => $a->name, 'sede_id' => $a->sede_id]));
+
+        function filterAreasBySede(sedeId) {
+            const select = document.getElementById('salaAreaSelect');
+            const filtered = allAreas.filter(a => String(a.sede_id) === String(sedeId));
+            select.innerHTML = '<option value="">Seleccione un área</option>';
+            filtered.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id; opt.textContent = a.name;
+                select.appendChild(opt);
+            });
+            select.disabled = filtered.length === 0;
+        }
+
+        document.body.addEventListener('click', function(e) {
+            if (e.target.classList.contains('seleccionar-sede') && e.target.dataset.prefix === 'sala') {
+                setTimeout(() => filterAreasBySede(document.getElementById('sala_sede_id').value), 80);
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
 
             const centroSelect = document.getElementById('filtro_centro_id');
