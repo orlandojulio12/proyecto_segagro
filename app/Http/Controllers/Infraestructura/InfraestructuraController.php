@@ -141,113 +141,137 @@ class InfraestructuraController extends Controller
         }
     }
 
+    public function show(Infraestructura $infraestructura)
+    {
+        $infraestructura->load([
+            'dependencia',
+            'funcionario',
+            'centro',
+            'sede',
+            'room',
+            'needTransfers.centroInicial',
+            'needTransfers.sedeInicial',
+            'needTransfers.centroFinal',
+            'needTransfers.sedeFinal',
+        ]);
+
+        return view('Infraestructura.show', compact('infraestructura'));
+    }
+
+    public function destroy(Infraestructura $infraestructura)
+    {
+        if ($infraestructura->imagen && \Storage::disk('public')->exists($infraestructura->imagen)) {
+            \Storage::disk('public')->delete($infraestructura->imagen);
+        }
+
+        $infraestructura->needTransfers()->detach();
+        $infraestructura->delete();
+
+        return redirect()->route('infraestructura.index')
+            ->with('success', 'Infraestructura eliminada correctamente');
+    }
+
     public function edit(Infraestructura $infraestructura)
     {
-        $dependencias = Dependencia::all();
-        $users = User::all();
+        $units   = DependencyUnit::with('subunits')->get();
+        $users   = User::all();
         $centros = Centro::all();
-
-        // Solo las sedes del centro relacionado a esta infraestructura
-        $sedes = Sede::where('centro_id', $infraestructura->centro_id)->get();
+        $areas   = Area::where('active', true)->get();
+        $sedes   = Sede::all();
 
         return view('Infraestructura.edit', compact(
-            'Infraestructura',
-            'dependencias',
-            'users',
-            'centros',
-            'sedes'
+            'infraestructura', 'units', 'users', 'centros', 'sedes', 'areas'
         ));
     }
 
     public function update(Request $request, Infraestructura $infraestructura)
     {
         $validated = $request->validate([
-            'dependencia_id' => 'required|exists:dependencias,id',
-            'user_id' => 'required|exists:users,id',
-            'centro_id' => 'required|exists:centros,id',
-            'sede_id' => 'required|exists:sedes,id',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-            'nivel_riesgo' => 'required',
-            'nivel_prioridad' => 'required',
-            'tipo_necesidad' => 'required',
-            'status' => 'nullable|in:pendiente,completada,cancelada',
+            'user_id'           => 'required|exists:users,id',
+            'unidad_id'         => 'required|exists:dependency_units,dependency_unit_id',
+            'subunidad_id'      => 'required|exists:dependency_subunits,subunit_id',
+            'inicial_centro_id' => 'required|exists:centros,id',
+            'inicial_sede_id'   => 'required|exists:sedes,id',
+            'nivel_riesgo'      => 'required|in:1,2,3',
+            'tipo_necesidad'    => 'required|string',
+            'area_id'           => 'required|exists:areas,id',
+            'ambiente'          => 'required|exists:rooms,id',
+            'nivel_complejidad' => 'required|in:1,2,3',
+            'descripcion'       => 'required|string',
+            'motivo_necesidad'  => 'required|string',
+            'imagen'            => 'nullable|image|max:2048',
+            'requiere_traslado' => 'boolean',
+            'final_centro_id'   => 'required_if:requiere_traslado,1|nullable|exists:centros,id',
+            'final_sede_id'     => 'required_if:requiere_traslado,1|nullable|exists:sedes,id',
         ]);
 
         DB::beginTransaction();
         try {
+            $path = $infraestructura->imagen;
+            if ($request->hasFile('imagen')) {
+                if ($path && \Storage::disk('public')->exists($path)) {
+                    \Storage::disk('public')->delete($path);
+                }
+                $path = $request->file('imagen')->store('infraestructuras', 'public');
+            }
+
             $infraestructura->update([
-                ...$validated,
-                'ambiente' => $request->ambiente,
-                'descripcion' => $request->descripcion,
-                'motivo_necesidad' => $request->motivo_necesidad,
-                'requiere_traslado' => $request->requiere_traslado ? true : false,
-                'personal' => $request->personal ?? [],
-                'fuente_financiacion' => $request->fuente_financiacion,
-                'presupuesto_solicitado' => $request->presupuesto_solicitado,
-                'presupuesto_aceptado' => $request->presupuesto_aceptado,
+                'unidad_id'         => $validated['unidad_id'],
+                'subunidad_id'      => $validated['subunidad_id'],
+                'user_id'           => $validated['user_id'],
+                'centro_id'         => $validated['inicial_centro_id'],
+                'sede_id'           => $validated['inicial_sede_id'],
+                'nivel_riesgo'      => $validated['nivel_riesgo'],
+                'tipo_necesidad'    => $validated['tipo_necesidad'],
+                'area_necesidad'    => $validated['area_id'],
+                'ambiente'          => $validated['ambiente'],
+                'nivel_complejidad' => $validated['nivel_complejidad'],
+                'descripcion'       => $validated['descripcion'],
+                'motivo_necesidad'  => $validated['motivo_necesidad'],
+                'requiere_traslado' => $request->boolean('requiere_traslado'),
+                'centro_final_id'   => $validated['final_centro_id'] ?? null,
+                'sede_final_id'     => $validated['final_sede_id'] ?? null,
+                'imagen'            => $path,
             ]);
 
-            // ✅ Manejo de traslado
+            // Sync need transfer if required
             if ($infraestructura->requiere_traslado) {
-
-                // 1️⃣ Buscar si ya existe relación en la pivote
                 $existingRelation = DB::table('infraestructura_need_transfer')
-                    ->where('infraestructura_id', $infraestructura->id)
-                    ->first();
+                    ->where('infraestructura_id', $infraestructura->id)->first();
+
+                $ntData = [
+                    'user_id'           => $infraestructura->user_id,
+                    'unidad_id'         => $infraestructura->unidad_id,
+                    'subunidad_id'      => $infraestructura->subunidad_id,
+                    'centro_inicial_id' => $infraestructura->centro_id,
+                    'sede_inicial_id'   => $infraestructura->sede_id,
+                    'centro_final_id'   => $infraestructura->centro_final_id,
+                    'sede_final_id'     => $infraestructura->sede_final_id,
+                    'descripcion'       => $infraestructura->descripcion,
+                    'nivel_riesgo'      => $infraestructura->nivel_riesgo,
+                    'nivel_complejidad' => $infraestructura->nivel_complejidad,
+                    'status'            => 'pendiente',
+                ];
 
                 if ($existingRelation) {
-                    // 2️⃣ Ya existe → actualizamos el need_transfer
-                    $needTransfer = NeedTransfer::find($existingRelation->need_transfer_id);
-                    if ($needTransfer) {
-                        $needTransfer->update([
-                            'user_id' => $infraestructura->user_id,
-                            'dependencia_id' => $infraestructura->dependencia_id,
-                            'centro_inicial_id' => $infraestructura->centro_id,
-                            'sede_inicial_id' => $infraestructura->sede_id,
-                            'centro_final_id' => $request->centro_final_id,
-                            'sede_final_id' => $request->sede_final_id,
-                            'fecha_inicio' => $infraestructura->fecha_inicio,
-                            'fecha_fin' => $infraestructura->fecha_fin,
-                            'descripcion' => $infraestructura->descripcion,
-                            'nivel_riesgo' => $infraestructura->nivel_riesgo,
-                            'nivel_complejidad' => $request->nivel_complejidad ?? 'baja',
-                            'presupuesto_solicitado' => $infraestructura->presupuesto_solicitado,
-                            'requiere_personal' => $infraestructura->personal ? true : false,
-                            'requiere_materiales' => $request->has('materiales'),
-                        ]);
-                    }
+                    NeedTransfer::find($existingRelation->need_transfer_id)?->update($ntData);
                 } else {
-                    // 3️⃣ No existe → creamos nuevo need_transfer y la relación
-                    $needTransfer = NeedTransfer::create([
-                        'user_id' => $infraestructura->user_id,
-                        'dependencia_id' => $infraestructura->dependencia_id,
-                        'centro_inicial_id' => $infraestructura->centro_id,
-                        'sede_inicial_id' => $infraestructura->sede_id,
-                        'centro_final_id' => $request->centro_final_id,
-                        'sede_final_id' => $request->sede_final_id,
-                        'fecha_inicio' => $infraestructura->fecha_inicio,
-                        'fecha_fin' => $infraestructura->fecha_fin,
-                        'descripcion' => $infraestructura->descripcion,
-                        'nivel_riesgo' => $infraestructura->nivel_riesgo,
-                        'nivel_complejidad' => $request->nivel_complejidad ?? 'baja',
-                        'presupuesto_solicitado' => $infraestructura->presupuesto_solicitado,
-                        'requiere_personal' => $infraestructura->personal ? true : false,
-                        'requiere_materiales' => $request->has('materiales'),
-                    ]);
-
+                    $nt = NeedTransfer::create(array_merge($ntData, [
+                        'fecha_inicio' => now(),
+                        'fecha_fin'    => now()->addDays(12),
+                    ]));
                     DB::table('infraestructura_need_transfer')->insert([
                         'infraestructura_id' => $infraestructura->id,
-                        'need_transfer_id' => $needTransfer->id,
-                        'estado' => 'pendiente',
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'need_transfer_id'   => $nt->id,
+                        'estado'             => 'pendiente',
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
                     ]);
                 }
             }
 
             DB::commit();
-            return redirect()->route('Infraestructura.index')
+            return redirect()->route('infraestructura.index')
                 ->with('success', 'Infraestructura actualizada correctamente');
         } catch (\Exception $e) {
             DB::rollBack();

@@ -3,132 +3,139 @@
 @section('page-title', 'Semovientes')
 
 @section('dashboard-content')
-    <div class="section-header">
-        <div>
-            <h2>Gestión de Semovientes</h2>
-            <p>Administra los registros de nacimientos de semovientes</p>
+
+<div class="sg-page-header">
+    <div>
+        <h2>Gestión de Semovientes</h2>
+        <p>Administra los registros de nacimientos y semovientes</p>
+    </div>
+    <a href="{{ route('semoviente.create') }}" class="sg-btn sg-btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Semoviente
+    </a>
+</div>
+
+<div class="sg-card">
+    {{-- Skeleton --}}
+    <div id="semovienteSkeleton">
+        <div class="sg-skeleton sg-skeleton-header"></div>
+        @for($i = 0; $i < 7; $i++)
+        <div class="sg-skeleton-row">
+            <div class="sg-skeleton sg-skeleton-cell" style="width:40px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:130px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:160px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:150px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:120px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:80px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:80px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:70px"></div>
+            <div class="sg-skeleton sg-skeleton-cell" style="width:80px"></div>
         </div>
-        <a href="{{ route('semoviente.create') }}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Nuevo Semoviente
-        </a>
+        @endfor
     </div>
 
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    <div class="content-card">
-        <table class="table table-striped" id="semovientesTable">
+    <div class="sg-table-wrapper" id="semovienteTableWrapper" style="display:none">
+        <table id="semovientesTable" class="sg-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Sede</th>
-                    <th>Centro</th>
-                    <th>Funcionario</th>
-                    <th>Fecha Nacimiento</th>
-                    <th>Tipo</th>
-                    <th>Raza</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th><i class="fas fa-hashtag"></i> ID</th>
+                    <th><i class="fas fa-map-marker-alt"></i> Sede</th>
+                    <th><i class="fas fa-university"></i> Centro</th>
+                    <th><i class="fas fa-user"></i> Funcionario</th>
+                    <th><i class="fas fa-calendar"></i> Fecha Nacimiento</th>
+                    <th><i class="fas fa-horse"></i> Tipo</th>
+                    <th><i class="fas fa-dna"></i> Raza</th>
+                    <th><i class="fas fa-circle"></i> Estado</th>
+                    <th><i class="fas fa-cogs"></i> Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($semovientes as $semoviente)
-                    <tr>
-                        <td>{{ $semoviente->id }}</td>
-                        <td>{{ $semoviente->sede->nom_sede ?? 'N/A' }}</td>
-                        <td>{{ $semoviente->sede->centro->nom_centro ?? 'N/A' }}</td>
-                        <td>{{ $semoviente->staff->name ?? 'N/A' }}</td>
-                        <td>
-                            @if ($semoviente->birth_date && $semoviente->birth_time)
-                                {{ $semoviente->birth_date->format('d/m/Y') }} {{ $semoviente->birth_time->format('H:i') }}
-                            @else
-                                N/A
-                            @endif
-                        </td>
-
-                        <td>{{ $semoviente->animal_type }}</td>
-                        <td>{{ $semoviente->breed }}</td>
-                        <td>
-                            <span class="badge bg-{{ $semoviente->estado_color }}">
-                                {{ $semoviente->estado_texto }}
+                <tr>
+                    <td><span class="sg-badge sg-badge-gray">#{{ $semoviente->id }}</span></td>
+                    <td>{{ $semoviente->sede->nom_sede ?? '—' }}</td>
+                    <td>{{ $semoviente->sede->centro->nom_centro ?? '—' }}</td>
+                    <td>{{ $semoviente->staff->name ?? '—' }}</td>
+                    <td>
+                        @if($semoviente->birth_date && $semoviente->birth_time)
+                            <span class="sg-badge sg-badge-blue">
+                                {{ $semoviente->birth_date->format('d/m/Y') }}
+                                {{ $semoviente->birth_time->format('H:i') }}
                             </span>
-                        </td>
-                        <td>
-                            <a href="{{ route('semoviente.edit', $semoviente) }}" class="btn btn-primary btn-sm">
+                        @else
+                            <span style="color:#9ca3af">—</span>
+                        @endif
+                    </td>
+                    <td>{{ $semoviente->animal_type }}</td>
+                    <td>{{ $semoviente->breed }}</td>
+                    <td>
+                        <span class="sg-badge sg-badge-{{ $semoviente->estado_color ?? 'gray' }}">
+                            {{ $semoviente->estado_texto }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="{{ route('semoviente.edit', $semoviente) }}" class="sg-btn sg-btn-warning" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button class="btn btn-danger btn-sm" onclick="deleteSemoviente({{ $semoviente->id }})">
+                            <button class="sg-btn sg-btn-danger" onclick="deleteSemoviente({{ $semoviente->id }})" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
-                        </td>
-                    </tr>
+                        </div>
+                    </td>
+                </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
+</div>
+
 @endsection
 
 @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <style>
-        .content-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 12px;
-        }
-    </style>
+    <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
 @endpush
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(document).ready(function() {
-            $('#semovientesTable').DataTable({
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.12.1/i18n/es-ES.json'
-                }
-            });
+        $(document).ready(function () {
+            setTimeout(function () {
+                $('#semovienteSkeleton').hide();
+                $('#semovienteTableWrapper').show();
+                $('#semovientesTable').DataTable({
+                    language: { url: 'https://cdn.datatables.net/plug-ins/1.12.1/i18n/es-ES.json' },
+                    order: [[0, 'desc']],
+                    dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
+                });
+            }, 400);
         });
 
         function deleteSemoviente(id) {
             Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Esta acción no se puede deshacer",
+                title: '¿Eliminar semoviente?',
+                text: 'Esta acción no se puede deshacer',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                borderRadius: '12px',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
-                        url: `/semoviente/${id}`,
-                        type: 'DELETE',
-                        data: {
-                            _token: $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(response) {
-                            Swal.fire('Eliminado', response.message, 'success');
-                            location.reload();
+                    fetch(`/semoviente/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
                         }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        Swal.fire({ title: 'Eliminado', text: data.message, icon: 'success', timer: 1500, showConfirmButton: false });
+                        setTimeout(() => location.reload(), 1500);
                     });
                 }
             });

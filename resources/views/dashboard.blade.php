@@ -55,18 +55,24 @@
         <!-- IZQUIERDA -->
         <div>
 
-            <!-- PRESUPUESTO -->
+            <!-- PRESUPUESTO ÚLTIMOS 6 MESES -->
             <div class="chart-container">
                 <div class="chart-header">
-                    <h3>Presupuesto</h3>
+                    <h3>Presupuesto — últimos 6 meses</h3>
                 </div>
                 <canvas id="accountingChart"></canvas>
             </div>
 
-            <!-- BALANCE -->
+            <!-- PQR POR ESTADO -->
             <div class="chart-container">
-                <h3>Balance total</h3>
-                <canvas id="balanceChart"></canvas>
+                <h3>PQR por estado</h3>
+                <canvas id="pqrChart"></canvas>
+            </div>
+
+            <!-- CONTRATOS POR ESTADO -->
+            <div class="chart-container">
+                <h3>Contratos por estado</h3>
+                <canvas id="contratosChart"></canvas>
             </div>
 
         </div>
@@ -501,62 +507,90 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        const presupuestoPorMes  = @json($presupuestoPorMes);
+        const pqrPorEstado       = @json($pqrPorEstado);
+        const contratosPorEstado = @json($contratosPorEstado);
 
+        document.addEventListener('DOMContentLoaded', () => {
             renderCalendar();
 
-            /* ================= CHART 1: PRESUPUESTO ================= */
+            // Presupuesto últimos 6 meses
             const accountingCtx = document.getElementById('accountingChart');
             if (accountingCtx) {
                 new Chart(accountingCtx, {
                     type: 'bar',
                     data: {
-                        labels: ['Enero', 'Febrero', 'Marzo', 'Abril'],
-                        datasets: [{
-                            label: 'Presupuesto',
-                            data: [1200000, 950000, 1400000, 1100000],
-                            borderWidth: 1
-                        }]
+                        labels: presupuestoPorMes.map(m => m.label),
+                        datasets: [
+                            {
+                                label: 'Solicitado',
+                                data: presupuestoPorMes.map(m => m.solicitado),
+                                backgroundColor: 'rgba(59,130,246,0.7)',
+                            },
+                            {
+                                label: 'Aceptado',
+                                data: presupuestoPorMes.map(m => m.aceptado),
+                                backgroundColor: 'rgba(34,197,94,0.7)',
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true
-                            }
-                        }
+                        plugins: { legend: { display: true } }
                     }
                 });
             }
 
-            /* ================= CHART 2: BALANCE ================= */
-            const balanceCtx = document.getElementById('balanceChart');
-            if (balanceCtx) {
-                new Chart(balanceCtx, {
-                    type: 'line',
+            // PQR por estado
+            const pqrCtx = document.getElementById('pqrChart');
+            if (pqrCtx) {
+                new Chart(pqrCtx, {
+                    type: 'doughnut',
                     data: {
-                        labels: ['Enero', 'Febrero', 'Marzo', 'Abril'],
+                        labels: ['En tiempo', 'Por vencer', 'Urgente', 'Vencido', 'Finalizada'],
                         datasets: [{
-                            label: 'Balance',
-                            data: [300000, 450000, 200000, 600000],
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2
+                            data: [
+                                pqrPorEstado.en_tiempo,
+                                pqrPorEstado.por_vencer,
+                                pqrPorEstado.urgente,
+                                pqrPorEstado.vencido,
+                                pqrPorEstado.finalizada,
+                            ],
+                            backgroundColor: ['#4CAF50','#FFC107','#F44336','#B71C1C','#9E9E9E'],
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true
-                            }
-                        }
+                        plugins: { legend: { position: 'bottom' } }
                     }
                 });
             }
 
+            // Contratos por estado
+            const contratosCtx = document.getElementById('contratosChart');
+            if (contratosCtx) {
+                new Chart(contratosCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Activos', 'Vencidos', 'Pendientes'],
+                        datasets: [{
+                            data: [
+                                contratosPorEstado.activos,
+                                contratosPorEstado.vencidos,
+                                contratosPorEstado.pendientes,
+                            ],
+                            backgroundColor: ['#22c55e','#ef4444','#f59e0b'],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
         });
     </script>
 @endpush

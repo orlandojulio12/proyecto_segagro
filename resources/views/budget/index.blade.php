@@ -6,12 +6,16 @@
 @section('dashboard-content')
     <div class="section-header mb-4">
         <div>
-            <p class="text-muted">Gestiona los presupuestos {{ $sedes->nom_sede ?? 'Centro' }}</p>
+            <h2 class="fw-bold">Gestión de Presupuestos</h2>
+            <p class="text-muted">
+                <i class="fas fa-university me-1 text-success"></i>
+                {{ $sedes->centro->nom_centro ?? 'Centro' }}
+                @if($sedes) — {{ $sedes->nom_sede }} @endif
+            </p>
         </div>
-        <a href="{{ route('budget.create') }}" class="btn btn-success shadow-sm">
-            <i class="fas fa-plus me-2"></i>Nuevo Presupuesto
+        <a href="{{ route('budget.create') }}" class="sg-btn sg-btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Presupuesto
         </a>
-
     </div>
     <br>
 
@@ -38,7 +42,7 @@
             <div class="col-12">
                 <div class="stat-card-large">
                     <div class="d-flex align-items-center">
-                        <div class="stat-icon bg-info flex-shrink-0">
+                        <div class="stat-icon-sg flex-shrink-0">
                             <i class="fas fa-wallet"></i>
                         </div>
                         <div class="ms-3 flex-grow-1">
@@ -57,7 +61,7 @@
 
             <div class="col-md-4" style="flex: 1 1 30%; max-width: 32%; ">
                 <div class="stat-card-small h-100">
-                    <div class="stat-icon bg-danger">
+                    <div class="stat-icon-sm-sg stat-icon-sm-red">
                         <i class="fas fa-money-bill-wave"></i>
                     </div>
                     <div class="stat-content">
@@ -69,7 +73,7 @@
 
             <div class="col-md-4" style="flex: 1 1 30%; max-width: 32%;">
                 <div class="stat-card-small h-100">
-                    <div class="stat-icon bg-success">
+                    <div class="stat-icon-sm-sg stat-icon-sm-green">
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <div class="stat-content">
@@ -83,7 +87,7 @@
 
             <div class="col-md-4" style="flex: 1 1 30%; max-width: 32%;">
                 <div class="stat-card-small h-100">
-                    <div class="stat-icon bg-warning">
+                    <div class="stat-icon-sm-sg stat-icon-sm-yellow">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <div class="stat-content">
@@ -181,9 +185,9 @@
                     @empty
                         <tr class="empty-state">
                             <td colspan="9" class="text-center py-5">
-                                <i class="fas fa-wallet fa-4x text-muted mb-3"></i>
-                                <h5 class="text-muted">No hay presupuestos registrados</h5>
-                                <p class="text-muted mb-3">Comienza registrando el primer presupuesto</p>
+                                        <div class="sg-empty-icon"><i class="fas fa-wallet"></i></div>
+                                <h5 class="fw-bold" style="color:#374151;">No hay presupuestos registrados</h5>
+                                <p style="color:#9ca3af;font-size:14px;" class="mb-3">Comienza registrando el primer presupuesto</p>
                             </td>
                         </tr>
                     @endforelse
@@ -403,17 +407,17 @@
 
         /* Tarjetas de estadísticas */
         .budgets-index .stat-card-large {
-            background: #ebf3fd;
-            border: 2px solid #3498db;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #4cd137;
             border-radius: 16px;
             padding: 20px 24px;
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.15);
+            box-shadow: 0 6px 20px rgba(76, 209, 55, 0.15);
             transition: all 0.3s ease;
         }
 
         .budgets-index .stat-card-large:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 28px rgba(52, 152, 219, 0.25);
+            box-shadow: 0 12px 28px rgba(76, 209, 55, 0.25);
         }
 
         .budgets-index .stat-card-large .stat-icon {

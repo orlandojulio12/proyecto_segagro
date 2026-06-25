@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Traslado;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Traslado\StoreNeedTransferRequest;
+use App\Http\Requests\Traslado\UpdateNeedTransferRequest;
 use App\Models\Centro;
 use App\Models\Dependency\DependencyUnit;
 use App\Models\InventoryMaterial;
@@ -15,17 +17,32 @@ use Illuminate\Support\Facades\Auth;
 
 class NeedTransferController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // traer lo necesario y nombrarlo como $traslados
-        $traslados = NeedTransfer::with(['user', 'centroInicial', 'sedeInicial', 'centroFinal', 'sedeFinal', 'materiales'])->get();
-        return view('traslados.index', compact('traslados'));
+        $query = NeedTransfer::with(['user', 'centroInicial', 'sedeInicial', 'centroFinal', 'sedeFinal'])
+            ->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('centro_id')) {
+            $query->where('centro_inicial_id', $request->centro_id);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('descripcion', 'like', "%{$request->search}%");
+        }
+
+        $traslados = $query->paginate(15)->withQueryString();
+        $centros = Centro::all();
+
+        return view('traslados.index', compact('traslados', 'centros'));
     }
 
     public function create()
     {
         $users = User::all();
-        $usuarios = User::all();
         $materials = InventoryMaterial::all();
         $centros = Centro::all();
         $sedes = Sede::all();
@@ -46,37 +63,11 @@ class NeedTransferController extends Controller
         return response()->json($materials);
     }
 
-    public function store(Request $request)
+    public function store(StoreNeedTransferRequest $request)
     {
-        $request->merge([
-            'centro_inicial_id' => $request->input('inicial_centro_id'),
-            'sede_inicial_id'   => $request->input('inicial_sede_id'),
-            'centro_final_id'   => $request->input('final_centro_id'),
-            'sede_final_id'     => $request->input('final_sede_id'),
-            'unidad_id'         => $request->input('unidad_id'),      // <-- nuevo
-            'subunidad_id'      => $request->input('subunidad_id'),   // <-- nuevo
-        ]);
-
-        $data = $request->validate([
-            'unidad_id' => 'required|exists:dependency_units,dependency_unit_id',
-            'subunidad_id' => 'required|exists:dependency_subunits,subunit_id',
-            'centro_inicial_id' => 'nullable|exists:centros,id',
-            'sede_inicial_id' => 'nullable|exists:sedes,id',
-            'centro_final_id' => 'nullable|exists:centros,id',
-            'sede_final_id' => 'nullable|exists:sedes,id',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date',
-            'descripcion' => 'nullable|string',
-            'nivel_riesgo' => 'required|string',
-            'nivel_complejidad' => 'required|string',
-            'presupuesto_solicitado' => 'nullable|numeric',
-            'presupuesto_aceptado' => 'nullable|numeric',
-            'requiere_personal' => 'boolean',
-            'requiere_materiales' => 'boolean',
-        ]);
+        $data = $request->validated();
         $data['user_id'] = Auth::id();
-        $data['status'] = 'pendiente'; // <-- status inicial
-        //dd($data);
+        $data['status'] = 'pendiente';
         $traslado = NeedTransfer::create($data);
 
         if ($request->filled('personal')) {
@@ -129,40 +120,10 @@ class NeedTransferController extends Controller
         ));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateNeedTransferRequest $request, string $id)
     {
         $traslado = NeedTransfer::findOrFail($id);
-
-        $request->merge([
-            'centro_inicial_id' => $request->input('inicial_centro_id'),
-            'sede_inicial_id'   => $request->input('inicial_sede_id'),
-            'centro_final_id'   => $request->input('final_centro_id'),
-            'sede_final_id'     => $request->input('final_sede_id'),
-            'unidad_id'         => $request->input('unidad_id'),
-            'subunidad_id'      => $request->input('subunidad_id'),
-        ]);
-
-        $data = $request->validate([
-            'unidad_id' => 'required|exists:dependency_units,dependency_unit_id',
-            'subunidad_id' => 'required|exists:dependency_subunits,subunit_id',
-            'centro_inicial_id' => 'nullable|exists:centros,id',
-            'sede_inicial_id' => 'nullable|exists:sedes,id',
-            'centro_final_id' => 'nullable|exists:centros,id',
-            'sede_final_id' => 'nullable|exists:sedes,id',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date',
-            'descripcion' => 'nullable|string',
-            'nivel_riesgo' => 'required|string',
-            'nivel_complejidad' => 'required|string',
-            'presupuesto_solicitado' => 'nullable|numeric',
-            'presupuesto_aceptado' => 'nullable|numeric',
-            'requiere_personal' => 'boolean',
-            'requiere_materiales' => 'boolean',
-            'status' => 'required|in:pendiente,completada', // <-- validación aquí
-        ]);
+        $data = $request->validated();
 
         $traslado->update($data);
 
@@ -195,11 +156,16 @@ class NeedTransferController extends Controller
             ->with('success', 'Traslado actualizado correctamente');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
+        $traslado = NeedTransfer::findOrFail($id);
+
+        $traslado->personal()->detach();
+        $traslado->materiales()->detach();
+        $traslado->infraestructuras()->detach();
+        $traslado->delete();
+
+        return redirect()->route('traslados.index')
+            ->with('success', 'Traslado eliminado correctamente');
     }
 }

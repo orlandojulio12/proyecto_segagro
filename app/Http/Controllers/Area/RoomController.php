@@ -12,8 +12,9 @@ class RoomController extends Controller
 {
     public function index()
     {
-        $centros = Centro::all(); // para el selector
-        return view('rooms.index', compact('centros'));
+        $centros = Centro::all();
+        $areas   = Area::with('sede')->where('active', true)->orderBy('name')->get();
+        return view('rooms.index', compact('centros', 'areas'));
     }
 
     public function filter(Request $request)

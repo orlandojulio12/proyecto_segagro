@@ -27,9 +27,16 @@
                 <span class="badge bg-info">{{ $area->code }}</span>
                 <span class="badge bg-secondary">{{ $area->salones_count ?? 0 }} Salones</span>
             </div>
-            <a href="{{ route('areas.edit', $area) }}" class="action-icon edit sm">
+            <button type="button" class="action-icon edit sm"
+                data-area-id="{{ $area->id }}"
+                data-area-name="{{ $area->name }}"
+                data-area-code="{{ $area->code ?? '' }}"
+                data-area-desc="{{ $area->description ?? '' }}"
+                data-area-sede="{{ $area->sede_id }}"
+                data-area-active="{{ $area->active ? '1' : '0' }}"
+                onclick="openAreaEditDrawer(this)">
                 <i class="fas fa-pen"></i>
-            </a>
+            </button>
         </div>
         @empty
         <div class="empty-subunit"><i class="fas fa-info-circle me-1"></i>No hay áreas</div>

@@ -7,11 +7,12 @@ use App\Models\Pqr\ConceptoPqr;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class Pqr extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -124,21 +125,36 @@ class Pqr extends Model
         return Carbon::parse($this->date)->addDays(10);
     }
 
-    // Scopes
+    // Scopes — usan SQL para permitir paginación y encadenamiento
     public function scopeByStatus($query, $status)
     {
-        return $query->get()->filter(fn($pqr) => match ($status) {
-            'en_tiempo' => $pqr->days_remaining >= 6,
-            'por_vencer' => $pqr->days_remaining >= 2 && $pqr->days_remaining < 6,
-            'urgente' => $pqr->days_remaining >= 1 && $pqr->days_remaining < 2,
-            'vencido' => $pqr->days_remaining === 0,
-            default => true
-        });
+        return match($status) {
+            'en_tiempo' => $query->whereRaw("
+                (is_tutela = 0 AND DATEDIFF(NOW(), date) <= 4)
+                OR (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) < 24)
+            "),
+            'por_vencer' => $query->whereRaw("
+                (is_tutela = 0 AND DATEDIFF(NOW(), date) BETWEEN 5 AND 8)
+                OR (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 24 AND 48)
+            "),
+            'urgente' => $query->whereRaw("
+                (is_tutela = 0 AND DATEDIFF(NOW(), date) = 9)
+                OR (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 48 AND 72)
+            "),
+            'vencido' => $query->whereRaw("
+                (is_tutela = 0 AND DATEDIFF(NOW(), date) >= 10)
+                OR (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) >= 72)
+            "),
+            default => $query,
+        };
     }
 
     public function scopeExpired($query)
     {
-        return $query->get()->filter(fn($pqr) => $pqr->is_expired);
+        return $query->whereRaw("
+            (is_tutela = 0 AND DATEDIFF(NOW(), date) >= 10)
+            OR (is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) >= 72)
+        ");
     }
 
     public function scopeTutelas($query)
@@ -148,7 +164,13 @@ class Pqr extends Model
 
     public function scopeByUrgency($query)
     {
-        return $query->get()->sortBy(fn($pqr) => $pqr->days_remaining);
+        return $query->orderByRaw("
+            CASE
+                WHEN is_tutela = 1
+                    THEN (COALESCE(horas_tutela, 72) - TIMESTAMPDIFF(HOUR, date, NOW()))
+                ELSE (10 - DATEDIFF(NOW(), date))
+            END ASC
+        ");
     }
 
     public function getTimeRemainingAttribute()

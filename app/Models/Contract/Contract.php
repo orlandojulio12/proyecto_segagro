@@ -94,9 +94,10 @@ class Contract extends Model
     /**
      * Calcular el valor total del contrato
      */
-    public function getTotalValueAttribute()
+    public function getTotalValueAttribute(): string
     {
-        return $this->initial_value + ($this->addition_value ?? 0);
+        $total = (float) $this->initial_value + (float) ($this->addition_value ?? 0);
+        return number_format($total, 2, '.', '');
     }
 
     /**

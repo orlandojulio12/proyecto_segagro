@@ -9,6 +9,25 @@
         /* 🎯 LAYOUT GENERAL */
         /* ============================= */
 
+        #pqrPagination {
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .premium-pagination {
+            position: sticky;
+            bottom: 0;
+        }
+
+        #pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -376,8 +395,8 @@
         }
 
         /* ===========================
-                   BOTONES PREMIUM FILTROS/ORDENAR
-                =========================== */
+                                    BOTONES PREMIUM FILTROS/ORDENAR
+                                    =========================== */
         .btn-premium-outline {
             display: inline-flex;
             align-items: center;
@@ -499,8 +518,8 @@
         }
 
         /* ===========================
-                       SELECT PREMIUM
-                    =========================== */
+                                                                                                                                                       SELECT PREMIUM
+                                                                                                                                                    =========================== */
         .form-select-premium {
             width: 100%;
             padding: 10px 14px;
@@ -519,8 +538,8 @@
         }
 
         /* ===========================
-                       MODALES PREMIUM
-                    =========================== */
+                                                                                                                                                       MODALES PREMIUM
+                                                                                                                                                    =========================== */
         .custom-modal {
             position: fixed;
             top: 0;
@@ -716,6 +735,248 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        ..table-header {
+            padding-bottom: 18px;
+            border-bottom: 3px solid #4cd137;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-header h5 {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .table-header h5 i {
+            color: #4cd137;
+            margin-left: 8px;
+            font-size: 1.2rem;
+        }
+
+        /* Tabla moderna */
+        .table-modern {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .table-modern thead {
+            background: linear-gradient(135deg, #4cd137 0%, #3db32a 100%);
+            color: #fff;
+        }
+
+        .table-modern thead th {
+            padding: 16px 12px;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 600;
+            border: none;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .table-modern tbody tr {
+            background: #fff;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table-modern tbody tr:hover:not(.empty-state) {
+            background: #f8fff9;
+            transform: scale(1.002);
+            box-shadow: 0 2px 8px rgba(76, 209, 55, 0.15);
+        }
+
+        .table-modern tbody td {
+            padding: 14px 12px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+
+        .table-modern .empty-state {
+            background: #fafafa;
+        }
+
+        .table-modern .empty-state:hover {
+            background: #fafafa;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ============================= */
+        /* 🎯 TABS PREMIUM */
+        /* ============================= */
+        .tabs-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e5e7eb;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            /* gris medio */
+            cursor: pointer;
+            border-radius: 12px 12px 0 0;
+            position: relative;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .tab-btn:hover {
+            color: #4cd137;
+            background: rgba(76, 209, 55, 0.1);
+        }
+
+        .tab-btn.active {
+            color: #111827;
+            background: #fff;
+            border: 2px solid #4cd137;
+            border-bottom: 2px solid #fff;
+            /* quita la línea inferior para que se integre con el contenido */
+            box-shadow: 0 4px 10px rgba(76, 209, 55, 0.15);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #4cd137;
+            border-radius: 2px 2px 0 0;
+        }
+
+        /* Para scroll horizontal en pantallas pequeñas */
+        .tabs-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .tabs-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(107, 114, 128, 0.4);
+            border-radius: 3px;
+        }
+
+        .tabs-wrapper::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* ============================= */
+        /* 🎯 CONTENIDO DE TABS */
+        /* ============================= */
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+            animation: fadeInTab 0.3s ease;
+        }
+
+        @keyframes fadeInTab {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .premium-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .premium-pagination .page {
+            min-width: 38px;
+            height: 38px;
+            padding: 0 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            color: #374151;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            transition: all .25s ease;
+        }
+
+        .premium-pagination .page:hover {
+            background: #f0fff4;
+            color: #4cd137;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(76, 209, 55, 0.25);
+        }
+
+        .premium-pagination .page.active {
+            background: linear-gradient(135deg, #4cd137, #3db32a);
+            color: white;
+            border: none;
+            box-shadow: 0 6px 14px rgba(76, 209, 55, 0.4);
+        }
+
+        .premium-pagination .page.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* ============================= */
+        /* 🎯 LOADING SKELETON */
+        /* ============================= */
+
+        .skeleton {
+            background: linear-gradient(90deg,
+                    #f1f5f9 25%,
+                    #e2e8f0 37%,
+                    #f1f5f9 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s ease infinite;
+            border-radius: 12px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
+        }
+
+        /* CARD SKELETON */
+        .skeleton-card {
+            height: 220px;
+            border-radius: 16px;
+        }
+
+        /* TABLE SKELETON */
+        .skeleton-row {
+            height: 40px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
     </style>
 
     <!-- HEADER -->
@@ -728,16 +989,16 @@
         <div class="d-flex gap-2 flex-wrap">
 
             <!-- BOTÓN ORDENAR -->
-            <button class="btn-premium-outline" onclick="openOrderModal()">
+            <button class="sg-btn sg-btn-outline" onclick="openOrderModal()">
                 <i class="fas fa-sort"></i> Ordenar
             </button>
 
             <!-- BOTÓN FILTRAR -->
-            <button class="btn-premium-outline" onclick="openFilterModal()">
+            <button class="sg-btn sg-btn-outline" onclick="openFilterModal()">
                 <i class="fas fa-filter"></i> Filtrar
             </button>
 
-            <a href="{{ route('pqr.create') }}" class="btn-premium-success">
+            <a href="{{ route('pqr.create') }}" class="sg-btn sg-btn-primary">
                 <i class="fas fa-plus"></i> Añadir queja
             </a>
         </div>
@@ -790,11 +1051,69 @@
         </div>
     </div>
 
+    <!-- =================== -->
+    <!-- TABS -->
+    <!-- =================== -->
+    <div class="tabs-wrapper mb-4">
+        <button class="tab-btn active" data-tab="mosaic">Mosaico</button>
+        <button class="tab-btn" data-tab="table">Tabla</button>
+    </div>
+
     <br>
 
-    <!-- GRID DONDE SE PINTAN LOS RESULTADOS -->
-    <div id="pqrGrid" class="grid-4">
-        @include('Complaint.partials.cards', ['pqr' => $pqr])
+    <!-- =================== -->
+    <!-- CONTENIDO DE TABS -->
+    <!-- =================== -->
+    <div id="tabContent">
+
+        <!-- TAB MOSAICO (por defecto) -->
+        <div id="mosaic" class="tab-pane active">
+            <div id="pqrGrid" class="grid-4">
+                @for ($i = 0; $i < 6; $i++)
+                    <div class="skeleton skeleton-card"></div>
+                @endfor
+            </div>
+            <!-- 🔥 PAGINACIÓN AQUÍ -->
+            <div id="pqrPagination">
+                @if ($pqr instanceof \Illuminate\Pagination\LengthAwarePaginator && $pqr->hasPages())
+                    <div class="premium-pagination">
+
+                        {{-- PREV --}}
+                        @if ($pqr->onFirstPage())
+                            <span class="page disabled">‹</span>
+                        @else
+                            <a href="{{ $pqr->previousPageUrl() }}" class="page page-link-ajax">‹</a>
+                        @endif
+
+                        {{-- NUMEROS --}}
+                        @foreach ($pqr->getUrlRange(1, $pqr->lastPage()) as $page => $url)
+                            <a href="{{ $url }}"
+                                class="page page-link-ajax {{ $page == $pqr->currentPage() ? 'active' : '' }}">
+                                {{ $page }}
+                            </a>
+                        @endforeach
+
+                        {{-- NEXT --}}
+                        @if ($pqr->hasMorePages())
+                            <a href="{{ $pqr->nextPageUrl() }}" class="page page-link-ajax">›</a>
+                        @else
+                            <span class="page disabled">›</span>
+                        @endif
+
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- TAB TABLA (vacío, se carga con AJAX al abrir) -->
+        <div id="table" class="tab-pane">
+            <div id="pqrTableWrapper" class="table-responsive">
+                @for ($i = 0; $i < 6; $i++)
+                    <div class="skeleton skeleton-row"></div>
+                @endfor
+            </div>
+        </div>
+
     </div>
 
     <!-- 🔥 TOOLTIP GLOBAL -->
@@ -862,93 +1181,201 @@
                 document.getElementById('orderModal').style.display = 'none';
             };
 
+            window.openEditModal = () => {
+                document.getElementById('editModal').style.display = 'flex';
+            };
+
+            window.closeEditModal = () => {
+                document.getElementById('editModal').style.display = 'none';
+            };
+
             // =========================
-            // FILTROS AJAX
+            // CORE 🔥
             // =========================
-            window.applyFilters = () => {
+            window.loadPqr = ({
+                page = 1,
+                target = 'mosaic'
+            } = {}) => {
 
-                closeFilterModal();
-                closeOrderModal();
+                const dependency = document.getElementById('filterDependency')?.value || '';
+                const status = document.getElementById('filterStatus')?.value || '';
+                const order_color = document.getElementById('orderColor')?.value || '';
 
-                const dependency = document.getElementById('filterDependency').value;
-                const status = document.getElementById('filterStatus').value;
-                const order_color = document.getElementById('orderColor').value;
+                const params = new URLSearchParams({
+                    dependency,
+                    status,
+                    order_color,
+                    page
+                });
 
-                let url = "{{ route('pqr.index') }}";
+                if (target === 'table') {
+                    params.append('table', 1);
+                }
 
-                fetch(url + "?" + new URLSearchParams({
-                        dependency,
-                        status,
-                        order_color
-                    }))
+                // =========================
+                // LOADING
+                // =========================
+                if (target === 'table') {
+                    document.getElementById('pqrTableWrapper').innerHTML =
+                        Array(6).fill('<div class="skeleton skeleton-row"></div>').join('');
+                } else {
+                    document.getElementById('pqrGrid').innerHTML =
+                        Array(6).fill('<div class="skeleton skeleton-card"></div>').join('');
+                }
+
+                fetch(`{{ route('pqr.index') }}?` + params, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
                     .then(res => res.text())
                     .then(html => {
 
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, "text/html");
-                        const newGrid = doc.querySelector('#pqrGrid');
-
-                        if (newGrid) {
-                            document.getElementById('pqrGrid').innerHTML = newGrid.innerHTML;
+                        if (target === 'table') {
+                            const wrapper = document.getElementById('pqrTableWrapper');
+                            wrapper.innerHTML = html;
+                            wrapper.dataset.loaded = 1;
                         } else {
-                            console.error("❌ No se encontró #pqrGrid");
+                            const temp = document.createElement('div');
+                            temp.innerHTML = html;
+
+                            const newGrid = temp.querySelector('#pqrGrid');
+                            const newPagination = temp.querySelector('#pqrPagination');
+
+                            const grid = document.getElementById('pqrGrid');
+
+                            if (newGrid) {
+                                grid.innerHTML = newGrid.innerHTML;
+                            } else {
+                                // fallback por si el backend no envuelve
+                                grid.innerHTML = html;
+                            }
+
+                            grid.dataset.loaded = 1;
+
+                            if (newPagination) {
+                                document.getElementById('pqrPagination').innerHTML = newPagination
+                                    .innerHTML;
+                            }
+                            // 🔥 SINCRONIZAR ACTIVE REAL
+                            const pagination = document.getElementById('pqrPagination');
+                            const links = pagination.querySelectorAll('.page-link-ajax');
+
+                            // obtener página actual desde request
+                            const currentPage = parseInt(page);
+
+                            links.forEach(link => {
+                                link.classList.remove('active');
+
+                                const url = new URL(link.href);
+                                const linkPage = parseInt(url.searchParams.get('page') || 1);
+
+                                if (linkPage === currentPage) {
+                                    link.classList.add('active');
+                                }
+                            });
                         }
-                    });
+
+                    })
+                    .catch(() => notify("Error cargando datos"));
             };
 
             // =========================
-            // TOAST
+            // 🔥 PRECARGA (SOLO MOSAICO)
             // =========================
-            window.notify = (msg) => {
-                const toast = document.createElement('div');
-                toast.className = 'toast-warning';
-                toast.innerText = msg;
-
-                document.body.appendChild(toast);
-
-                setTimeout(() => toast.remove(), 4000);
-            };
-
-            // =========================
-            // TOOLTIP SLA (🔥 FIX REAL)
-            // =========================
-            const tooltip = document.getElementById('slaTooltip');
-
-            document.addEventListener('mousemove', (e) => {
-
-                const bar = e.target.closest('.sla-fill');
-
-                if (!bar) {
-                    tooltip.classList.remove('show');
-                    return;
-                }
-
-                const elapsed = parseFloat(bar.dataset.elapsed);
-                const total = parseFloat(bar.dataset.total);
-                const unit = bar.dataset.unit;
-
-                const percent = Math.round((elapsed / total) * 100);
-
-                tooltip.innerHTML = `
-            <div style="font-weight:600">
-                ${elapsed.toFixed(1)} ${unit}
-            </div>
-            <div style="font-size:11px; opacity:.7">
-                de ${total} ${unit} (${percent}%)
-            </div>
-        `;
-
-                tooltip.style.left = e.clientX + 'px';
-                tooltip.style.top = e.clientY + 'px';
-
-                tooltip.classList.add('show');
+            loadPqr({
+                target: 'mosaic'
             });
 
-        });
-        document.getElementById('editModal').addEventListener('click', (e) => {
-            if (e.target.id === 'editModal') {
-                closeEditModal();
-            }
+            // =========================
+            // FILTROS
+            // =========================
+            window.applyFilters = () => {
+                closeFilterModal();
+                closeOrderModal();
+
+                // reset de carga
+                document.getElementById('pqrGrid').dataset.loaded = '';
+                document.getElementById('pqrTableWrapper').dataset.loaded = '';
+
+                loadPqr({
+                    target: 'mosaic'
+                });
+            };
+
+            // =========================
+            // TABS
+            // =========================
+            const tabs = document.querySelectorAll('.tab-btn');
+            const panes = document.querySelectorAll('.tab-pane');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+
+                    const target = tab.dataset.tab;
+
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    panes.forEach(p => {
+                        p.style.display = p.id === target ? 'block' : 'none';
+                    });
+
+                    if (target === 'table') {
+                        if (!document.getElementById('pqrTableWrapper').dataset.loaded) {
+                            loadPqr({
+                                target: 'table'
+                            });
+                        }
+                    } else {
+                        if (!document.getElementById('pqrGrid').dataset.loaded) {
+                            loadPqr({
+                                target: 'mosaic'
+                            });
+                        }
+                    }
+                });
+            });
+
+            // =========================
+            // PAGINACIÓN AJAX
+            // =========================
+            document.addEventListener('click', function(e) {
+
+                const link = e.target.closest('.page-link-ajax');
+                if (!link) return;
+
+                e.preventDefault();
+
+                const url = new URL(link.href);
+                const page = url.searchParams.get('page') || 1;
+
+                const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+
+                loadPqr({
+                    page,
+                    target: activeTab
+                });
+            });
+
+            // =========================
+            // TABLA PAGINACIÓN
+            // =========================
+            window.goToPage = (page) => {
+                loadPqr({
+                    page,
+                    target: 'table'
+                });
+            };
+
+            window.clearFilters = () => {
+                document.getElementById('filterDependency').value = '';
+                document.getElementById('filterStatus').value = '';
+                document.getElementById('orderColor').value = '';
+
+                applyFilters();
+            };
+
         });
     </script>
 

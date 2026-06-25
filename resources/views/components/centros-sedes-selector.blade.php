@@ -137,36 +137,51 @@ body.modal-open {
 
 .custom-modal-content {
     background: #fff;
-    border-radius: 12px;
-    width: 95%;
-    max-width: 900px;
-    max-height: 80vh;           /* limita altura para scroll interno */
-    overflow-y: auto;           /* scroll solo dentro del modal si hay mucho contenido */
-    box-shadow: 0 5px 30px rgba(0,0,0,0.3);
-    animation: zoomIn 0.3s ease;
-    will-change: transform;
+    border-radius: 14px;
+    width: 92%;
+    max-width: 780px;
+    max-height: 82vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,.25);
+    animation: zoomIn 0.25s ease;
 }
-    .custom-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        border-bottom: 1px solid #eee;
-        background: #f8f9fa;
-        border-radius: 12px 12px 0 0;
-    }
-    .custom-modal-body { padding: 20px; max-height: 65vh; overflow-y: auto; }
-    .search-box { position: relative; display: flex; align-items: center; width: 100%; }
-    .search-box input { width: 100%; padding: 12px 40px 12px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 14px; outline: none; background: #f9f9f9; transition: all 0.3s ease; }
-    .search-box input:focus { border-color: #43a047; background: #fff; box-shadow: 0 0 0 4px rgba(67,160,71,0.1); }
-    .search-box .search-icon { position: absolute; right: 14px; font-size: 16px; color: #888; cursor: pointer; }
-    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
-    .close-btn:hover { color: #000; }
-    .pagination { display: flex; justify-content: center; margin-top: 15px; gap: 5px; }
-    .pagination button { background: #f1f3f5; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; }
-    .pagination button.active { background: #007bff; color: white; font-weight: bold; }
-    .pagination button:hover { background: #e0e0e0; }
-    @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 22px;
+    border-bottom: 1.5px solid #d1fae5;
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    flex-shrink: 0;
+    border-radius: 14px 14px 0 0;
+}
+.custom-modal-header h5 { margin: 0; font-size: 15px; font-weight: 700; color: #111827; }
+.custom-modal-body { padding: 18px 22px; overflow-y: auto; flex: 1; }
+.search-box { position: relative; display: flex; align-items: center; width: 100%; }
+.search-box input { width: 100%; padding: 10px 42px 10px 16px; border: 1.5px solid #d1d5db; border-radius: 10px; font-size: 13.5px; outline: none; background: #f9fafb; transition: all 0.2s; box-sizing: border-box; }
+.search-box input:focus { border-color: #22c55e; background: #fff; box-shadow: 0 0 0 3px rgba(34,197,94,.12); }
+.search-box .search-icon { position: absolute; right: 14px; font-size: 15px; color: #9ca3af; cursor: pointer; user-select: none; }
+.close-btn { background: none; border: 1.5px solid #d1d5db; width: 30px; height: 30px; border-radius: 7px; cursor: pointer; color: #6b7280; font-size: 16px; display:flex; align-items:center; justify-content:center; transition: all .2s; }
+.close-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+/* Table inside modal — full width, no Bootstrap required */
+.custom-modal-body table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+.custom-modal-body table thead tr { background: linear-gradient(135deg, #16a34a, #22c55e); }
+.custom-modal-body table thead th { padding: 10px 14px; font-size: 12px; font-weight: 700; color: #fff; text-align: left; border: none; }
+.custom-modal-body table tbody tr { border-bottom: 1px solid #f3f4f6; transition: background .15s; }
+.custom-modal-body table tbody tr:hover { background: #f0fdf4; }
+.custom-modal-body table tbody td { padding: 10px 14px; font-size: 13px; color: #374151; vertical-align: middle; border: none; }
+.custom-modal-body table tbody td:last-child { width: 120px; text-align: center; }
+/* Seleccionar buttons inside modal */
+.seleccionar-centro, .seleccionar-sede { background: linear-gradient(135deg, #16a34a, #22c55e); color: white !important; border: none; padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+.seleccionar-centro:hover, .seleccionar-sede:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(22,163,74,.35); }
+/* Pagination inside modal */
+.centros-sedes-component .pagination { display: flex; justify-content: center; margin-top: 14px; gap: 5px; list-style: none; padding: 0; }
+.centros-sedes-component .pagination button { background: white; border: 1.5px solid #e5e7eb; padding: 5px 11px; border-radius: 6px; cursor: pointer; font-size: 12.5px; transition: all 0.2s; color: #374151; }
+.centros-sedes-component .pagination button.active { background: linear-gradient(135deg, #16a34a, #22c55e); border-color: #16a34a; color: white; font-weight: 600; }
+.centros-sedes-component .pagination button:hover:not(.active) { background: #f0fdf4; border-color: #22c55e; color: #16a34a; }
+@keyframes zoomIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 </style>
 @endpush
 

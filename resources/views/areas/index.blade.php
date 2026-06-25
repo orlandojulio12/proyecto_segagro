@@ -15,10 +15,106 @@
             </div>
         </div>
 
-        <a href="{{ route('areas.create') }}" class="btn btn-add-dependency">
+        <button onclick="openDrawer('areaDrawer')" class="btn btn-add-dependency" type="button">
             <i class="fas fa-plus"></i>
             <span>Nueva Área</span>
-        </a>
+        </button>
+    </div>
+
+    {{-- ══ DRAWER CREAR ÁREA ══ --}}
+    <div class="sg-drawer-overlay" id="areaDrawerOverlay"></div>
+    <div class="sg-drawer" id="areaDrawer">
+        <div class="sg-drawer-header">
+            <h5><i class="fas fa-layer-group drawer-icon"></i> Nueva Área</h5>
+            <button type="button" class="sg-drawer-close" onclick="closeDrawer('areaDrawer')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sg-drawer-body">
+            @if($errors->any())
+            <div class="alert alert-danger mb-3">
+                <ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+            </div>
+            @endif
+            <form id="areaCreateForm" action="{{ route('areas.store') }}" method="POST">
+                @csrf
+                <x-centros-sedes-selector :centros="$centros" prefix="inicial" />
+                <div class="mb-3">
+                    <label>Nombre del Área <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" required value="{{ old('name') }}">
+                </div>
+                <div class="mb-3">
+                    <label>Código</label>
+                    <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+                </div>
+                <div class="mb-3">
+                    <label>Descripción</label>
+                    <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="active" value="1" checked>
+                    <label class="form-check-label">Activa</label>
+                </div>
+            </form>
+        </div>
+        <div class="sg-drawer-footer">
+            <button type="button" class="sg-btn sg-btn-secondary" onclick="closeDrawer('areaDrawer')">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" form="areaCreateForm" class="sg-btn sg-btn-primary">
+                <i class="fas fa-save"></i> Guardar Área
+            </button>
+        </div>
+    </div>
+
+    {{-- ══ DRAWER EDITAR ÁREA ══ --}}
+    <div class="sg-drawer-overlay" id="areaEditDrawerOverlay"></div>
+    <div class="sg-drawer" id="areaEditDrawer">
+        <div class="sg-drawer-header">
+            <h5><i class="fas fa-pen drawer-icon"></i> Editar Área</h5>
+            <button type="button" class="sg-drawer-close" onclick="closeDrawer('areaEditDrawer')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sg-drawer-body">
+            <form id="areaEditForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="mb-3">
+                    <label>Sede <span class="text-danger">*</span></label>
+                    <select name="sede_id" id="editAreaSede" class="form-control" required>
+                        <option value="">Seleccione una sede</option>
+                        @foreach($sedes as $s)
+                        <option value="{{ $s->id }}">{{ $s->nom_sede }} — {{ $s->centro->nom_centro ?? '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Nombre del Área <span class="text-danger">*</span></label>
+                    <input type="text" name="name" id="editAreaName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Código</label>
+                    <input type="text" name="code" id="editAreaCode" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Descripción</label>
+                    <textarea name="description" id="editAreaDesc" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="active" id="editAreaActive" value="1">
+                    <label class="form-check-label" for="editAreaActive">Activa</label>
+                </div>
+            </form>
+        </div>
+        <div class="sg-drawer-footer">
+            <button type="button" class="sg-btn sg-btn-secondary" onclick="closeDrawer('areaEditDrawer')">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" form="areaEditForm" class="sg-btn sg-btn-primary">
+                <i class="fas fa-save"></i> Actualizar Área
+            </button>
+        </div>
     </div>
 
     {{-- FILTRO POR CENTRO --}}
@@ -126,6 +222,18 @@
 
 @push('scripts')
 <script>
+function openAreaEditDrawer(btn) {
+    const d = btn.dataset;
+    document.getElementById('areaEditForm').action = '/areas/' + d.areaId;
+    document.getElementById('editAreaName').value = d.areaName ?? '';
+    document.getElementById('editAreaCode').value = d.areaCode ?? '';
+    document.getElementById('editAreaDesc').value = d.areaDesc ?? '';
+    document.getElementById('editAreaActive').checked = d.areaActive === '1';
+    const sedeSel = document.getElementById('editAreaSede');
+    for (let opt of sedeSel.options) { opt.selected = String(opt.value) === String(d.areaSede); }
+    openDrawer('areaEditDrawer');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const filter = document.getElementById('centroFilter');
