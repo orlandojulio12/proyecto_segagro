@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\Complaint\pqr;
+use App\Models\Complaint\Pqr;
 use App\Models\Infraestructura\Infraestructura;
 use App\Policies\InfraestructuraPolicy;
 use App\Policies\PqrPolicy;

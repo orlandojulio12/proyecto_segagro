@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Complaint\pqr;
+use App\Models\Complaint\Pqr;
 use App\Models\User;
 
 class PqrPolicy
