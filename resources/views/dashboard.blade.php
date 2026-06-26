@@ -47,16 +47,16 @@
             <div class="stat-label">PQR Registradas</div>
         </div>
 
-        <div class="stat-card" style="background:var(--card);border-left:4px solid #7c3aed;">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">
+        <div class="stat-card purple">
+            <div class="stat-icon">
                 <i class="fas fa-file-alt"></i>
             </div>
             <div class="stat-number">{{ $totalFichasActivas }}</div>
             <div class="stat-label">Fichas en Formación</div>
         </div>
 
-        <div class="stat-card" style="background:var(--card);border-left:4px solid #0891b2;">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#0891b2,#0e7490);">
+        <div class="stat-card cyan">
+            <div class="stat-icon">
                 <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <div class="stat-number">{{ $totalInstructoresActivos }}</div>
@@ -259,6 +259,14 @@
             background: linear-gradient(145deg, var(--red), var(--red-dark));
         }
 
+        .stat-card.purple::before {
+            background: linear-gradient(145deg, #7c3aed, #6d28d9);
+        }
+
+        .stat-card.cyan::before {
+            background: linear-gradient(145deg, #0891b2, #0e7490);
+        }
+
         .stat-card .stat-icon {
             font-size: 2.8rem;
             margin-bottom: 0.6rem;
@@ -286,6 +294,14 @@
 
         .stat-card.warning .stat-icon {
             color: var(--red);
+        }
+
+        .stat-card.purple .stat-icon {
+            color: #7c3aed;
+        }
+
+        .stat-card.cyan .stat-icon {
+            color: #0891b2;
         }
 
         .stat-number {

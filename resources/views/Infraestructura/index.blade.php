@@ -47,36 +47,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($infraestructuras as $infra)
+                    @php
+                        $riesgoMap = ['Alto' => 'sg-badge-red', 'Medio' => 'sg-badge-yellow', 'Bajo' => 'sg-badge-green'];
+                        $estadoMap = ['Pendiente' => 'sg-badge-yellow', 'En Proceso' => 'sg-badge-blue', 'Cancelada' => 'sg-badge-red', 'Completada' => 'sg-badge-green'];
+                    @endphp
+                    @foreach($infraestructuras as $infra)
                         <tr>
                             <td><strong>#{{ $infra->id }}</strong></td>
-                            <td>{{ $infra->dependencia->short_name ?? 'N/A' }}</td>
-                            <td>{{ $infra->funcionario->name ?? 'N/A' }}</td>
-                            <td><span class="sg-badge sg-badge-blue">{{ $infra->centro->nom_centro ?? 'N/A' }}</span></td>
-                            <td><span class="sg-badge sg-badge-green">{{ $infra->sede->nom_sede ?? 'N/A' }}</span></td>
+                            <td>{{ $infra->dependencia?->short_name ?? 'N/A' }}</td>
+                            <td>{{ $infra->funcionario?->name ?? 'N/A' }}</td>
+                            <td><span class="sg-badge sg-badge-blue">{{ $infra->centro?->nom_centro ?? 'N/A' }}</span></td>
+                            <td><span class="sg-badge sg-badge-green">{{ $infra->sede?->nom_sede ?? 'N/A' }}</span></td>
                             <td>{{ $infra->tipo_necesidad }}</td>
-                            <td>
-                                @php
-                                    $riesgoMap = ['Alto' => 'sg-badge-red', 'Medio' => 'sg-badge-yellow', 'Bajo' => 'sg-badge-green'];
-                                @endphp
-                                <span class="sg-badge {{ $riesgoMap[$infra->nivel_riesgo] ?? 'sg-badge-gray' }}">
-                                    {{ $infra->nivel_riesgo }}
-                                </span>
-                            </td>
-                            <td>
-                                @php
-                                    $estadoMap = [
-                                        'Pendiente'  => 'sg-badge-yellow',
-                                        'En Proceso' => 'sg-badge-blue',
-                                        'Cancelada'  => 'sg-badge-red',
-                                        'Completada' => 'sg-badge-green',
-                                    ];
-                                @endphp
-                                <span class="sg-badge {{ $estadoMap[$infra->estado] ?? 'sg-badge-gray' }}">
-                                    {{ $infra->estado }}
-                                </span>
-                            </td>
-                            <td><span class="sg-badge sg-badge-gray">{{ $infra->created_at->format('d/m/Y') }}</span></td>
+                            <td><span class="sg-badge {{ $riesgoMap[$infra->nivel_riesgo] ?? 'sg-badge-gray' }}">{{ $infra->nivel_riesgo }}</span></td>
+                            <td><span class="sg-badge {{ $estadoMap[$infra->estado] ?? 'sg-badge-gray' }}">{{ $infra->estado }}</span></td>
+                            <td><span class="sg-badge sg-badge-gray">{{ $infra->created_at?->format('d/m/Y') ?? '—' }}</span></td>
                             <td>
                                 <div style="display:flex;gap:6px;">
                                     <a href="{{ route('infraestructura.edit', $infra) }}" class="sg-btn sg-btn-warning" title="Editar" style="font-size:11px;padding:5px 10px;">
@@ -88,14 +73,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="text-center py-5">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
-                                <span class="text-muted">No hay necesidades de infraestructura registradas</span>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -117,7 +95,7 @@
                 language: { url: 'https://cdn.datatables.net/plug-ins/1.12.1/i18n/es-ES.json' },
                 order: [[0, 'desc']],
                 pageLength: 10,
-                responsive: true,
+                columnDefs: [{ orderable: false, targets: [9] }],
             });
         });
 
