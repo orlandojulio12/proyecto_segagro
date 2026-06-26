@@ -9,9 +9,14 @@
         <h2>Gestión de Fichas</h2>
         <p>Programas de formación registrados por ficha SENA</p>
     </div>
-    <button onclick="openDrawer('fichaCreateDrawer')" class="sg-btn sg-btn-primary" type="button">
-        <i class="fas fa-plus"></i> Nueva Ficha
-    </button>
+    <div style="display:flex;gap:8px;">
+        <a href="{{ route('exports.fichas') }}" class="sg-btn sg-btn-secondary" title="Exportar Excel">
+            <i class="fas fa-file-excel"></i> Excel
+        </a>
+        <button onclick="openDrawer('fichaCreateDrawer')" class="sg-btn sg-btn-primary" type="button">
+            <i class="fas fa-plus"></i> Nueva Ficha
+        </button>
+    </div>
 </div>
 
 @if(session('success'))
@@ -57,6 +62,39 @@
         <button type="button" class="sg-btn sg-btn-secondary" onclick="closeDrawer('fichaEditDrawer')"><i class="fas fa-times"></i> Cancelar</button>
         <button type="submit" form="fichaEditForm" class="sg-btn sg-btn-primary"><i class="fas fa-save"></i> Actualizar</button>
     </div>
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+    <div>
+        <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Estado</label>
+        <select id="filterEstado" class="form-control form-control-sm" style="min-width:160px;">
+            <option value="">Todos los estados</option>
+            @foreach(\App\Models\Ficha\Ficha::ESTADOS as $key => $info)
+                <option value="{{ $info['label'] }}">{{ $info['label'] }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div>
+        <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Nivel</label>
+        <select id="filterNivel" class="form-control form-control-sm" style="min-width:180px;">
+            <option value="">Todos los niveles</option>
+            @foreach(\App\Models\Ficha\Ficha::NIVELES as $key => $label)
+                <option value="{{ $label }}">{{ $label }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div>
+        <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Jornada</label>
+        <select id="filterJornada" class="form-control form-control-sm" style="min-width:150px;">
+            <option value="">Todas las jornadas</option>
+            @foreach(\App\Models\Ficha\Ficha::JORNADAS as $key => $label)
+                <option value="{{ $label }}">{{ $label }}</option>
+            @endforeach
+        </select>
+    </div>
+    <button onclick="limpiarFiltrosFichas()" class="sg-btn sg-btn-ghost" style="height:34px;font-size:12px;">
+        <i class="fas fa-times me-1"></i>Limpiar
+    </button>
 </div>
 
 <div class="sg-card">
@@ -140,18 +178,38 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
+var fichasTable;
 $(document).ready(function() {
     setTimeout(function() {
         $('#fichasSkeleton').hide();
         $('#fichasTableWrapper').show();
-        $('#fichasTable').DataTable({
+        fichasTable = $('#fichasTable').DataTable({
             language: { url: 'https://cdn.datatables.net/plug-ins/1.12.1/i18n/es-ES.json' },
             order: [[0, 'desc']],
             pageLength: 25,
             dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
         });
+
+        $('#filterEstado').on('change', function() {
+            fichasTable.column(3).search(this.value).draw();
+        });
+        $('#filterNivel').on('change', function() {
+            fichasTable.column(2).search(this.value).draw();
+        });
+        $('#filterJornada').on('change', function() {
+            fichasTable.column(4).search(this.value).draw();
+        });
     }, 300);
 });
+
+function limpiarFiltrosFichas() {
+    document.getElementById('filterEstado').value = '';
+    document.getElementById('filterNivel').value = '';
+    document.getElementById('filterJornada').value = '';
+    if (fichasTable) {
+        fichasTable.column(2).search('').column(3).search('').column(4).search('').draw();
+    }
+}
 
 function openFichaEditDrawer(id) {
     fetch('/fichas/' + id, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })

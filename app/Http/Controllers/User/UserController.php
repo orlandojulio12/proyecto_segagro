@@ -10,6 +10,7 @@ use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -48,23 +49,27 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        $user = User::create([
-            'name'              => $request->name,
-            'email'             => $request->email,
-            'password'          => Hash::make($request->password),
-            'address'           => $request->address,
-            'phone'             => $request->phone,
-            'registration_date' => now(),
-            'state'             => 1,
-        ]);
+        try {
+            $user = User::create([
+                'name'              => $request->name,
+                'email'             => $request->email,
+                'password'          => Hash::make($request->password),
+                'address'           => $request->address,
+                'phone'             => $request->phone,
+                'registration_date' => now(),
+                'state'             => 1,
+            ]);
 
-        $user->sedes()->attach($request->sede_id);
+            $user->sedes()->attach($request->sede_id);
+            $user->assignRole($request->role);
 
-        // 🔥 ASIGNAR ROL
-        $user->assignRole($request->role);
-
-        return redirect()->route('users.index')
-            ->with('success', 'Usuario creado exitosamente.');
+            return redirect()->route('users.index')
+                ->with('success', 'Usuario registrado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al crear usuario: ' . $e->getMessage());
+            return back()->withInput()
+                ->withErrors(['error' => 'No se pudo crear el usuario. Por favor intenta de nuevo.']);
+        }
     }
 
     public function edit($id)
@@ -95,24 +100,30 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, $id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        $user->update([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => $request->password ? Hash::make($request->password) : $user->password,
-            'address'  => $request->address,
-            'phone'    => $request->phone,
-        ]);
+            $user->update([
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'password' => $request->password ? Hash::make($request->password) : $user->password,
+                'address'  => $request->address,
+                'phone'    => $request->phone,
+            ]);
 
-        $user->sedes()->sync([$request->sede_id]);
+            $user->sedes()->sync([$request->sede_id]);
 
-        if ($request->filled('role')) {
-            $user->syncRoles([$request->role]);
+            if ($request->filled('role')) {
+                $user->syncRoles([$request->role]);
+            }
+
+            return redirect()->route('users.index')
+                ->with('success', 'Usuario actualizado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar usuario: ' . $e->getMessage());
+            return back()->withInput()
+                ->withErrors(['error' => 'No se pudo actualizar el usuario. Por favor intenta de nuevo.']);
         }
-
-        return redirect()->route('users.index')
-            ->with('success', 'Usuario actualizado correctamente.');
     }
 
     public function show($id)

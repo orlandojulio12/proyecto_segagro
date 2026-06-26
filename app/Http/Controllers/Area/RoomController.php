@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Area\Area;
 use App\Models\Area\Room;
 use App\Models\Centro;
+use App\Models\Horario\Horario;
 use Illuminate\Http\Request;
 
 class RoomController extends Controller
@@ -95,6 +96,25 @@ class RoomController extends Controller
         return redirect()
             ->route('rooms.index')
             ->with('success', 'Room actualizado correctamente');
+    }
+
+    public function destroy($id)
+    {
+        $room = Room::findOrFail($id);
+
+        if (Horario::where('room_id', $room->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede eliminar el salón porque tiene horarios asignados.',
+            ], 422);
+        }
+
+        $room->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Salón eliminado correctamente.',
+        ]);
     }
 
     /**

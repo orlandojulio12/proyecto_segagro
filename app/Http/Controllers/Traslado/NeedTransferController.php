@@ -89,12 +89,16 @@ class NeedTransferController extends Controller
     }
 
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
+        $traslado = NeedTransfer::with([
+            'user', 'unidad',
+            'centroInicial', 'sedeInicial',
+            'centroFinal', 'sedeFinal',
+            'personal', 'materiales', 'infraestructuras',
+        ])->findOrFail($id);
+
+        return view('traslados.show', compact('traslado'));
     }
 
     /**

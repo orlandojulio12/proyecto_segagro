@@ -47,6 +47,22 @@
             <div class="stat-label">PQR Registradas</div>
         </div>
 
+        <div class="stat-card" style="background:var(--card);border-left:4px solid #7c3aed;">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-number">{{ $totalFichasActivas }}</div>
+            <div class="stat-label">Fichas en Formación</div>
+        </div>
+
+        <div class="stat-card" style="background:var(--card);border-left:4px solid #0891b2;">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#0891b2,#0e7490);">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="stat-number">{{ $totalInstructoresActivos }}</div>
+            <div class="stat-label">Instructores Activos</div>
+        </div>
+
     </div>
 
     <!-- ================= GRID ================= -->
@@ -74,6 +90,35 @@
                 <h3>Contratos por estado</h3>
                 <canvas id="contratosChart"></canvas>
             </div>
+
+            @if($contratosProximos->isNotEmpty())
+            <!-- CONTRATOS PRÓXIMOS A VENCER -->
+            <div class="chart-container">
+                <h3 style="display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-exclamation-triangle" style="color:#f59e0b;font-size:1rem;"></i>
+                    Contratos próximos a vencer
+                    <span style="margin-left:auto;font-size:12px;font-weight:500;color:#6b7280;">≤ 30 días</span>
+                </h3>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+                    @foreach($contratosProximos as $contrato)
+                    @php
+                        $dias = $contrato->days_remaining;
+                        $color = $dias <= 7 ? '#dc2626' : ($dias <= 15 ? '#f59e0b' : '#16a34a');
+                    @endphp
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;background:#f9fafb;border-left:3px solid {{ $color }};">
+                        <div>
+                            <div style="font-weight:600;font-size:13px;color:#111827;">{{ Str::limit($contrato->contractor_name, 30) }}</div>
+                            <div style="font-size:11px;color:#6b7280;">{{ $contrato->sede->nom_sede ?? '—' }} · #{{ $contrato->contract_number }}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:700;font-size:13px;color:{{ $color }};">{{ $dias }} días</div>
+                            <div style="font-size:10px;color:#9ca3af;">{{ $contrato->final_end_date?->format('d/m/Y') }}</div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
 
         </div>
 
