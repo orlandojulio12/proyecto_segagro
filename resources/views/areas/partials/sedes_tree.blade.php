@@ -27,16 +27,23 @@
                 <span class="badge bg-info">{{ $area->code }}</span>
                 <span class="badge bg-secondary">{{ $area->salones_count ?? 0 }} Salones</span>
             </div>
-            <button type="button" class="action-icon edit sm"
-                data-area-id="{{ $area->id }}"
-                data-area-name="{{ $area->name }}"
-                data-area-code="{{ $area->code ?? '' }}"
-                data-area-desc="{{ $area->description ?? '' }}"
-                data-area-sede="{{ $area->sede_id }}"
-                data-area-active="{{ $area->active ? '1' : '0' }}"
-                onclick="openAreaEditDrawer(this)">
-                <i class="fas fa-pen"></i>
-            </button>
+            <div class="d-flex gap-1">
+                <button type="button" class="action-icon edit sm"
+                    data-area-id="{{ $area->id }}"
+                    data-area-name="{{ $area->name }}"
+                    data-area-code="{{ $area->code ?? '' }}"
+                    data-area-desc="{{ $area->description ?? '' }}"
+                    data-area-sede="{{ $area->sede_id }}"
+                    data-area-active="{{ $area->active ? '1' : '0' }}"
+                    onclick="openAreaEditDrawer(this)">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button type="button" class="action-icon sm"
+                    style="background:#fee2e2;color:#dc2626;border:none;border-radius:8px;padding:6px 10px;"
+                    onclick="deleteArea({{ $area->id }}, '{{ addslashes($area->name) }}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </div>
         @empty
         <div class="empty-subunit"><i class="fas fa-info-circle me-1"></i>No hay áreas</div>

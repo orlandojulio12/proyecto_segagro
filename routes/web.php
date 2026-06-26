@@ -280,6 +280,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/guardar', [NeedTransferController::class, 'store'])->name('store');
         });
 
+        Route::middleware('permission:traslados.view')->get('/{id}', [NeedTransferController::class, 'show'])->name('show');
+
         Route::middleware('permission:traslados.edit')->group(function () {
             Route::get('/{id}/editar', [NeedTransferController::class, 'edit'])->name('edit');
             Route::put('/{id}', [NeedTransferController::class, 'update'])->name('update');
@@ -335,15 +337,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/store', [AreaController::class, 'store'])->name('store');
         Route::get('/{id}/edit', [AreaController::class, 'edit'])->name('edit');
         Route::put('/{id}/update', [AreaController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AreaController::class, 'destroy'])->name('destroy');
     });
 
     Route::prefix('rooms')->name('rooms.')->middleware('permission:infraestructura.view')->group(function () {
         Route::get('/', [RoomController::class, 'index'])->name('index');
         Route::get('/create', [RoomController::class, 'create'])->name('create');
         Route::post('/store', [RoomController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [RoomController::class, 'edit'])->name('edit');
         Route::get('/filter', [RoomController::class, 'filter'])->name('filter');
+        Route::get('/{id}/edit', [RoomController::class, 'edit'])->name('edit');
         Route::put('/{id}/update', [RoomController::class, 'update'])->name('update');
+        Route::delete('/{id}', [RoomController::class, 'destroy'])->name('destroy');
     });
 
     Route::get('/sedes/{sede}/areas', [AreaController::class, 'getBySede'])->name('areas.bySede'); // AJAX Route::get('/{areaId}/rooms', [RoomController::class, 'getRoomsByArea']) ->name('rooms.byArea'); });
@@ -403,9 +407,12 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------
     */
     Route::prefix('exports')->name('exports.')->middleware('permission:contratos.view')->group(function () {
-        Route::get('/contratos', [\App\Http\Controllers\Exports\ExportController::class, 'contratos'])->name('contratos');
-        Route::get('/pqr', [\App\Http\Controllers\Exports\ExportController::class, 'pqr'])->name('pqr')->withoutMiddleware('permission:contratos.view')->middleware('permission:pqr.view');
-        Route::get('/traslados', [\App\Http\Controllers\Exports\ExportController::class, 'traslados'])->name('traslados')->withoutMiddleware('permission:contratos.view')->middleware('permission:traslados.view');
+        Route::get('/contratos',       [\App\Http\Controllers\Exports\ExportController::class, 'contratos'])->name('contratos');
+        Route::get('/pqr',             [\App\Http\Controllers\Exports\ExportController::class, 'pqr'])->name('pqr')->withoutMiddleware('permission:contratos.view')->middleware('permission:pqr.view');
+        Route::get('/traslados',       [\App\Http\Controllers\Exports\ExportController::class, 'traslados'])->name('traslados')->withoutMiddleware('permission:contratos.view')->middleware('permission:traslados.view');
+        Route::get('/fichas',          [\App\Http\Controllers\Exports\ExportController::class, 'fichas'])->name('fichas')->withoutMiddleware('permission:contratos.view');
+        Route::get('/instructores',    [\App\Http\Controllers\Exports\ExportController::class, 'instructores'])->name('instructores')->withoutMiddleware('permission:contratos.view');
+        Route::get('/infraestructura', [\App\Http\Controllers\Exports\ExportController::class, 'infraestructura'])->name('infraestructura')->withoutMiddleware('permission:contratos.view')->middleware('permission:infraestructura.view');
     });
 
     /*

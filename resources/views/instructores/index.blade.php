@@ -10,6 +10,9 @@
         <p>Docentes y facilitadores vinculados al centro de formación</p>
     </div>
     <div style="display:flex;gap:10px;">
+        <a href="{{ route('exports.instructores') }}" class="sg-btn sg-btn-secondary" title="Exportar Excel">
+            <i class="fas fa-file-excel"></i> Excel
+        </a>
         <button onclick="document.getElementById('importModal').style.display='flex'" class="sg-btn sg-btn-secondary" type="button">
             <i class="fas fa-file-csv"></i> Importar CSV
         </button>
@@ -121,6 +124,7 @@
                     <th><i class="fas fa-book-open"></i> Especialidad</th>
                     <th><i class="fas fa-briefcase"></i> Contrato</th>
                     <th><i class="fas fa-circle"></i> Estado</th>
+                    <th><i class="fas fa-book"></i> Fichas</th>
                     <th><i class="fas fa-cogs"></i> Acciones</th>
                 </tr>
             </thead>
@@ -148,6 +152,9 @@
                         @else
                             <span class="sg-badge sg-badge-red">Inactivo</span>
                         @endif
+                    </td>
+                    <td>
+                        <span class="sg-badge sg-badge-blue">{{ $instr->fichas_count }}</span>
                     </td>
                     <td>
                         <div style="display:flex;gap:6px;">
@@ -185,7 +192,7 @@ $(document).ready(function() {
             language: { url: 'https://cdn.datatables.net/plug-ins/1.12.1/i18n/es-ES.json' },
             order: [[0, 'asc']],
             pageLength: 25,
-            columnDefs: [{ orderable: false, targets: [7] }],
+            columnDefs: [{ orderable: false, targets: [8] }],
         });
     }, 300);
 });

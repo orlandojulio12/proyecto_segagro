@@ -76,6 +76,25 @@ class AreaController extends Controller
             ->with('success', 'Area actualizada correctamente');
     }
 
+    public function destroy($id)
+    {
+        $area = Area::findOrFail($id);
+
+        if ($area->rooms()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede eliminar el área porque tiene salones asociados.',
+            ], 422);
+        }
+
+        $area->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Área eliminada correctamente.',
+        ]);
+    }
+
     /**
      * AJAX: Areas por sede
      */

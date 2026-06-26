@@ -476,6 +476,23 @@
 
 @push('scripts')
     <script>
+        function deleteRoom(id, name) {
+            if (!confirm(`¿Eliminar el salón "${name}"? Esta acción no se puede deshacer.`)) return;
+            fetch(`/rooms/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    document.getElementById('filtro_sede_id').dispatchEvent(new Event('change'));
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
         function openRoomEditDrawer(btn) {
             const d = btn.dataset;
             document.getElementById('roomEditForm').action = '/rooms/' + d.roomId;

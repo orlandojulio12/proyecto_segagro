@@ -25,7 +25,7 @@
                             <span class="sub-capacity">Capacidad: {{ $room->capacity ?? 'N/A' }} personas</span>
                         </div>
                     </div>
-                    <div class="sub-actions">
+                    <div class="sub-actions d-flex gap-1">
                         <button type="button" class="action-icon edit sm"
                             data-room-id="{{ $room->id }}"
                             data-room-name="{{ $room->name }}"
@@ -36,6 +36,11 @@
                             data-room-active="{{ $room->active ? '1' : '0' }}"
                             onclick="openRoomEditDrawer(this)">
                             <i class="fas fa-pen"></i>
+                        </button>
+                        <button type="button" class="action-icon sm"
+                            style="background:#fee2e2;color:#dc2626;border:none;border-radius:8px;padding:6px 10px;"
+                            onclick="deleteRoom({{ $room->id }}, '{{ addslashes($room->name) }}')">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>

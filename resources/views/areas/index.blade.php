@@ -234,6 +234,23 @@ function openAreaEditDrawer(btn) {
     openDrawer('areaEditDrawer');
 }
 
+function deleteArea(id, name) {
+    if (!confirm(`¿Eliminar el área "${name}"? Esta acción no se puede deshacer.`)) return;
+    fetch(`/areas/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('centroFilter').dispatchEvent(new Event('change'));
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const filter = document.getElementById('centroFilter');

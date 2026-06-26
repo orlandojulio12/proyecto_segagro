@@ -10,7 +10,7 @@ class InstructorController extends Controller
 {
     public function index()
     {
-        $instructores = Instructor::orderBy('apellido')->orderBy('nombre')->get();
+        $instructores = Instructor::withCount('fichas')->orderBy('apellido')->orderBy('nombre')->get();
         return view('instructores.index', compact('instructores'));
     }
 

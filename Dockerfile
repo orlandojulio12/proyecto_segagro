@@ -41,6 +41,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 # Copiar código del proyecto
 COPY . .
 
+# Fix PSR-4: Windows no distingue mayúsculas/minúsculas en filenames
+RUN [ -f app/Models/Complaint/pqr.php ] && mv app/Models/Complaint/pqr.php app/Models/Complaint/Pqr.php || true
+
 RUN composer dump-autoload --optimize --no-scripts
 
 # =========================
@@ -53,45 +56,43 @@ WORKDIR /var/www
 # Evitar warning "dubious ownership"
 RUN git config --global --add safe.directory /var/www
 
-# Copiar proyecto, vendor y caches
+# Copiar proyecto y vendor compilado
 COPY . .
 COPY --from=composer-builder /var/www/vendor ./vendor
 
+# Fix PSR-4: renombrar pqr.php → Pqr.php (Windows → Linux no distingue case)
+RUN [ -f app/Models/Complaint/pqr.php ] && mv app/Models/Complaint/pqr.php app/Models/Complaint/Pqr.php || true
+
 # Configurar permisos
-RUN mkdir -p storage/framework/{sessions,views,cache} \
-    && mkdir -p bootstrap/cache \
+RUN mkdir -p storage/framework/{sessions,views,cache} storage/app/public/pqrs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Instalar Composer (para comandos futuros tipo artisan)
+# Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Instalar Laravel Octane + Swoole
-RUN composer require laravel/octane:^2.1 --with-all-dependencies \
-    && php artisan octane:install --server=swoole
+# Crear .env mínimo válido para comandos artisan durante el build.
+# El .env real con credenciales lo inyecta Dokploy en runtime; entrypoint.sh hace config:cache.
+RUN cp .env .env.prod \
+    && printf 'APP_NAME=SEGAGRO\nAPP_ENV=production\nAPP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\nAPP_DEBUG=false\nAPP_URL=http://localhost\nDB_CONNECTION=mysql\n' > .env
 
-# Cache de producción
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Instalar Octane sin disparar post-autoload-dump (que lee .env), luego publicar configs
+RUN composer require laravel/octane:^2.1 --with-all-dependencies --no-scripts \
+    && composer dump-autoload --optimize --no-scripts \
+    && php artisan octane:install --server=swoole \
+    && php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --force \
+    && php artisan vendor:publish --provider="OwenIt\Auditing\AuditingServiceProvider" --force \
+    && php artisan package:discover --ansi
+
+# Restaurar .env de producción
+RUN mv .env.prod .env
 
 # Puerto que expondrá Octane
 EXPOSE 8000
 
-# Configurar permisos y crear carpeta pqrs
-RUN mkdir -p storage/framework/{sessions,views,cache} \
-    && mkdir -p storage/app/public/pqrs \
-    && mkdir -p bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
-
 # Copiar script de entrada
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Publicar configs y migraciones (opcional si ya están en repo)
-RUN php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --force \
-    && php artisan vendor:publish --provider="OwenIt\Auditing\AuditingServiceProvider" --force
 
 # Usar script como entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

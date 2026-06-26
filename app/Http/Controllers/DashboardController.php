@@ -2,78 +2,78 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Budget\GeneralBudget;
-use App\Models\Complaint\pqr;
+use App\Models\Complaint\Pqr;
 use App\Models\Contract\Contract;
+use App\Models\Ficha\Ficha;
 use App\Models\Infraestructura\Infraestructura;
+use App\Models\Instructor\Instructor;
 use App\Models\Traslado\NeedTransfer;
 use App\Models\User;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Conteos generales
-        $totalContratos    = Contract::count();
-        $totalUsuarios     = User::count();
-        $totalInfra        = Infraestructura::count();
-        $totalTraslados    = NeedTransfer::count();
-        $totalNecesidades  = $totalInfra + $totalTraslados;
-        $totalPqr          = Pqr::count();
+        // Conteos y presupuestos — cacheados 5 minutos
+        $stats = Cache::remember('dashboard_stats', 300, function () {
+            $totalInfra     = Infraestructura::count();
+            $totalTraslados = NeedTransfer::count();
 
-        // Presupuesto agregado
-        $presupuestoSolicitado =
-            Infraestructura::sum('presupuesto_solicitado')
-            + NeedTransfer::sum('presupuesto_solicitado');
+            return [
+                'totalContratos'          => Contract::count(),
+                'totalUsuarios'           => User::count(),
+                'totalNecesidades'        => $totalInfra + $totalTraslados,
+                'totalPqr'                => Pqr::count(),
+                'totalFichasActivas'      => Ficha::where('estado', 'en_formacion')->count(),
+                'totalInstructoresActivos'=> Instructor::where('activo', true)->count(),
+                'presupuestoSolicitado'   => Infraestructura::sum('presupuesto_solicitado')
+                                            + NeedTransfer::sum('presupuesto_solicitado'),
+                'presupuestoAceptado'     => Infraestructura::sum('presupuesto_aceptado')
+                                            + NeedTransfer::sum('presupuesto_aceptado'),
+                'contratosPorEstado' => [
+                    'activos'    => Contract::active()->count(),
+                    'vencidos'   => Contract::expired()->count(),
+                    'pendientes' => Contract::pending()->count(),
+                ],
+                'pqrPorEstado' => [
+                    'en_tiempo'  => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) <= 4")->count()
+                                  + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) < 24")->count(),
+                    'por_vencer' => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) BETWEEN 5 AND 8")->count()
+                                  + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 24 AND 48")->count(),
+                    'urgente'    => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) = 9")->count()
+                                  + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 48 AND 72")->count(),
+                    'vencido'    => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) >= 10")->count()
+                                  + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) >= 72")->count(),
+                    'finalizada' => Pqr::where('state', 1)->count(),
+                ],
+            ];
+        });
 
-        $presupuestoAceptado =
-            Infraestructura::sum('presupuesto_aceptado')
-            + NeedTransfer::sum('presupuesto_aceptado');
+        $balance = $stats['presupuestoAceptado'] - $stats['presupuestoSolicitado'];
 
-        $balance = $presupuestoAceptado - $presupuestoSolicitado;
+        // Gráfica presupuesto por mes — cacheada 15 minutos
+        $presupuestoPorMes = Cache::remember('dashboard_presupuesto_mes', 900, function () {
+            $meses = collect(range(5, 0))->map(fn($i) => Carbon::now()->subMonths($i));
+            return $meses->map(fn($mes) => [
+                'label'      => $mes->translatedFormat('M Y'),
+                'solicitado' => Infraestructura::whereYear('created_at', $mes->year)->whereMonth('created_at', $mes->month)->sum('presupuesto_solicitado')
+                               + NeedTransfer::whereYear('created_at', $mes->year)->whereMonth('created_at', $mes->month)->sum('presupuesto_solicitado'),
+                'aceptado'   => Infraestructura::whereYear('created_at', $mes->year)->whereMonth('created_at', $mes->month)->sum('presupuesto_aceptado')
+                               + NeedTransfer::whereYear('created_at', $mes->year)->whereMonth('created_at', $mes->month)->sum('presupuesto_aceptado'),
+            ]);
+        });
 
-        // Datos reales para gráfica de presupuesto por mes (últimos 6 meses)
-        $meses = collect(range(5, 0))->map(fn($i) => Carbon::now()->subMonths($i));
+        // Contratos próximos a vencer (≤30 días) — tiempo real
+        $contratosProximos = Contract::active()
+            ->whereRaw('COALESCE(extension_date, initial_end_date) <= ?', [now()->addDays(30)->toDateString()])
+            ->with('sede')
+            ->orderByRaw('COALESCE(extension_date, initial_end_date) ASC')
+            ->limit(8)
+            ->get();
 
-        $presupuestoPorMes = $meses->map(fn($mes) => [
-            'label'     => $mes->translatedFormat('M Y'),
-            'solicitado' => Infraestructura::whereYear('created_at', $mes->year)
-                ->whereMonth('created_at', $mes->month)
-                ->sum('presupuesto_solicitado')
-                + NeedTransfer::whereYear('created_at', $mes->year)
-                ->whereMonth('created_at', $mes->month)
-                ->sum('presupuesto_solicitado'),
-            'aceptado'  => Infraestructura::whereYear('created_at', $mes->year)
-                ->whereMonth('created_at', $mes->month)
-                ->sum('presupuesto_aceptado')
-                + NeedTransfer::whereYear('created_at', $mes->year)
-                ->whereMonth('created_at', $mes->month)
-                ->sum('presupuesto_aceptado'),
-        ]);
-
-        // Datos reales para gráfica de PQR por estado (umbrales: 10 días normales / 72h tutela)
-        $pqrPorEstado = [
-            'en_tiempo'  => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) <= 4")->count()
-                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) < 24")->count(),
-            'por_vencer' => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) BETWEEN 5 AND 8")->count()
-                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 24 AND 48")->count(),
-            'urgente'    => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) = 9")->count()
-                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) BETWEEN 48 AND 72")->count(),
-            'vencido'    => Pqr::where('state', 0)->whereRaw("is_tutela = 0 AND DATEDIFF(NOW(), date) >= 10")->count()
-                          + Pqr::where('state', 0)->whereRaw("is_tutela = 1 AND TIMESTAMPDIFF(HOUR, date, NOW()) >= 72")->count(),
-            'finalizada' => Pqr::where('state', 1)->count(),
-        ];
-
-        // Contratos por estado
-        $contratosPorEstado = [
-            'activos'   => Contract::active()->count(),
-            'vencidos'  => Contract::expired()->count(),
-            'pendientes' => Contract::pending()->count(),
-        ];
-
-        // Eventos próximos (solo 60 días) — limitamos en BD, no en PHP
+        // Eventos del calendario (60 días) — tiempo real
         $limite = Carbon::now()->addDays(60)->toDateString();
         $hoy    = Carbon::now()->toDateString();
 
@@ -108,12 +108,9 @@ class DashboardController extends Controller
                     ? Carbon::parse($p->date)->addHours($p->horas_tutela ?? 72)
                     : Carbon::parse($p->date)->addDays(12);
 
-                if ($fechaLimite->toDateString() > $limite) {
-                    return null;
-                }
+                if ($fechaLimite->toDateString() > $limite) return null;
 
                 $isExpired = now()->gt($fechaLimite);
-
                 return [
                     'type'    => $p->is_tutela ? 'tutela' : 'pqr',
                     'title'   => ($p->is_tutela ? 'Tutela: ' : 'PQR: ') . str($p->title)->limit(30),
@@ -130,18 +127,21 @@ class DashboardController extends Controller
             ->merge($pqrEventos)
             ->values();
 
-        return view('dashboard', compact(
-            'totalContratos',
-            'totalUsuarios',
-            'totalNecesidades',
-            'totalPqr',
-            'presupuestoSolicitado',
-            'presupuestoAceptado',
-            'balance',
-            'eventosCalendario',
-            'presupuestoPorMes',
-            'pqrPorEstado',
-            'contratosPorEstado',
-        ));
+        return view('dashboard', [
+            'totalContratos'           => $stats['totalContratos'],
+            'totalUsuarios'            => $stats['totalUsuarios'],
+            'totalNecesidades'         => $stats['totalNecesidades'],
+            'totalPqr'                 => $stats['totalPqr'],
+            'totalFichasActivas'       => $stats['totalFichasActivas'],
+            'totalInstructoresActivos' => $stats['totalInstructoresActivos'],
+            'presupuestoSolicitado'    => $stats['presupuestoSolicitado'],
+            'presupuestoAceptado'      => $stats['presupuestoAceptado'],
+            'balance'                  => $balance,
+            'contratosProximos'        => $contratosProximos,
+            'eventosCalendario'        => $eventosCalendario,
+            'presupuestoPorMes'        => $presupuestoPorMes,
+            'pqrPorEstado'             => $stats['pqrPorEstado'],
+            'contratosPorEstado'       => $stats['contratosPorEstado'],
+        ]);
     }
 }

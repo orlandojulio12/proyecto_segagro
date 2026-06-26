@@ -80,6 +80,10 @@
 
                             <td>
                                 <div class="action-buttons">
+                                    <a href="{{ route('traslados.show', $traslado->id) }}" class="btn btn-sm btn-secondary"
+                                        title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                     <a href="{{ route('traslados.edit', $traslado->id) }}" class="btn btn-sm btn-info"
                                         title="Editar">
                                         <i class="fas fa-edit"></i>
