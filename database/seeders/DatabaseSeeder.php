@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Llamar al seeder de sedes
-        $this->call([
+        /* $this->call([
             CentrosSeeder::class,
             SedesSeeder::class,
             DependencisSeeder::class,
@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             ConceptoPqrSeeder::class,
             TutelaSeeder::class,
             CatalogProductSeeder::class,
-        ]);
+        ]); */
         $user = User::create([
             'name' => 'Super Admin',
             'email' => 'admin@example.com',

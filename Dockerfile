@@ -41,7 +41,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 # Copiar código del proyecto
 COPY . .
 
-RUN composer dump-autoload --optimize
+RUN composer dump-autoload --optimize --no-scripts
 
 # =========================
 # Stage final de producción
